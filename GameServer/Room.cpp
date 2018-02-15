@@ -441,6 +441,11 @@ bool Room::HasLaw(Asset::ROOM_EXTEND_TYPE type)
 	{
 		return true; //建平支持
 	}
+	
+	if (city_type == Asset::CITY_TYPE_YINGKOU && type == Asset::ROOM_EXTEND_TYPE_HUANGZHUANGHUANGGANG)
+	{
+		return false; //营口流局,杠依然算分
+	}
 
 	auto it = std::find(_stuff.options().extend_type().begin(), _stuff.options().extend_type().end(), type);
 	if (it == _stuff.options().extend_type().end()) return false; //常规规则检查
