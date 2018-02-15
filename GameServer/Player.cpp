@@ -2157,6 +2157,26 @@ bool Player::CheckHuiHu(const Asset::PaiElement& pai, bool check_zimo, bool calc
 
 		++cnt;
 	}
+	
+	//
+	//会牌可能有多种胡法,求最大番数
+	//
+	auto max_fan_score = 1;
+	auto max_fan_list = _fan_list;
+
+	for (const auto& fan_list : _hui_fan_list)
+	{
+		int32_t score_base = 1;
+		for (const auto fan : fan_list) score_base *= _room->GetMultiple(fan); //番数
+		
+		if (score_base >= max_fan_score)
+		{
+			max_fan_score = score_base;
+			max_fan_list = fan_list;
+		}
+	}
+
+	_fan_list = max_fan_list;
 
 	return false;
 }
