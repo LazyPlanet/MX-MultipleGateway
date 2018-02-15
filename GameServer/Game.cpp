@@ -148,6 +148,39 @@ void Game::OnStarted()
 
 	auto cards = FaPai(1); 
 	auto huipai = GameInstance.GetCard(cards[0]);
+
+	switch (huipai.card_type())
+	{
+		case Asset::CARD_TYPE_WANZI:
+		case Asset::CARD_TYPE_BINGZI:
+		case Asset::CARD_TYPE_TIAOZI:
+		{
+			huipai.set_card_value(huipai.card_value() + 1);
+			if (huipai.card_value() == 10) huipai.set_card_value(1);
+		}
+		break;
+		
+		case Asset::CARD_TYPE_FENG:
+		{
+			huipai.set_card_value(huipai.card_value() + 1);
+			if (huipai.card_value() == 5) huipai.set_card_value(1);
+		}
+		break;
+		
+		case Asset::CARD_TYPE_JIAN:
+		{
+			huipai.set_card_value(huipai.card_value() + 1);
+			if (huipai.card_value() == 4) huipai.set_card_value(1);
+		}
+		break;
+		
+		default:
+		{
+			ERROR("严重错误,产生了尚未存在的会儿牌:{}", huipai.ShortDebugString());
+		}
+		break;
+	}
+
 	saizi.mutable_pai()->CopyFrom(huipai);
 
 	BroadCast(saizi); //会儿牌
