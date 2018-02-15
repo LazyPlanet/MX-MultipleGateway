@@ -324,7 +324,9 @@ void Room::OnPlayerOperate(std::shared_ptr<Player> player, pb::Message* message)
 
 		case Asset::GAME_OPER_TYPE_LEAVE: //离开游戏
 		{
-			if (!HasDisMiss() && HasStarted() && !HasBeenOver()) return; //没有开局，且没有对战完，则不允许退出
+			if (IsFriend() && !HasDisMiss() && HasStarted() && !HasBeenOver()) return; //好友房没有开局，且没有对战完，则不允许退出
+			
+			if (IsMatch() && IsGaming()) return; //非好友房结束可以直接退出
 			//
 			//如果房主离开房间，且此时尚未开局，则直接解散
 			//
@@ -417,6 +419,13 @@ int32_t Room::GetRemainCount()
 { 
 	return _stuff.options().open_rands() - _games.size(); 
 }
+	
+bool Room::HasBeenOver() 
+{ 
+	if (!IsFriend()) return false;
+
+	return !_game && GetRemainCount() <= 0; 
+}
 
 bool Room::HasLaw(Asset::ROOM_EXTEND_TYPE type)
 {
@@ -442,6 +451,11 @@ bool Room::HasLaw(Asset::ROOM_EXTEND_TYPE type)
 bool Room::HasAnbao()
 {
 	return HasLaw(Asset::ROOM_EXTEND_TYPE_ANBAO);
+}
+
+bool Room::HasHuiPai()
+{
+	return HasLaw(Asset::ROOM_EXTEND_TYPE_HUIPAI);
 }
 
 bool Room::HasBaopai()
@@ -763,6 +777,8 @@ void Room::OnRemove()
 {
 	std::lock_guard<std::mutex> lock(_mutex);
 
+	WARN("房间:{} 删除成功", _stuff.room_id());
+
 	for (auto& player : _players)
 	{
 		if (!player) continue;
@@ -1058,6 +1074,8 @@ void Room::ClearDisMiss()
 	
 bool Room::IsExpired()
 {
+	if (_gmt_opened) return false; //代开房不解散
+
 	auto curr_time = CommonTimerInstance.GetTime();
 	return _expired_time < curr_time;
 }
@@ -1085,8 +1103,12 @@ std::shared_ptr<Room> RoomManager::Get(int64_t room_id)
 	std::lock_guard<std::mutex> lock(_room_lock);
 
 	auto it = _rooms.find(room_id);
-	if (it == _rooms.end()) return nullptr;
-
+	if (it == _rooms.end()) 
+	{
+		ERROR("获取房间:{} 数据失败：未找到房间", room_id);
+		return nullptr;
+	}
+	
 	return it->second;
 }
 	
@@ -1138,23 +1160,17 @@ std::shared_ptr<Room> RoomManager::GetMatchingRoom(Asset::ROOM_TYPE room_type)
 {
 	std::lock_guard<std::mutex> lock(_match_mutex);
 
-	do 
+	auto& rooms = _matching_rooms[room_type];
+
+	for (auto it = rooms.begin(); it != rooms.end(); ++it)
 	{
-		auto it = _matching_rooms.find(room_type);
-		if (it == _matching_rooms.end()) break;
+		if (it->second->IsFull()) continue;
 	
-		if (it->second->IsFull()) 
-		{
-			_matching_rooms.erase(it); //删除匹配
-			break;
-		}
-
-		return it->second;
-
-	} while (false);
+		return it->second; //尚未满房间
+	}
 			
 	auto room_id = RoomInstance.AllocRoom();
-	if (room_id <= 0) return nullptr;
+	if (room_id <= 0) return nullptr; //创建
 
 	Asset::Room room;
 	room.set_room_id(room_id);
@@ -1165,8 +1181,7 @@ std::shared_ptr<Room> RoomManager::GetMatchingRoom(Asset::ROOM_TYPE room_type)
 	room_ptr->OnCreated();
 
 	OnCreateRoom(room_ptr);
-
-	_matching_rooms.emplace(room_type, room_ptr);
+	rooms.emplace(room_id, room_ptr);
 
 	return room_ptr;
 }
@@ -1177,10 +1192,8 @@ void RoomManager::Update(int32_t diff)
 	
 	std::lock_guard<std::mutex> lock(_room_lock);
 
-	if (_heart_count % 1200 == 0) //1分钟
-	{
-		DEBUG("服务器:{} 进行房间数量:{}", _server_id, _rooms.size());
-	}
+	if (_heart_count % 1200 == 0) { DEBUG("服务器:{} 进行房间数量:{}", _server_id, _rooms.size()); } //1分钟
+	if (_heart_count % 12000 == 0) UpdateMatching(); //10分钟
 
 	if (_heart_count % 100 == 0) //5秒
 	{
@@ -1188,7 +1201,7 @@ void RoomManager::Update(int32_t diff)
 		{
 			it->second->Update();
 
-			if ((it->second->IsExpired() && it->second->IsEmpty()) || it->second->HasDisMiss() || it->second->HasBeenOver())
+			if ((it->second->IsFriend() && it->second->IsExpired() && it->second->IsEmpty()) || it->second->HasDisMiss() || it->second->HasBeenOver())
 			{
 				it->second->OnRemove();
 				it = _rooms.erase(it); //删除房间
@@ -1199,6 +1212,46 @@ void RoomManager::Update(int32_t diff)
 			}
 		}
 	}
+}
+
+void RoomManager::UpdateMatching()
+{
+	std::lock_guard<std::mutex> lock(_match_mutex);
+
+	Asset::MatchStatistics stats;
+	RedisInstance.GetMatching(stats);
+
+	Asset::MatchStatistics_MatchingRoom* match_stats = nullptr;
+
+	if (stats.server_list().size() == 0)
+	{
+		match_stats = stats.mutable_server_list()->Add();
+		match_stats->set_server_id(_server_id);
+	}
+	else
+	{
+		for (int32_t i = 0; i < stats.server_list().size(); ++i)
+		{
+			if (_server_id == stats.server_list(i).server_id())	
+			{
+				match_stats = stats.mutable_server_list(i);
+				break;
+			}
+		}
+	}
+
+	if (!match_stats) return;
+
+	match_stats->mutable_room_list()->Clear();
+
+	for (auto room : _matching_rooms)
+	{
+		auto room_matching = match_stats->mutable_room_list()->Add();
+		room_matching->set_room_type((Asset::ROOM_TYPE)room.first);
+		room_matching->set_player_count(room.second.size());
+	}
+
+	RedisInstance.SaveMatching(stats); //存盘
 }
 	
 void RoomManager::Remove(int64_t room_id)

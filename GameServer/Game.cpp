@@ -107,6 +107,8 @@ bool Game::Start(std::vector<std::shared_ptr<Player>> players, int64_t room_id, 
 		}
 	}
 
+	OnStarted(); //开局成功
+
 	return true;
 }
 	
@@ -130,7 +132,27 @@ void Game::OnStart()
 		
 		_saizi_random_result.push_back(result);
 	}
-	_room->BroadCast(saizi);
+
+	BroadCast(saizi);
+}
+
+void Game::OnStarted()
+{
+	if (!_room->HasHuiPai()) return;
+
+	Asset::RandomSaizi saizi; //开局股子广播
+	saizi.set_reason_type(Asset::RandomSaizi_REASON_TYPE_REASON_TYPE_START);
+		
+	int32_t result = CommonUtil::Random(1, 6);
+	saizi.mutable_random_result()->Add(result);
+
+	auto cards = FaPai(1); 
+	auto huipai = GameInstance.GetCard(cards[0]);
+	saizi.mutable_pai()->CopyFrom(huipai);
+
+	BroadCast(saizi); //会儿牌
+
+	_huipai = huipai;
 }
 
 bool Game::OnGameOver(int64_t player_id)
@@ -164,6 +186,7 @@ void Game::SavePlayBack()
 void Game::ClearState()
 {
 	_baopai.Clear();
+	_huipai.Clear();
 
 	_oper_cache.Clear();
 
@@ -1325,8 +1348,6 @@ void Game::Calculate(int64_t hupai_player_id/*胡牌玩家*/, int64_t dianpao_pl
 		//DEBUG("玩家:{} 因为牌型和位置输所有积分:{}", player_id, -score);
 	}
 
-	DEBUG("胡牌测试:{}", message.ShortDebugString());
-	
 	//
 	//2.胡牌玩家积分
 	//
@@ -1385,14 +1406,10 @@ void Game::Calculate(int64_t hupai_player_id/*胡牌玩家*/, int64_t dianpao_pl
 
 	record->set_score(total_score); //胡牌玩家赢的总积分
 	
-	DEBUG("胡牌测试:{}", message.ShortDebugString());
-	
 	//
 	//3.杠牌积分
 	//
 	CalculateGangScore(message);
-	
-	DEBUG("胡牌测试:{}", message.ShortDebugString());
 	
 	/*
 	for (int i = 0; i < MAX_PLAYER_COUNT; ++i)
@@ -1527,8 +1544,6 @@ void Game::Calculate(int64_t hupai_player_id/*胡牌玩家*/, int64_t dianpao_pl
 		it_dianpao->set_score(-baofen_total + it_dianpao->score()); //总积分
 	}
 	
-	DEBUG("胡牌测试:{}", message.ShortDebugString());
-	
 	//
 	//如果仅仅是平胡，则显示
 	//
@@ -1613,8 +1628,6 @@ void Game::Calculate(int64_t hupai_player_id/*胡牌玩家*/, int64_t dianpao_pl
 			if (consume_count != consume_real) continue;
 		}
 	}
-	
-	DEBUG("胡牌测试:{}", message.ShortDebugString());
 	
 	BroadCast(message);
 	OnGameOver(hupai_player_id); //结算之后才是真正结束

@@ -39,8 +39,9 @@ private:
 	Asset::PaiElement _baopai; //宝牌
 	int32_t _random_result = 0; //宝牌随机：1~6
 	std::unordered_set<int32_t> _random_result_list; //宝牌历史随机结果
-
 	std::vector<int32_t> _saizi_random_result; //开局股子缓存
+
+	Asset::PaiElement _huipai; //会儿牌
 	
 	Asset::PaiOperationCache _oper_cache; //牌操作缓存
 	std::vector<Asset::PaiOperationCache> _oper_list; //可操作列表
@@ -55,6 +56,7 @@ public:
 	virtual void Init(std::shared_ptr<Room> room); //初始化
 	virtual bool Start(std::vector<std::shared_ptr<Player>> players, int64_t room_id = 0, int32_t game_id = 0); //开始游戏
 	virtual void OnStart(); //开始游戏回调
+	virtual void OnStarted(); //开始游戏,玩家已经进入游戏
 
 	virtual bool OnGameOver(int64_t player_id); //游戏结束
 	void ClearState(); //清理状态
@@ -73,6 +75,7 @@ public:
 	void OnOperateTimeOut();
 	void ClearOperation();
 	void SetPaiOperation(const Asset::PaiOperationCache& oper) { _oper_cache = oper; } //牌操作限制
+	const Asset::PaiOperationCache& GetOperCache() { return _oper_cache; }
 	void SetPaiOperation(int64_t player_id, int64_t source_player_id, Asset::PaiElement pai, Asset::PAI_OPER_TYPE oper_type = Asset::PAI_OPER_TYPE_HUPAI);
 	void SetZiMoCache(std::shared_ptr<Player> player, Asset::PaiElement pai);
 
@@ -115,6 +118,8 @@ public:
 	void SetRandResult(int32_t random_result) { _random_result = random_result; }
 	int32_t GetRandResult() { return _random_result; }
 	const std::vector<int32_t>& GetSaizi() { return _saizi_random_result; }
+
+	const Asset::PaiElement& GetHuiPai() { return _huipai; } //获取会儿牌
 
 	bool CheckLiuJu(); //流局检查
 	bool IsLiuJu() { return _liuju; } //是否流局

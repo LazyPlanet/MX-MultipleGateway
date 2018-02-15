@@ -396,11 +396,17 @@ enum ROOM_EXTEND_TYPE {
   ROOM_EXTEND_TYPE_HUANGZHUANGHUANGGANG = 11,
   ROOM_EXTEND_TYPE_YIBIANGAO = 12,
   ROOM_EXTEND_TYPE_SIGUIYI = 13,
-  ROOM_EXTEND_TYPE_YIJIAFU = 14
+  ROOM_EXTEND_TYPE_YIJIAFU = 14,
+  ROOM_EXTEND_TYPE_HUIPAI = 15,
+  ROOM_EXTEND_TYPE_JUETOUHUI = 16,
+  ROOM_EXTEND_TYPE_QIONGHU = 17,
+  ROOM_EXTEND_TYPE_QIDUI = 18,
+  ROOM_EXTEND_TYPE_ZHUIFENGGANGA = 19,
+  ROOM_EXTEND_TYPE_YIPAOBAOSANJIA = 20
 };
 bool ROOM_EXTEND_TYPE_IsValid(int value);
 const ROOM_EXTEND_TYPE ROOM_EXTEND_TYPE_MIN = ROOM_EXTEND_TYPE_NULL;
-const ROOM_EXTEND_TYPE ROOM_EXTEND_TYPE_MAX = ROOM_EXTEND_TYPE_YIJIAFU;
+const ROOM_EXTEND_TYPE ROOM_EXTEND_TYPE_MAX = ROOM_EXTEND_TYPE_YIPAOBAOSANJIA;
 const int ROOM_EXTEND_TYPE_ARRAYSIZE = ROOM_EXTEND_TYPE_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* ROOM_EXTEND_TYPE_descriptor();
@@ -453,11 +459,12 @@ inline bool ROOM_PAY_TYPE_Parse(
 }
 enum CITY_TYPE {
   CITY_TYPE_CHAOYANG = 1,
-  CITY_TYPE_JIANPING = 2
+  CITY_TYPE_JIANPING = 2,
+  CITY_TYPE_YINGKOU = 3
 };
 bool CITY_TYPE_IsValid(int value);
 const CITY_TYPE CITY_TYPE_MIN = CITY_TYPE_CHAOYANG;
-const CITY_TYPE CITY_TYPE_MAX = CITY_TYPE_JIANPING;
+const CITY_TYPE CITY_TYPE_MAX = CITY_TYPE_YINGKOU;
 const int CITY_TYPE_ARRAYSIZE = CITY_TYPE_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* CITY_TYPE_descriptor();
@@ -519,11 +526,12 @@ enum FAN_TYPE {
   FAN_TYPE_JIA_HU_HIGHER = 23,
   FAN_TYPE_PIAO_WEIHU = 24,
   FAN_TYPE_BAOSANJIA = 25,
-  FAN_TYPE_YIJIAFU = 26
+  FAN_TYPE_YIJIAFU = 26,
+  FAN_TYPE_QIDUI = 27
 };
 bool FAN_TYPE_IsValid(int value);
 const FAN_TYPE FAN_TYPE_MIN = FAN_TYPE_PINGHU;
-const FAN_TYPE FAN_TYPE_MAX = FAN_TYPE_YIJIAFU;
+const FAN_TYPE FAN_TYPE_MAX = FAN_TYPE_QIDUI;
 const int FAN_TYPE_ARRAYSIZE = FAN_TYPE_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* FAN_TYPE_descriptor();
@@ -1996,6 +2004,20 @@ class CommonConst : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 shared_reward_id() const;
   inline void set_shared_reward_id(::google::protobuf::int32 value);
 
+  // optional int32 player_matching_base_count = 25 [default = 500];
+  inline bool has_player_matching_base_count() const;
+  inline void clear_player_matching_base_count();
+  static const int kPlayerMatchingBaseCountFieldNumber = 25;
+  inline ::google::protobuf::int32 player_matching_base_count() const;
+  inline void set_player_matching_base_count(::google::protobuf::int32 value);
+
+  // optional int32 player_matching_random_count = 26 [default = 30];
+  inline bool has_player_matching_random_count() const;
+  inline void clear_player_matching_random_count();
+  static const int kPlayerMatchingRandomCountFieldNumber = 26;
+  inline ::google::protobuf::int32 player_matching_random_count() const;
+  inline void set_player_matching_random_count(::google::protobuf::int32 value);
+
   // @@protoc_insertion_point(class_scope:Adoter.Asset.CommonConst)
  private:
   inline void set_has_type_t();
@@ -2044,6 +2066,10 @@ class CommonConst : public ::google::protobuf::Message {
   inline void clear_has_room_card_beishu();
   inline void set_has_shared_reward_id();
   inline void clear_has_shared_reward_id();
+  inline void set_has_player_matching_base_count();
+  inline void clear_has_player_matching_base_count();
+  inline void set_has_player_matching_random_count();
+  inline void clear_has_player_matching_random_count();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -2073,6 +2099,8 @@ class CommonConst : public ::google::protobuf::Message {
   ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::ActivityPage > page_list_;
   ::google::protobuf::int32 room_card_beishu_;
   ::google::protobuf::int32 shared_reward_id_;
+  ::google::protobuf::int32 player_matching_base_count_;
+  ::google::protobuf::int32 player_matching_random_count_;
   friend void  protobuf_AddDesc_P_5fAsset_2eproto();
   friend void protobuf_AssignDesc_P_5fAsset_2eproto();
   friend void protobuf_ShutdownFile_P_5fAsset_2eproto();
@@ -7975,6 +8003,54 @@ inline void CommonConst::set_shared_reward_id(::google::protobuf::int32 value) {
   set_has_shared_reward_id();
   shared_reward_id_ = value;
   // @@protoc_insertion_point(field_set:Adoter.Asset.CommonConst.shared_reward_id)
+}
+
+// optional int32 player_matching_base_count = 25 [default = 500];
+inline bool CommonConst::has_player_matching_base_count() const {
+  return (_has_bits_[0] & 0x01000000u) != 0;
+}
+inline void CommonConst::set_has_player_matching_base_count() {
+  _has_bits_[0] |= 0x01000000u;
+}
+inline void CommonConst::clear_has_player_matching_base_count() {
+  _has_bits_[0] &= ~0x01000000u;
+}
+inline void CommonConst::clear_player_matching_base_count() {
+  player_matching_base_count_ = 500;
+  clear_has_player_matching_base_count();
+}
+inline ::google::protobuf::int32 CommonConst::player_matching_base_count() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.CommonConst.player_matching_base_count)
+  return player_matching_base_count_;
+}
+inline void CommonConst::set_player_matching_base_count(::google::protobuf::int32 value) {
+  set_has_player_matching_base_count();
+  player_matching_base_count_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.CommonConst.player_matching_base_count)
+}
+
+// optional int32 player_matching_random_count = 26 [default = 30];
+inline bool CommonConst::has_player_matching_random_count() const {
+  return (_has_bits_[0] & 0x02000000u) != 0;
+}
+inline void CommonConst::set_has_player_matching_random_count() {
+  _has_bits_[0] |= 0x02000000u;
+}
+inline void CommonConst::clear_has_player_matching_random_count() {
+  _has_bits_[0] &= ~0x02000000u;
+}
+inline void CommonConst::clear_player_matching_random_count() {
+  player_matching_random_count_ = 30;
+  clear_has_player_matching_random_count();
+}
+inline ::google::protobuf::int32 CommonConst::player_matching_random_count() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.CommonConst.player_matching_random_count)
+  return player_matching_random_count_;
+}
+inline void CommonConst::set_player_matching_random_count(::google::protobuf::int32 value) {
+  set_has_player_matching_random_count();
+  player_matching_random_count_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.CommonConst.player_matching_random_count)
 }
 
 // -------------------------------------------------------------------

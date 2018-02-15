@@ -19,6 +19,7 @@
 #include "MXLog.h"
 #include "Config.h"
 #include "CenterSession.h"
+#include "MessageDispatcher.h"
 
 const int const_world_sleep = 50;
 
@@ -141,6 +142,8 @@ int main(int argc, const char* argv[])
 		boost::asio::ip::tcp::endpoint center_endpoint(boost::asio::ip::address::from_string(center_server_address), center_server_port);
 		g_center_session = std::make_shared<CenterSession>(_io_service, center_endpoint);
 		g_center_session->AsyncConnect();
+		
+		DispatcherInstance.StartWork(); //消息处理机制
 
 		//世界循环
 		WorldUpdateLoop();

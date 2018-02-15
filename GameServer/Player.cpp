@@ -147,13 +147,11 @@ int32_t Player::Logout(pb::Message* message)
 		{
 			SetOffline(); //玩家状态
 
-			//auto room_id = _room->GetID();
-			//ERROR("玩家:{}从房间且牌局内退出游戏:{}", _player_id, room_id); //玩家逃跑
+			ERROR("玩家:{} 从房间且牌局内退出游戏:{},服务器进行托管", _player_id, _room->GetID()); //玩家逃跑
 
-			//_tuoguan_server = true; //服务器托管
+			_tuoguan_server = true; //服务器托管
 
-			/*
-			if (_tuoguan_server && _game->CanPaiOperate(shared_from_this())) //轮到该玩家操作
+			if (HasTuoGuan() && _game->CanPaiOperate(shared_from_this())) //轮到该玩家操作
 			{
 				Asset::PaiElement pai;
 
@@ -174,7 +172,6 @@ int32_t Player::Logout(pb::Message* message)
 
 				CmdPaiOperate(&pai_operation);
 			}
-			*/
 
 			return 2; //不能退出游戏
 		}
@@ -229,21 +226,15 @@ int32_t Player::OnLogout(Asset::KICK_OUT_REASON reason)
 	
 	return 0;
 }
-	
-/*
-void Player::OnCreatePlayer(int64_t player_id)
-{
-	Asset::CreatePlayer create_player;
-	create_player.set_player_id(player_id);
-	SendProtocol(create_player);
-}
 
-int32_t Player::CmdEnterGame(pb::Message* message)
+bool Player::HasTuoGuan()
 {
-	OnEnterGame();
-	return 0;
+	if (!_game || !_room) return false;
+
+	if (_room->IsFriend()) return false; //好友房不托管
+
+	return _tuoguan_server; 
 }
-*/
 	
 int64_t Player::ConsumeRoomCard(Asset::ROOM_CARD_CHANGED_TYPE changed_type, int64_t count)
 {
@@ -577,6 +568,8 @@ int32_t Player::CmdGameOperate(pb::Message* message)
 				OnLeaveRoom(); //防止玩家不在房间内进行解散操作,出现这种情况原因是C<->S状态不一致
 				return 0;
 			}
+
+			if (_room && _room->IsMatch()) return 5; //匹配房不允许解散
 		}
 		break;
 
@@ -764,6 +757,8 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 			*/
 
 			--_oper_count;
+			
+			if (!CheckFengGangPai()) return 13;
 
 			OnGangFengPai();
 		}
@@ -779,6 +774,8 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 			*/
 			
 			--_oper_count;
+	
+			if (!CheckJianGangPai()) return 14;
 			
 			OnGangJianPai();
 		}
@@ -823,6 +820,7 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 
 		case Asset::PAI_OPER_TYPE_CANCEL:
 		{
+			WARN("玩家:{} 放弃操作:{}", _player_id, _game->GetOperCache().ShortDebugString());
 			return 0;
 		}
 		break;
@@ -1058,6 +1056,14 @@ int32_t Player::EnterRoom(pb::Message* message)
 		case Asset::ROOM_TYPE_GAOSHOU:
 		case Asset::ROOM_TYPE_DASHI:
 		{
+			if (_room || _game) return 1; //已经在房间内
+
+			if (HasMatching(room_type)) 
+			{
+				ERROR("玩家:{}已经匹配中,历史匹配房间类型:{},本次匹配房间类型:{} 无法再次匹配.", _player_id, _stuff.matching_room_type(), room_type);
+				return 2; //匹配中,防止多次点击匹配
+			}
+
 			auto result = check();
 
 			if (result != Asset::ERROR_SUCCESS) //不允许进入
@@ -1065,6 +1071,10 @@ int32_t Player::EnterRoom(pb::Message* message)
 				AlertMessage(result);
 				return result;
 			}
+
+			SetMatchingRoom(room_type);
+
+			WARN("玩家:{}进入匹配, 匹配数据:{}", _player_id, message->ShortDebugString());
 
 			//进入匹配
 			MatchInstance.Join(shared_from_this(), message);
@@ -1090,29 +1100,75 @@ int32_t Player::GetLocalRoomID()
 
 void Player::OnEnterSuccess(int64_t room_id)
 {
-	_stuff.set_room_id(room_id); //防止玩家进入房间后尚未加载场景，掉线
-
+	_stuff.set_room_id(room_id); //避免玩家进入房间后尚未加载场景，掉线
+	_stuff.clear_matching_room_type(); //匹配
+	
 	SetDirty();
 }
 
 bool Player::HandleMessage(const Asset::MsgItem& item)
 {
-	switch (item.type())
+	pb::Message* msg = ProtocolInstance.GetMessage(item.type_t());
+	if (!msg) return false;
+
+	auto message = msg->New();
+	auto result = message->ParseFromString(item.content());
+
+	if (!result) return false;      //非法协议
+	
+	DEBUG("玩家:{} 处理消息:{}", _player_id, message->ShortDebugString());
+
+	switch (item.type_t())
 	{
+		case Asset::META_TYPE_SHARE_PAI_OPERATION:
+		{
+			CmdPaiOperate(message);
+		}
+		break;
+
+		default:
+		{
+			WARN("玩家:{} 尚未消息:{}处理回调", _player_id, item.ShortDebugString());
+		}
+		break;
 	}
+		
+	delete message; //防止内存泄漏
+	message = nullptr;
 
 	return true;
 }
-
-void Player::SendMessage(Asset::MsgItem& item)
+	
+void Player::SendMessage(const Asset::MsgItem& item)
 {
 	DispatcherInstance.SendMessage(item);
 }	
+	
+void Player::SendMessage(int64_t receiver, const pb::Message* message)
+{
+	if (!message) return;
+	SendMessage(receiver, *message);
+}
+	
+void Player::SendMessage(int64_t receiver, const pb::Message& message)
+{
+	const pb::FieldDescriptor* field = message.GetDescriptor()->FindFieldByName("type_t");
+	if (!field) return;
+	
+	int type_t = field->default_value_enum()->number();
+	if (!Asset::META_TYPE_IsValid(type_t)) return;	//如果不合法，不检查会宕线
+	
+	Asset::MsgItem msg;
+	msg.set_receiver(receiver);
+	msg.set_type_t((Asset::META_TYPE)type_t);
+	msg.set_content(message.SerializeAsString());
+
+	SendMessage(msg);
+}
 
 void Player::SendProtocol(const pb::Message* message)
 {
 	if (!message) return;
-
 	SendProtocol(*message);
 }
 
@@ -1120,7 +1176,7 @@ void Player::SendProtocol(const pb::Message& message)
 {
 	if (!g_center_session) 
 	{
-		LOG(ERROR, "玩家{}尚未建立连接，目前所在服务器:{}", _player_id, _stuff.server_id());
+		LOG(ERROR, "玩家:{}尚未建立连接，目前所在服务器:{}", _player_id, _stuff.server_id());
 		return; //尚未建立网络连接
 	}
 
@@ -1331,7 +1387,7 @@ bool Player::PushBackItem(Asset::INVENTORY_TYPE inventory_type, Item* item)
 void Player::BroadCastCommonProp(Asset::MSG_TYPE type)       
 {
 	Asset::MsgItem item; //消息数据
-	item.set_type(type);
+	item.set_type_t(type);
 	item.set_sender(_player_id);
 	this->BroadCast(item); //通知给房间玩家
 }
@@ -1519,6 +1575,8 @@ int32_t Player::CmdGetRoomData(pb::Message* message)
 		if (!room)
 		{
 			AlertMessage(Asset::ERROR_ROOM_QUERY_NOT_FORBID);
+			
+			OnLogout(Asset::KICK_OUT_REASON_LOGOUT); //查询之后退出，否则会残留在此服务器
 			return 2;
 		}
 
@@ -2022,6 +2080,98 @@ bool Player::CheckBaoHu(const Asset::PaiElement& pai/*宝牌数据*/)
 	return hupai;
 }
 
+//
+//会牌计算方法
+//
+//总共非重复牌数据, 万饼条:1~9; 风牌:1~4; 箭牌:1~3; 共34张不同的牌
+//
+//会牌可以任意替换上面任何一张牌,如果多张会牌,则进行上述规则的排列组合
+//
+//1~34个数字分别代表上面34张牌,然后通过映射关系反求牌数据
+//
+bool Player::CheckHuiHu(const Asset::PaiElement& pai, bool check_zimo, bool calculate)
+{
+	if (!_room || !_game) return false;
+
+	if (!_room->HasHuiPai()) return false; //不带会儿牌
+
+	int32_t count = GetHuiPaiCount();
+	if (count == 0) return false;
+	
+	const auto& huipai = _game->GetHuiPai();
+	
+	auto cards_inhand = _cards_inhand; //玩家手里牌
+	auto cards_outhand = _cards_outhand; //玩家墙外牌
+	auto minggang = _minggang; //明杠
+	auto angang = _angang; //暗杠
+	auto jiangang = _jiangang; //旋风杠，本质是明杠
+	auto fenggang = _fenggang; //旋风杠，本质是暗杠
+	
+	auto it = cards_inhand.find(huipai.card_type());
+	if (it == cards_inhand.end()) return false; //由于前面GetHuiPaiCount的检查,理论上此处一定有会牌
+	 
+	auto remove_it = std::remove(it->second.begin(), it->second.end(), huipai.card_value()); //删除会牌
+	if (remove_it != it->second.end()) it->second.erase(remove_it, it->second.end());
+
+	auto cards_inhand_without_hupai = cards_inhand;
+
+	const auto& cards = GameInstance.GetPais();
+
+	unsigned int SET = cards.size(); //非重复牌数量
+	unsigned int COMB = count;
+	
+	std::vector<unsigned int> vi(COMB, 0);
+
+	int cnt = 0;
+	{
+		++cnt;
+
+		for (size_t j = 0; j < COMB; ++j)
+		{
+			auto pai_element = cards[vi[j]];
+			cards_inhand_without_hupai[pai_element.card_type()].push_back(pai_element.card_value());
+		}
+			
+		bool can_hupai = CheckHuPai(cards_inhand_without_hupai, cards_outhand, minggang, angang, jiangang, fenggang, pai, check_zimo, calculate);
+		if (can_hupai) return true; //可以胡牌
+	}
+
+	while (CommonUtil::CombinationWithRepeated(SET, COMB, vi))
+	{
+		cards_inhand_without_hupai = cards_inhand;
+
+		for (size_t j = 0; j < COMB; ++j)
+		{
+			auto pai_element = cards[vi[j]];
+			cards_inhand_without_hupai[pai_element.card_type()].push_back(pai_element.card_value());
+		}
+		
+		bool can_hupai = CheckHuPai(cards_inhand_without_hupai, cards_outhand, minggang, angang, jiangang, fenggang, pai, check_zimo, calculate);
+		if (can_hupai) return true; //可以胡牌
+
+		++cnt;
+	}
+
+	return false;
+}
+
+int32_t Player::GetHuiPaiCount()
+{
+	if (!_room || !_game) return 0;
+
+	if (!_room->HasHuiPai()) return 0; //不带会儿牌
+
+	const auto& huipai = _game->GetHuiPai();
+	
+	if (huipai.card_type() <= 0 || huipai.card_value() == 0) return 0;
+
+	const auto& pais = _cards_inhand[huipai.card_type()];
+	if (pais.size() == 0) return 0;
+
+	auto count = std::count(pais.begin(), pais.end(), huipai.card_value());
+	return count;
+}
+
 bool Player::HasYaoJiu()
 {
 	return HasYaoJiu(_cards_inhand, _cards_outhand, _minggang, _angang, _jiangang, _fenggang);
@@ -2132,7 +2282,7 @@ bool Player::CheckHuPai(const std::map<int32_t, std::vector<int32_t>>& cards_inh
 				if (_room->HasQingYiSe()) //可以清一色
 				{
 					if (has_count == 2) { return false; } //不可缺门
-					else { yise = true;} //<= 1//是清一色
+					else { yise = true; } //<= 1//是清一色
 				}
 				else //断门还不可以清一色
 				{
@@ -2241,7 +2391,8 @@ bool Player::CheckHuPai(const std::map<int32_t, std::vector<int32_t>>& cards_inh
 		 if (is_ke) ++ke_count;
 	}
 
-	if (!has_ke && (/*cards[Asset::CARD_TYPE_FENG].size() //朝阳：两个风牌不顶横 || */cards[Asset::CARD_TYPE_JIAN].size())) has_ke = true;
+	if (!has_ke && (/*cards[Asset::CARD_TYPE_FENG].size() //朝阳：风牌不顶刻 || */cards[Asset::CARD_TYPE_JIAN].size())) has_ke = true;
+	if (!has_ke && _room->IsYingKou() && cards[Asset::CARD_TYPE_FENG].size()) has_ke = true; //营口麻将
 	
 	if (!has_ke && (jiangang > 0 || fenggang > 0 || minggang.size() > 0 || angang.size() > 0)) has_ke = true;
 	
@@ -2506,7 +2657,7 @@ bool Player::CheckZiMo(const Asset::PaiElement& pai, bool calculate)
 {
 	if (!_room || !_game) return false;
 
-	if (_tuoguan_server) return false;
+	if (HasTuoGuan()) return false;
 
 	return CheckHuPai(pai, true, calculate);
 }
@@ -2820,7 +2971,7 @@ bool Player::CheckChiPai(const Asset::PaiElement& pai)
 {
 	if (!_room || !_game) return false;
 
-	if (_has_ting || _tuoguan_server) return false; //已经听牌，不再提示
+	if (_has_ting || HasTuoGuan()) return false; //已经听牌，不再提示
 
 	if (ShouldDaPai()) return false;
 
@@ -2928,7 +3079,7 @@ bool Player::CheckPengPai(const Asset::PaiElement& pai)
 {
 	if (!_room || !_game) return false;
 
-	if (_has_ting || _tuoguan_server) return false; //已经听牌，不再提示
+	if (_has_ting || HasTuoGuan()) return false; //已经听牌，不再提示
 	
 	if (ShouldDaPai()) return false;
 	
@@ -2980,10 +3131,8 @@ bool Player::CheckGangPai(const Asset::PaiElement& pai, int64_t source_player_id
 {
 	if (!_room || !_game) return false;
 
-	if (_tuoguan_server) return false;
+	if (HasTuoGuan()) return false;
 	
-	//if (ShouldDaPai()) return false;
-
 	auto cards_inhand = _cards_inhand; //玩家手里牌
 	auto cards_outhand = _cards_outhand; //玩家墙外牌
 	auto minggang = _minggang; //明杠
@@ -3061,7 +3210,7 @@ bool Player::CheckGangPai(const Asset::PaiElement& pai, int64_t source_player_id
 
 bool Player::CanTingIfGang(const Asset::PaiElement& pai)
 {
-	if (_tuoguan_server) return false;
+	if (HasTuoGuan()) return false;
 
 	if (!CheckMingPiao(Asset::PAI_OPER_TYPE_GANGPAI)) return false; //明飘检查
 	
@@ -3402,43 +3551,6 @@ bool Player::CanTingPai(const Asset::PaiElement& pai)
 			
 	cards_inhand[pai.card_type()].erase(find_it); //删除这张牌
 
-	/*
-	//能否胡万饼条
-	for (int card_type = Asset::CARD_TYPE_WANZI; card_type <= Asset::CARD_TYPE_TIAOZI; ++card_type)
-	{
-		for (int card_value = 1; card_value <= 9; ++card_value)
-		{
-			Asset::PaiElement pai;
-			pai.set_card_type((Asset::CARD_TYPE)card_type);
-			pai.set_card_value(card_value);
-
-			if (CheckHuPai(cards_inhand, cards_outhand, minggang, angang, jiangang, fenggang, pai)) 
-				cards_hu.push_back(pai);
-		}
-	}
-	
-	//能否胡风牌
-	for (int card_value = 1; card_value <= 4; ++card_value)
-	{
-		Asset::PaiElement pai;
-		pai.set_card_type(Asset::CARD_TYPE_FENG);
-		pai.set_card_value(card_value);
-
-		if (CheckHuPai(cards_inhand, cards_outhand, minggang, angang, jiangang, fenggang, pai))
-			cards_hu.push_back(pai);
-	}
-
-	//能否胡箭牌
-	for (int card_value = 1; card_value <= 3; ++card_value)
-	{
-		Asset::PaiElement pai;
-		pai.set_card_type(Asset::CARD_TYPE_JIAN);
-		pai.set_card_value(card_value);
-
-		if (CheckHuPai(cards_inhand, cards_outhand, minggang, angang, jiangang, fenggang, pai)) 
-			cards_hu.push_back(pai);
-	}
-	*/
 	const auto& cards = GameInstance.GetPais();
 
 	for (const auto& pai : cards)
@@ -3448,18 +3560,6 @@ bool Player::CanTingPai(const Asset::PaiElement& pai)
 
 	if (_cards_hu.size() > 0 && cards_hu.size() > 0)
 	{
-		/*
-		 * 听牌减少了可以杠
-		 *
-		for (auto card_hu : _cards_hu)
-		{
-			auto it = std::find_if(cards_hu.begin(), cards_hu.end(), [&card_hu](const Asset::PaiElement& pai){
-					return card_hu.card_type() == pai.card_type() && card_hu.card_value() == pai.card_value();
-				});
-			if (it == cards_hu.end()) return false; //不能换听
-		}
-		*/
-
 		for (auto card_hu : cards_hu)
 		{
 			auto it = std::find_if(_cards_hu.begin(), _cards_hu.end(), [&card_hu](const Asset::PaiElement& pai){
@@ -3487,45 +3587,6 @@ bool Player::CanTingPai(std::map<int32_t, std::vector<int32_t>> cards_inhand, //
 
 	std::vector<Asset::PaiElement> cards_hu;
 
-	/*
-	//能否胡万饼条
-	for (int card_type = Asset::CARD_TYPE_WANZI; card_type <= Asset::CARD_TYPE_TIAOZI; ++card_type)
-	{
-		for (int card_value = 1; card_value <= 9; ++card_value)
-		{
-			Asset::PaiElement pai;
-			pai.set_card_type((Asset::CARD_TYPE)card_type);
-			pai.set_card_value(card_value);
-
-			if (CheckHuPai(cards_inhand, cards_outhand, minggang, angang, jiangang, fenggang, pai)) 
-				cards_hu.push_back(pai);
-		}
-	}
-	
-	//能否胡风牌
-	for (int card_value = 1; card_value <= 4; ++card_value)
-	{
-		Asset::PaiElement pai;
-		pai.set_card_type(Asset::CARD_TYPE_FENG);
-		pai.set_card_value(card_value);
-
-		if (CheckHuPai(cards_inhand, cards_outhand, minggang, angang, jiangang, fenggang, pai))
-			cards_hu.push_back(pai);
-	}
-
-	//能否胡箭牌
-	for (int card_value = 1; card_value <= 3; ++card_value)
-	{
-		Asset::PaiElement pai;
-		pai.set_card_type(Asset::CARD_TYPE_JIAN);
-		pai.set_card_value(card_value);
-
-		if (CheckHuPai(cards_inhand, cards_outhand, minggang, angang, jiangang, fenggang, pai)) 
-			cards_hu.push_back(pai);
-	}
-	
-	*/
-
 	const auto& cards = GameInstance.GetPais();
 
 	for (const auto& pai : cards)
@@ -3537,15 +3598,6 @@ bool Player::CanTingPai(std::map<int32_t, std::vector<int32_t>> cards_inhand, //
 	
 	if (_cards_hu.size() > 0 && cards_hu.size() > 0)
 	{
-		/*
-		for (auto card_hu : _cards_hu)
-		{
-			auto it = std::find_if(cards_hu.begin(), cards_hu.end(), [&card_hu](const Asset::PaiElement& pai){
-					return card_hu.card_type() == pai.card_type() && card_hu.card_value() == pai.card_value();
-				});
-			if (it == cards_hu.end()) return false; //不能换听
-		}
-		*/
 		for (auto card_hu : cards_hu)
 		{
 			auto it = std::find_if(_cards_hu.begin(), _cards_hu.end(), [&card_hu](const Asset::PaiElement& pai){
@@ -3570,7 +3622,7 @@ bool Player::CheckTingPai(std::vector<Asset::PaiElement>& pais)
 {
 	if (!_room || !_game) return false;
 
-	if (_has_ting || _tuoguan_server) return false; //已经听牌，不再提示
+	if (_has_ting || HasTuoGuan()) return false; //已经听牌，不再提示
 
 	if (!_room->HasAnbao() && !_room->HasBaopai()) return false;
 
@@ -3615,62 +3667,6 @@ bool Player::CheckTingPai(std::vector<Asset::PaiElement>& pais)
 				}
 			}
 
-			/*
-			//能否胡万饼条
-			for (int card_type = Asset::CARD_TYPE_WANZI; card_type <= Asset::CARD_TYPE_TIAOZI; ++card_type)
-			{
-				for (int card_value = 1; card_value <= 9; ++card_value)
-				{
-					Asset::PaiElement pai;
-					pai.set_card_type((Asset::CARD_TYPE)card_type);
-					pai.set_card_value(card_value);
-
-					if (CheckHuPai(cards_inhand, cards_outhand, minggang, angang, jiangang, fenggang, pai))
-					{
-						Asset::PaiElement pai; //即打出这张后，听牌
-						pai.set_card_type((Asset::CARD_TYPE)it->first);
-						pai.set_card_value(value);
-
-						pais.push_back(pai); //缓存
-					}
-				}
-			}
-			
-			//能否胡风牌
-			for (int card_value = 1; card_value <= 4; ++card_value)
-			{
-				Asset::PaiElement pai;
-				pai.set_card_type(Asset::CARD_TYPE_FENG);
-				pai.set_card_value(card_value);
-					
-				if (CheckHuPai(cards_inhand, cards_outhand, minggang, angang, jiangang, fenggang, pai))
-				{
-					Asset::PaiElement pai; //即打出这张后，听牌
-					pai.set_card_type((Asset::CARD_TYPE)it->first);
-					pai.set_card_value(value);
-
-					pais.push_back(pai); //缓存
-				}
-			}
-		
-			//能否胡箭牌
-			for (int card_value = 1; card_value <= 3; ++card_value)
-			{
-				Asset::PaiElement pai;
-				pai.set_card_type(Asset::CARD_TYPE_JIAN);
-				pai.set_card_value(card_value);
-					
-				if (CheckHuPai(cards_inhand, cards_outhand, minggang, angang, jiangang, fenggang, pai))
-				{
-					Asset::PaiElement pai; //即打出这张后，听牌
-					pai.set_card_type((Asset::CARD_TYPE)it->first);
-					pai.set_card_value(value);
-
-					pais.push_back(pai); //缓存
-				}
-			}
-			*/
-			
 			//
 			//下一轮检查
 			//
@@ -3987,15 +3983,15 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 	{
 		_cards_inhand = {
 			{ 1, {2, 2, 7, 7, 7} },
-			{ 2, {6, 6, 6} },
+			{ 2, {2, 2, 2} },
 			{ 3, {3, 3, 4} },
-			//{ 5, { 1, 2, 3 } },
+			{ 5, {1, 2} },
 		};
 		
 		_cards_outhand = {
 			//{ 1, { 7, 7, 7, 6, 7, 8} },
 			//{ 2, { 3, 4, 5 } },
-			{ 4, { 3, 3, 3 } },
+			//{ 4, { 3, 3, 3 } },
 		};
 
 		/*
@@ -4006,13 +4002,13 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 		_minggang.push_back(gang);
 		*/
 	}
-	else if (true && _player_id == 262687 && _cards_inhand.size() == 0)
+	else if (false && _player_id == 262553 && _cards_inhand.size() == 0 && _game->GetID() == 1)
 	{
 		_cards_inhand = {
-			{ 1, {1, 1, 1, 1, 2, 2, 3, 3, 3} },
-			{ 2, {1, 1} },
-			{ 3, {2, 2} },
-			//{ 5, {1, 1} },
+			{ 1, {5, 7} },
+			{ 2, {2, 2, 3, 5, 5, 7} },
+			//{ 3, {2, 2} },
+			{ 5, {1, 1, 2, 2, 3, 3} },
 		};
 		
 		_cards_outhand = {
@@ -4176,7 +4172,6 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 		//
 		//可能玩家掉线或者已经逃跑
 		//
-		/*
 		if (HasTuoGuan())
 		{
 			Asset::PaiOperation pai_operation; 
@@ -4184,13 +4179,9 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 			pai_operation.set_position(GetPosition());
 			pai_operation.mutable_pai()->CopyFrom(card);
 
-			CmdPaiOperate(&pai_operation);
+			//CmdPaiOperate(&pai_operation);
+			SendMessage(_player_id, pai_operation);
 		}
-		else
-		{
-			NormalCheckAfterFaPai(card);
-		}
-		*/
 	}
 	
 	auto remain_count = _game->GetRemainCount();
@@ -4400,6 +4391,7 @@ void Player::ClearCards()
 	_cards_pool.clear(); //牌池
 	_cards_hu.clear(); //胡牌
 	_hu_result.clear(); //胡牌数据
+	_xf_gang.clear(); //旋风杠
  
  	_minggang.clear(); //清理杠牌
 	_angang.clear(); //清理杠牌
@@ -4422,7 +4414,7 @@ void Player::OnGameOver()
 {
 	ClearCards();
 	
-	if (_tuoguan_server) OnLogout(Asset::KICK_OUT_REASON_LOGOUT);
+	if (HasTuoGuan()) OnLogout(Asset::KICK_OUT_REASON_LOGOUT);
 }
 
 int32_t Player::CmdSayHi(pb::Message* message)

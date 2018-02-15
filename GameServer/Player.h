@@ -118,7 +118,9 @@ public:
 	virtual int32_t GetGender() { return _stuff.common_prop().gender(); }
 	//消息处理
 	virtual bool HandleMessage(const Asset::MsgItem& item); 
-	virtual void SendMessage(Asset::MsgItem& item);
+	virtual void SendMessage(const Asset::MsgItem& item);
+	virtual void SendMessage(int64_t receiver, const pb::Message& message);
+	virtual void SendMessage(int64_t receiver, const pb::Message* message);
 	virtual void BroadCastCommonProp(Asset::MSG_TYPE type); //向房间里的玩家发送公共数据       
 	//协议处理(Protocol Buffer)
 	virtual bool HandleProtocol(int32_t type_t, pb::Message* message);
@@ -140,6 +142,13 @@ public:
 	virtual int32_t CmdEnterRoom(pb::Message* message);
 	virtual int32_t EnterRoom(pb::Message* message);
 	virtual void OnEnterSuccess(int64_t room_id = 0); //成功回调
+
+	bool HasMatching(Asset::ROOM_TYPE room_type) { 
+		if (_stuff.matching_room_type() == room_type) return false; 
+		return _stuff.matching_room_type() == Asset::ROOM_TYPE_XINSHOU || _stuff.matching_room_type() == Asset::ROOM_TYPE_GAOSHOU || _stuff.matching_room_type() == Asset::ROOM_TYPE_DASHI; }
+	void SetMatchingRoom(Asset::ROOM_TYPE room_type) { _stuff.set_matching_room_type(room_type); }
+	void ClearMatching() { _stuff.clear_matching_room_type(); }
+
 	//玩家登录
 	virtual int32_t OnLogin();
 	//玩家登出
@@ -327,6 +336,9 @@ public:
 	bool IsJinbao() { return _jinbao; }
 	void Jinbao() { _jinbao = true; }
 	
+	bool CheckHuiHu(const Asset::PaiElement& pai, bool check_zimo = false, bool calculate = false); //会儿胡牌
+	int32_t GetHuiPaiCount(); //是否有会儿牌//返回会儿牌数量
+	
 	const Asset::PaiElement& GetZhuaPai() { return _zhuapai; }
 	bool HasPai(const Asset::PaiElement& pai);
 	bool CheckValidCard(const Asset::PaiElement& pai) { 
@@ -466,7 +478,7 @@ public:
 	void OnGameOver(); //游戏结束
 
 	//是否//设置服务器托管状态
-	bool HasTuoGuan() { return _tuoguan_server; }
+	bool HasTuoGuan();
 	void SetTuoGuan() { _tuoguan_server = true; }
 
 	bool IsGangOperation(); //上次牌是否杠操作

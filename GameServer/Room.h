@@ -55,7 +55,8 @@ public:
 
 	virtual const Asset::Room& Get() { return _stuff; } //数据
 	virtual Asset::ROOM_TYPE GetType() { return _stuff.room_type(); } //数据
-	virtual bool IsFriend() { return Asset::ROOM_TYPE_FRIEND == _stuff.room_type(); } //是否是好友房
+	virtual bool IsFriend() { return Asset::ROOM_TYPE_FRIEND == _stuff.room_type(); } //是否是好友房间
+	virtual bool IsMatch() { return Asset::ROOM_TYPE_FRIEND != _stuff.room_type(); } //是否是匹配房间
 	
 	const Asset::RoomOptions& GetOptions() { return _stuff.options(); } //额外番型
 	void SetOptions(const Asset::RoomOptions& options) {	_stuff.mutable_options()->CopyFrom(options);}
@@ -66,10 +67,11 @@ public:
 	Asset::CITY_TYPE GetCity() { return _stuff.options().city_type(); } //城市玩法
 	bool IsChaoYang() { return _stuff.options().city_type() == Asset::CITY_TYPE_CHAOYANG; }
 	bool IsJianPing() { return _stuff.options().city_type() == Asset::CITY_TYPE_JIANPING; }
+	bool IsYingKou() { return _stuff.options().city_type() == Asset::CITY_TYPE_YINGKOU; }
 
 	bool HasLaw(Asset::ROOM_EXTEND_TYPE type); //支持玩法
-	bool HasAnbao(); //是否明宝
-	bool HasBaopai(); //是否暗宝
+	bool HasAnbao(); //是否暗包
+	bool HasBaopai(); //是否带宝牌
 	bool HasZhang28(); //28是否可以做掌
 	bool HasZhanLi(); //是否可以站立胡
 	bool HasJiaHu(); //是否可以夹胡
@@ -82,6 +84,7 @@ public:
 	bool HasYiBianGao(); //是否支持一边高
 	bool HasSiGuiYi(); //是否支持四归一
 	bool HasYiJiaFu(); //点炮一家付
+	bool HasHuiPai(); //是否带会儿
 
 	bool IsVoiceOpen() { return _stuff.options().voice_open(); }
 
@@ -114,8 +117,9 @@ public:
 	int32_t GetGamesCount() { return _games.size(); }
 	int32_t GetOpenRands() { return _stuff.options().open_rands(); }
 	bool HasStarted() { return _games.size() > 0; }
-	bool HasBeenOver() { return !_game && GetRemainCount() <= 0; }
+	bool HasBeenOver();
 	std::shared_ptr<Game> GetGame() { return _game; }
+	bool IsGaming() { return _game != nullptr; }
 
 	void OnPlayerOperate(std::shared_ptr<Player> player, pb::Message* message);
 
@@ -163,17 +167,15 @@ class RoomManager
 private:
 	std::mutex _match_mutex;
 	std::mutex _room_lock;
+
 	//好友房//匹配房
 	std::unordered_map<int64_t, std::shared_ptr<Room>> _rooms;
-	//要输入密码，可入的房间
-	//std::unordered_map<int64_t, std::shared_ptr<Room>> _password_rooms; 
-	//不要输入密码，可入的房间
-	std::unordered_map<int64_t, std::shared_ptr<Room>> _no_password_rooms;
-
-	//匹配成功房间
-	std::unordered_map<int64_t, std::shared_ptr<Room>> _matched_rooms;
+	//
 	//匹配房间
-	std::unordered_map<int64_t/*房间类型*/, std::shared_ptr<Room>> _matching_rooms;
+	//
+	//匹配的原理：如果有在匹配的房间，优先选择未满的房间；如果都是已满的房间，则创建一个；
+	//
+	std::unordered_map<int32_t/*房间类型*/, std::unordered_map<int64_t/*房间ID*/, std::shared_ptr<Room>>> _matching_rooms;
 	
 	int32_t _heart_count = 0; //心跳
 	int32_t _server_id = 0; //服务器ID
@@ -193,6 +195,7 @@ public:
 	std::shared_ptr<Room> GetMatchingRoom(Asset::ROOM_TYPE room_type); //获取可入房间
 	bool CheckPassword(int64_t room_id, std::string password); //密码检查
 	void Update(int32_t diff); //心跳
+	void UpdateMatching(); //匹配房数据
 
 	void Remove(int64_t room_id);
 };

@@ -13,6 +13,7 @@
 #include "PlayerName.h"
 #include "PlayerCommonReward.h"
 #include "PlayerCommonLimit.h"
+#include "PlayerCoolDown.h"
 
 #define MAX_PLAYER_COUNT 4
 
@@ -47,6 +48,7 @@ Player::Player()
 	AddHandler(Asset::META_TYPE_SHARE_ROOM_HISTORY, std::bind(&Player::CmdGetBattleHistory, this, std::placeholders::_1));
 	AddHandler(Asset::META_TYPE_SHARE_RECHARGE, std::bind(&Player::CmdRecharge, this, std::placeholders::_1));
 	AddHandler(Asset::META_TYPE_SHARE_PLAY_BACK, std::bind(&Player::CmdPlayBack, this, std::placeholders::_1));
+	AddHandler(Asset::META_TYPE_SHARE_PLAY_BACK, std::bind(&Player::CmdGetMatchStatistics, this, std::placeholders::_1));
 
 	AddHandler(Asset::META_TYPE_C2S_GET_REWARD, std::bind(&Player::CmdGetReward, this, std::placeholders::_1));
 }
@@ -576,16 +578,14 @@ int32_t Player::DefaultMethod(pb::Message* message)
 	if (!message) return 0;
 
 	const pb::FieldDescriptor* field = message->GetDescriptor()->FindFieldByName("type_t");
-	if (!field) 
-	{
-		std::cout << __func__ << ":Could not found type_t of received message." << std::endl;
-		return 1;
-	}
+	if (!field) return 1;
+
 	const pb::EnumValueDescriptor* enum_value = message->GetReflection()->GetEnum(*message, field);
 	if (!enum_value) return 2;
 
 	const std::string& enum_name = enum_value->name();
-	std::cout << __func__ << ":Could not found call back, message type is: " << enum_name.c_str() << std::endl;
+	ERROR("尚未找到玩家:{} 处理协议:{}", _player_id, enum_name);
+
 	return 0;
 }
 
@@ -681,6 +681,18 @@ bool Player::CommonLimitUpdate()
 	if (updated) SyncCommonLimit();
 
 	return updated;
+}
+	
+bool Player::AddCoolDown(int64_t global_id)
+{
+	if (global_id <= 0) return false;
+	return CoolDownInstance.AddCoolDown(shared_from_this(), global_id);
+}
+
+bool Player::IsCoolDown(int64_t global_id)
+{
+	if (global_id <= 0) return false;
+	return CoolDownInstance.IsCoolDown(shared_from_this(), global_id);
 }
 
 void Player::SendPlayer()
@@ -920,43 +932,7 @@ int32_t Player::CmdPlayBack(pb::Message* message)
 	auto play_back = dynamic_cast<const Asset::PlayBack*>(message);
 	if (!play_back) return 1;
 	
-	/*
-	cpp_redis::future_client client;
-	client.connect(ConfigInstance.GetString("Redis_ServerIP", "127.0.0.1"), ConfigInstance.GetInt("Redis_ServerPort", 6379));
-	if (!client.is_connected()) 
-	{
-		AlertMessage(Asset::ERROR_ROOM_PLAYBACK_NO_RECORD, Asset::ERROR_TYPE_NORMAL, Asset::ERROR_SHOW_TYPE_MESSAGE_BOX);
-		return 5;
-	}
-	
-	auto has_auth = client.auth(ConfigInstance.GetString("Redis_Password", "!QAZ%TGB&UJM9ol."));
-	if (has_auth.get().ko()) 
-	{
-		AlertMessage(Asset::ERROR_ROOM_PLAYBACK_NO_RECORD, Asset::ERROR_TYPE_NORMAL, Asset::ERROR_SHOW_TYPE_MESSAGE_BOX);
-		return 2;
-	}
-	*/
-
 	std::string key = "playback:" + std::to_string(play_back->room_id()) + "_" + std::to_string(play_back->game_index());
-	/*
-	auto get = client.get(key);
-	cpp_redis::reply reply = get.get();
-	client.commit();
-
-	if (!reply.is_string()) 
-	{
-		AlertMessage(Asset::ERROR_ROOM_PLAYBACK_NO_RECORD, Asset::ERROR_TYPE_NORMAL, Asset::ERROR_SHOW_TYPE_MESSAGE_BOX);
-		return 3;
-	}
-		
-	Asset::PlayBack playback;
-	auto success = playback.ParseFromString(reply.as_string());
-	if (!success) 
-	{
-		AlertMessage(Asset::ERROR_ROOM_PLAYBACK_NO_RECORD, Asset::ERROR_TYPE_NORMAL, Asset::ERROR_SHOW_TYPE_MESSAGE_BOX);
-		return 4;
-	}
-	*/
 	
 	Asset::PlayBack playback;
 	auto has_record = RedisInstance.Get(key, playback);
@@ -968,6 +944,42 @@ int32_t Player::CmdPlayBack(pb::Message* message)
 
 	SendProtocol(playback);
 	
+	return 0;
+}
+
+int32_t Player::CmdGetMatchStatistics(pb::Message* message)
+{
+	auto match_stats = dynamic_cast<Asset::MatchStats*>(message);
+	if (!match_stats) return 1;
+
+	std::unordered_map<int32_t, int32_t> room_list;
+	
+	Asset::MatchStatistics stats;
+	RedisInstance.GetMatching(stats);
+
+	for (const auto& server_element : stats.server_list())
+	{
+		//auto server_id = server_element.server_id();
+		for (const auto& room_element : server_element.room_list())
+		{
+			auto room_type = room_element.room_type();
+			auto player_count = room_element.player_count();
+
+			room_list[room_type] = room_list[room_type] + player_count;
+		}
+	}
+
+	for (auto room_match : room_list)
+	{
+		auto random_count = CommonUtil::Random(1, g_const->player_matching_random_count());
+
+		auto room = match_stats->mutable_room_list()->Add();
+		room->set_room_type((Asset::ROOM_TYPE)room_match.first);
+		room->set_player_count(room_match.second + g_const->player_matching_base_count() + random_count);
+	}
+
+	SendProtocol(match_stats);
+
 	return 0;
 }
 	

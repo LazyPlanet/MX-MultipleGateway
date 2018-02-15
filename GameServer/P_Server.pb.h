@@ -25,6 +25,7 @@
 #include <google/protobuf/extension_set.h>
 #include <google/protobuf/generated_enum_reflection.h>
 #include <google/protobuf/unknown_field_set.h>
+#include "P_Asset.pb.h"
 // @@protoc_insertion_point(includes)
 
 namespace Adoter {
@@ -44,6 +45,9 @@ class SeverConfig;
 class SeverConfig_SeverElement;
 class WhiteList;
 class BlackList;
+class MatchStatistics;
+class MatchStatistics_MatchingRoom;
+class MatchStatistics_MatchingRoom_MatchingElement;
 
 enum MSG_TYPE {
   MSG_TYPE_BEGIN = 1,
@@ -128,12 +132,12 @@ class MsgItem : public ::google::protobuf::Message {
   inline ::google::protobuf::int64 message_id() const;
   inline void set_message_id(::google::protobuf::int64 value);
 
-  // optional int32 type = 2;
-  inline bool has_type() const;
-  inline void clear_type();
-  static const int kTypeFieldNumber = 2;
-  inline ::google::protobuf::int32 type() const;
-  inline void set_type(::google::protobuf::int32 value);
+  // optional int32 type_t = 2;
+  inline bool has_type_t() const;
+  inline void clear_type_t();
+  static const int kTypeTFieldNumber = 2;
+  inline ::google::protobuf::int32 type_t() const;
+  inline void set_type_t(::google::protobuf::int32 value);
 
   // optional int32 priority = 3 [default = 10];
   inline bool has_priority() const;
@@ -186,8 +190,8 @@ class MsgItem : public ::google::protobuf::Message {
  private:
   inline void set_has_message_id();
   inline void clear_has_message_id();
-  inline void set_has_type();
-  inline void clear_has_type();
+  inline void set_has_type_t();
+  inline void clear_has_type_t();
   inline void set_has_priority();
   inline void clear_has_priority();
   inline void set_has_sender();
@@ -206,7 +210,7 @@ class MsgItem : public ::google::protobuf::Message {
   ::google::protobuf::uint32 _has_bits_[1];
   mutable int _cached_size_;
   ::google::protobuf::int64 message_id_;
-  ::google::protobuf::int32 type_;
+  ::google::protobuf::int32 type_t_;
   ::google::protobuf::int32 priority_;
   ::google::protobuf::int64 sender_;
   ::google::protobuf::int64 receiver_;
@@ -1026,6 +1030,273 @@ class BlackList : public ::google::protobuf::Message {
   void InitAsDefaultInstance();
   static BlackList* default_instance_;
 };
+// -------------------------------------------------------------------
+
+class MatchStatistics_MatchingRoom_MatchingElement : public ::google::protobuf::Message {
+ public:
+  MatchStatistics_MatchingRoom_MatchingElement();
+  virtual ~MatchStatistics_MatchingRoom_MatchingElement();
+
+  MatchStatistics_MatchingRoom_MatchingElement(const MatchStatistics_MatchingRoom_MatchingElement& from);
+
+  inline MatchStatistics_MatchingRoom_MatchingElement& operator=(const MatchStatistics_MatchingRoom_MatchingElement& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const MatchStatistics_MatchingRoom_MatchingElement& default_instance();
+
+  void Swap(MatchStatistics_MatchingRoom_MatchingElement* other);
+
+  // implements Message ----------------------------------------------
+
+  MatchStatistics_MatchingRoom_MatchingElement* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const MatchStatistics_MatchingRoom_MatchingElement& from);
+  void MergeFrom(const MatchStatistics_MatchingRoom_MatchingElement& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional .Adoter.Asset.ROOM_TYPE room_type = 2;
+  inline bool has_room_type() const;
+  inline void clear_room_type();
+  static const int kRoomTypeFieldNumber = 2;
+  inline ::Adoter::Asset::ROOM_TYPE room_type() const;
+  inline void set_room_type(::Adoter::Asset::ROOM_TYPE value);
+
+  // optional int32 player_count = 3;
+  inline bool has_player_count() const;
+  inline void clear_player_count();
+  static const int kPlayerCountFieldNumber = 3;
+  inline ::google::protobuf::int32 player_count() const;
+  inline void set_player_count(::google::protobuf::int32 value);
+
+  // @@protoc_insertion_point(class_scope:Adoter.Asset.MatchStatistics.MatchingRoom.MatchingElement)
+ private:
+  inline void set_has_room_type();
+  inline void clear_has_room_type();
+  inline void set_has_player_count();
+  inline void clear_has_player_count();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::uint32 _has_bits_[1];
+  mutable int _cached_size_;
+  int room_type_;
+  ::google::protobuf::int32 player_count_;
+  friend void  protobuf_AddDesc_P_5fServer_2eproto();
+  friend void protobuf_AssignDesc_P_5fServer_2eproto();
+  friend void protobuf_ShutdownFile_P_5fServer_2eproto();
+
+  void InitAsDefaultInstance();
+  static MatchStatistics_MatchingRoom_MatchingElement* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class MatchStatistics_MatchingRoom : public ::google::protobuf::Message {
+ public:
+  MatchStatistics_MatchingRoom();
+  virtual ~MatchStatistics_MatchingRoom();
+
+  MatchStatistics_MatchingRoom(const MatchStatistics_MatchingRoom& from);
+
+  inline MatchStatistics_MatchingRoom& operator=(const MatchStatistics_MatchingRoom& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const MatchStatistics_MatchingRoom& default_instance();
+
+  void Swap(MatchStatistics_MatchingRoom* other);
+
+  // implements Message ----------------------------------------------
+
+  MatchStatistics_MatchingRoom* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const MatchStatistics_MatchingRoom& from);
+  void MergeFrom(const MatchStatistics_MatchingRoom& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  typedef MatchStatistics_MatchingRoom_MatchingElement MatchingElement;
+
+  // accessors -------------------------------------------------------
+
+  // optional int64 server_id = 1;
+  inline bool has_server_id() const;
+  inline void clear_server_id();
+  static const int kServerIdFieldNumber = 1;
+  inline ::google::protobuf::int64 server_id() const;
+  inline void set_server_id(::google::protobuf::int64 value);
+
+  // repeated .Adoter.Asset.MatchStatistics.MatchingRoom.MatchingElement room_list = 2;
+  inline int room_list_size() const;
+  inline void clear_room_list();
+  static const int kRoomListFieldNumber = 2;
+  inline const ::Adoter::Asset::MatchStatistics_MatchingRoom_MatchingElement& room_list(int index) const;
+  inline ::Adoter::Asset::MatchStatistics_MatchingRoom_MatchingElement* mutable_room_list(int index);
+  inline ::Adoter::Asset::MatchStatistics_MatchingRoom_MatchingElement* add_room_list();
+  inline const ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::MatchStatistics_MatchingRoom_MatchingElement >&
+      room_list() const;
+  inline ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::MatchStatistics_MatchingRoom_MatchingElement >*
+      mutable_room_list();
+
+  // @@protoc_insertion_point(class_scope:Adoter.Asset.MatchStatistics.MatchingRoom)
+ private:
+  inline void set_has_server_id();
+  inline void clear_has_server_id();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::uint32 _has_bits_[1];
+  mutable int _cached_size_;
+  ::google::protobuf::int64 server_id_;
+  ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::MatchStatistics_MatchingRoom_MatchingElement > room_list_;
+  friend void  protobuf_AddDesc_P_5fServer_2eproto();
+  friend void protobuf_AssignDesc_P_5fServer_2eproto();
+  friend void protobuf_ShutdownFile_P_5fServer_2eproto();
+
+  void InitAsDefaultInstance();
+  static MatchStatistics_MatchingRoom* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class MatchStatistics : public ::google::protobuf::Message {
+ public:
+  MatchStatistics();
+  virtual ~MatchStatistics();
+
+  MatchStatistics(const MatchStatistics& from);
+
+  inline MatchStatistics& operator=(const MatchStatistics& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const MatchStatistics& default_instance();
+
+  void Swap(MatchStatistics* other);
+
+  // implements Message ----------------------------------------------
+
+  MatchStatistics* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const MatchStatistics& from);
+  void MergeFrom(const MatchStatistics& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  typedef MatchStatistics_MatchingRoom MatchingRoom;
+
+  // accessors -------------------------------------------------------
+
+  // repeated .Adoter.Asset.MatchStatistics.MatchingRoom server_list = 1;
+  inline int server_list_size() const;
+  inline void clear_server_list();
+  static const int kServerListFieldNumber = 1;
+  inline const ::Adoter::Asset::MatchStatistics_MatchingRoom& server_list(int index) const;
+  inline ::Adoter::Asset::MatchStatistics_MatchingRoom* mutable_server_list(int index);
+  inline ::Adoter::Asset::MatchStatistics_MatchingRoom* add_server_list();
+  inline const ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::MatchStatistics_MatchingRoom >&
+      server_list() const;
+  inline ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::MatchStatistics_MatchingRoom >*
+      mutable_server_list();
+
+  // @@protoc_insertion_point(class_scope:Adoter.Asset.MatchStatistics)
+ private:
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::uint32 _has_bits_[1];
+  mutable int _cached_size_;
+  ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::MatchStatistics_MatchingRoom > server_list_;
+  friend void  protobuf_AddDesc_P_5fServer_2eproto();
+  friend void protobuf_AssignDesc_P_5fServer_2eproto();
+  friend void protobuf_ShutdownFile_P_5fServer_2eproto();
+
+  void InitAsDefaultInstance();
+  static MatchStatistics* default_instance_;
+};
 // ===================================================================
 
 
@@ -1057,28 +1328,28 @@ inline void MsgItem::set_message_id(::google::protobuf::int64 value) {
   // @@protoc_insertion_point(field_set:Adoter.Asset.MsgItem.message_id)
 }
 
-// optional int32 type = 2;
-inline bool MsgItem::has_type() const {
+// optional int32 type_t = 2;
+inline bool MsgItem::has_type_t() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void MsgItem::set_has_type() {
+inline void MsgItem::set_has_type_t() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void MsgItem::clear_has_type() {
+inline void MsgItem::clear_has_type_t() {
   _has_bits_[0] &= ~0x00000002u;
 }
-inline void MsgItem::clear_type() {
-  type_ = 0;
-  clear_has_type();
+inline void MsgItem::clear_type_t() {
+  type_t_ = 0;
+  clear_has_type_t();
 }
-inline ::google::protobuf::int32 MsgItem::type() const {
-  // @@protoc_insertion_point(field_get:Adoter.Asset.MsgItem.type)
-  return type_;
+inline ::google::protobuf::int32 MsgItem::type_t() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.MsgItem.type_t)
+  return type_t_;
 }
-inline void MsgItem::set_type(::google::protobuf::int32 value) {
-  set_has_type();
-  type_ = value;
-  // @@protoc_insertion_point(field_set:Adoter.Asset.MsgItem.type)
+inline void MsgItem::set_type_t(::google::protobuf::int32 value) {
+  set_has_type_t();
+  type_t_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.MsgItem.type_t)
 }
 
 // optional int32 priority = 3 [default = 10];
@@ -2143,6 +2414,151 @@ inline ::google::protobuf::RepeatedPtrField< ::std::string>*
 BlackList::mutable_ip_address() {
   // @@protoc_insertion_point(field_mutable_list:Adoter.Asset.BlackList.ip_address)
   return &ip_address_;
+}
+
+// -------------------------------------------------------------------
+
+// MatchStatistics_MatchingRoom_MatchingElement
+
+// optional .Adoter.Asset.ROOM_TYPE room_type = 2;
+inline bool MatchStatistics_MatchingRoom_MatchingElement::has_room_type() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void MatchStatistics_MatchingRoom_MatchingElement::set_has_room_type() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void MatchStatistics_MatchingRoom_MatchingElement::clear_has_room_type() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void MatchStatistics_MatchingRoom_MatchingElement::clear_room_type() {
+  room_type_ = 1;
+  clear_has_room_type();
+}
+inline ::Adoter::Asset::ROOM_TYPE MatchStatistics_MatchingRoom_MatchingElement::room_type() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.MatchStatistics.MatchingRoom.MatchingElement.room_type)
+  return static_cast< ::Adoter::Asset::ROOM_TYPE >(room_type_);
+}
+inline void MatchStatistics_MatchingRoom_MatchingElement::set_room_type(::Adoter::Asset::ROOM_TYPE value) {
+  assert(::Adoter::Asset::ROOM_TYPE_IsValid(value));
+  set_has_room_type();
+  room_type_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.MatchStatistics.MatchingRoom.MatchingElement.room_type)
+}
+
+// optional int32 player_count = 3;
+inline bool MatchStatistics_MatchingRoom_MatchingElement::has_player_count() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void MatchStatistics_MatchingRoom_MatchingElement::set_has_player_count() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void MatchStatistics_MatchingRoom_MatchingElement::clear_has_player_count() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void MatchStatistics_MatchingRoom_MatchingElement::clear_player_count() {
+  player_count_ = 0;
+  clear_has_player_count();
+}
+inline ::google::protobuf::int32 MatchStatistics_MatchingRoom_MatchingElement::player_count() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.MatchStatistics.MatchingRoom.MatchingElement.player_count)
+  return player_count_;
+}
+inline void MatchStatistics_MatchingRoom_MatchingElement::set_player_count(::google::protobuf::int32 value) {
+  set_has_player_count();
+  player_count_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.MatchStatistics.MatchingRoom.MatchingElement.player_count)
+}
+
+// -------------------------------------------------------------------
+
+// MatchStatistics_MatchingRoom
+
+// optional int64 server_id = 1;
+inline bool MatchStatistics_MatchingRoom::has_server_id() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void MatchStatistics_MatchingRoom::set_has_server_id() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void MatchStatistics_MatchingRoom::clear_has_server_id() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void MatchStatistics_MatchingRoom::clear_server_id() {
+  server_id_ = GOOGLE_LONGLONG(0);
+  clear_has_server_id();
+}
+inline ::google::protobuf::int64 MatchStatistics_MatchingRoom::server_id() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.MatchStatistics.MatchingRoom.server_id)
+  return server_id_;
+}
+inline void MatchStatistics_MatchingRoom::set_server_id(::google::protobuf::int64 value) {
+  set_has_server_id();
+  server_id_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.MatchStatistics.MatchingRoom.server_id)
+}
+
+// repeated .Adoter.Asset.MatchStatistics.MatchingRoom.MatchingElement room_list = 2;
+inline int MatchStatistics_MatchingRoom::room_list_size() const {
+  return room_list_.size();
+}
+inline void MatchStatistics_MatchingRoom::clear_room_list() {
+  room_list_.Clear();
+}
+inline const ::Adoter::Asset::MatchStatistics_MatchingRoom_MatchingElement& MatchStatistics_MatchingRoom::room_list(int index) const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.MatchStatistics.MatchingRoom.room_list)
+  return room_list_.Get(index);
+}
+inline ::Adoter::Asset::MatchStatistics_MatchingRoom_MatchingElement* MatchStatistics_MatchingRoom::mutable_room_list(int index) {
+  // @@protoc_insertion_point(field_mutable:Adoter.Asset.MatchStatistics.MatchingRoom.room_list)
+  return room_list_.Mutable(index);
+}
+inline ::Adoter::Asset::MatchStatistics_MatchingRoom_MatchingElement* MatchStatistics_MatchingRoom::add_room_list() {
+  // @@protoc_insertion_point(field_add:Adoter.Asset.MatchStatistics.MatchingRoom.room_list)
+  return room_list_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::MatchStatistics_MatchingRoom_MatchingElement >&
+MatchStatistics_MatchingRoom::room_list() const {
+  // @@protoc_insertion_point(field_list:Adoter.Asset.MatchStatistics.MatchingRoom.room_list)
+  return room_list_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::MatchStatistics_MatchingRoom_MatchingElement >*
+MatchStatistics_MatchingRoom::mutable_room_list() {
+  // @@protoc_insertion_point(field_mutable_list:Adoter.Asset.MatchStatistics.MatchingRoom.room_list)
+  return &room_list_;
+}
+
+// -------------------------------------------------------------------
+
+// MatchStatistics
+
+// repeated .Adoter.Asset.MatchStatistics.MatchingRoom server_list = 1;
+inline int MatchStatistics::server_list_size() const {
+  return server_list_.size();
+}
+inline void MatchStatistics::clear_server_list() {
+  server_list_.Clear();
+}
+inline const ::Adoter::Asset::MatchStatistics_MatchingRoom& MatchStatistics::server_list(int index) const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.MatchStatistics.server_list)
+  return server_list_.Get(index);
+}
+inline ::Adoter::Asset::MatchStatistics_MatchingRoom* MatchStatistics::mutable_server_list(int index) {
+  // @@protoc_insertion_point(field_mutable:Adoter.Asset.MatchStatistics.server_list)
+  return server_list_.Mutable(index);
+}
+inline ::Adoter::Asset::MatchStatistics_MatchingRoom* MatchStatistics::add_server_list() {
+  // @@protoc_insertion_point(field_add:Adoter.Asset.MatchStatistics.server_list)
+  return server_list_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::MatchStatistics_MatchingRoom >&
+MatchStatistics::server_list() const {
+  // @@protoc_insertion_point(field_list:Adoter.Asset.MatchStatistics.server_list)
+  return server_list_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::MatchStatistics_MatchingRoom >*
+MatchStatistics::mutable_server_list() {
+  // @@protoc_insertion_point(field_mutable_list:Adoter.Asset.MatchStatistics.server_list)
+  return &server_list_;
 }
 
 

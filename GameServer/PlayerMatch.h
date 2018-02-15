@@ -17,6 +17,7 @@ class Player;
 class PlayerMatch : public std::enable_shared_from_this<PlayerMatch>   
 {
 	std::unordered_map<int32_t/*房间类型*/, std::unordered_map<int64_t/*角色ID*/, std::shared_ptr<Player>>> _match_list; 
+	std::unordered_map<int32_t/*房间类型*/, const Asset::RoomOptions> _options;
 
 	TaskScheduler _scheduler;
 
@@ -31,6 +32,7 @@ public:
 
 	void Join(std::shared_ptr<Player> player, pb::Message* message);
 	void DoMatch();
+	void OnStart();
 };
 
 #define MatchInstance PlayerMatch::Instance()

@@ -98,5 +98,43 @@ public:
 		}
 		return end;
 	}
+
+	//
+	//排列组合,带重复元素
+	//
+	static bool CombinationWithRepeated(unsigned int Set, unsigned int Comb, std::vector<unsigned int> &vi)
+	{
+		if (Set == 0 || Comb == 0) return false;
+		
+		bool reach_end = false;
+		for( int x = Comb - 1; x >= 0 ; --x )
+		{
+			if (x == 0 && vi[x] == Set - 1) return false;
+
+			if (reach_end)
+			{
+				if (vi[x] != Set - 1)
+				{
+					unsigned int level = vi[x] + 1;
+					for(unsigned int y = x; y < Comb; ++y) vi[y] = level;
+						
+					return true;
+				}		
+			}
+			
+			// At the end of the Set
+			if (vi[x] == Set - 1)
+			{
+				reach_end = true;
+			}
+			else if (vi[x] < Set - 1)
+			{
+				(vi[x])++;
+				return true;		
+			}
+		}
+
+		return true;		
+	}
 };
 

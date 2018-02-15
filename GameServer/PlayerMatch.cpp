@@ -38,19 +38,36 @@ void PlayerMatch::Join(std::shared_ptr<Player> player, pb::Message* message)
 	}
 }
 	
+void PlayerMatch::OnStart()
+{
+	const auto& messages = AssetInstance.GetMessagesByType(Asset::ASSET_TYPE_ROOM);
+
+	for (const auto& message : messages)
+	{
+		auto room_limit = dynamic_cast<Asset::RoomLimit*>(message);
+		if (!room_limit) return;
+	
+		_options.emplace(room_limit->room_type(), room_limit->room_options());
+	}
+}
+	
 void PlayerMatch::DoMatch()
 {
 	DEBUG("匹配房开始匹配...");
 
-	_scheduler.Schedule(std::chrono::seconds(3), [this](TaskContext task) {
+	OnStart(); //开始初始化
+
+	_scheduler.Schedule(std::chrono::milliseconds(500), [this](TaskContext task) {
+
+		DEBUG("匹配中,持续匹配...");
 			
 		for (auto it = _match_list.begin(); it != _match_list.end(); ++it)
 		{
 			auto& player_list = it->second; 
+
+			if (player_list.size() == 0) continue; //尚未匹配
 	
-			DEBUG("房间类型:{} 玩家数量:{}", it->first, it->second.size());
-		
-			auto room_type = (Asset::ROOM_TYPE)it->first;
+			auto room_type = (Asset::ROOM_TYPE)it->first; //房间类型
 
 			auto room_ptr = RoomInstance.GetMatchingRoom(room_type);
 			if (!room_ptr) continue;
@@ -59,20 +76,7 @@ void PlayerMatch::DoMatch()
 			enter_room.mutable_room()->CopyFrom(room_ptr->Get());
 			enter_room.set_enter_type(Asset::EnterRoom_ENTER_TYPE_ENTER_TYPE_ENTER); //进入房间
 
-			const auto& messages = AssetInstance.GetMessagesByType(Asset::ASSET_TYPE_ROOM);
-
-			auto room_it = std::find_if(messages.begin(), messages.end(), [room_type](pb::Message* message){
-				 auto room_limit = dynamic_cast<Asset::RoomLimit*>(message);
-				 if (!room_limit) return false;
-
-				 return room_type == room_limit->room_type();
-			 });
-			if (room_it == messages.end()) return;
-
-			auto room_limit = dynamic_cast<Asset::RoomLimit*>(*room_it);
-			if (!room_limit) return;
-
-			room_ptr->SetOptions(room_limit->room_options()); //玩法
+			room_ptr->SetOptions(_options[room_type]); //玩法
 
 			//
 			//检查是否满足创建房间条件
@@ -81,6 +85,8 @@ void PlayerMatch::DoMatch()
 			{
 				auto player = it->second;
 				if (!player) continue;
+
+				DEBUG("玩家:{} 匹配成功,进入房间", it->first);
 
 				auto enter_status = room_ptr->TryEnter(player); //玩家尝试进入房间
 				enter_room.set_error_code(enter_status); 
@@ -96,7 +102,7 @@ void PlayerMatch::DoMatch()
 				}
 				else
 				{
-					ERROR("玩家:{} 加入房间{} 失败，原因:{}", it->first, enter_room.ShortDebugString(), enter_status);
+					ERROR("玩家:{} 加入房间:{} 失败，原因:{}", it->first, enter_room.ShortDebugString(), enter_status);
 
 					++it; //持续匹配
 				}
@@ -105,7 +111,7 @@ void PlayerMatch::DoMatch()
 			}
 		}
 		
-		task.Repeat(std::chrono::milliseconds(300)); //持续匹配
+		task.Repeat(std::chrono::milliseconds(500)); //持续匹配
 	});
 }
 
