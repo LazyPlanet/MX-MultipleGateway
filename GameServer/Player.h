@@ -260,6 +260,7 @@ private:
 	std::shared_ptr<Room> _room = nullptr; //实体所在房间
 	std::shared_ptr<Game> _game = nullptr; //当前游戏
 	std::unordered_set<int32_t> _fan_list = {}; //番型缓存
+	std::vector<std::unordered_set<int32_t>> _hui_fan_list; //会儿牌番数缓存,防止多次求解//用于求解最大番数
 	bool _debug_model = false;
 	bool _jinbao = false;
 	Asset::PaiElement _baopai; //宝牌

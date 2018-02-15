@@ -1850,6 +1850,11 @@ std::vector<Asset::PAI_OPER_TYPE> Player::CheckPai(const Asset::PaiElement& pai,
 		DEBUG("玩家:{} 可以胡来自玩家:{} 牌数据:{}", _player_id, source_player_id, pai.ShortDebugString());
 		rtn_check.push_back(Asset::PAI_OPER_TYPE_HUPAI);
 	}
+	if (CheckHuiHu(pai, false, false)) 
+	{
+		DEBUG("玩家:{} 可以会胡来自玩家:{} 牌数据:{}", _player_id, source_player_id, pai.ShortDebugString());
+		rtn_check.push_back(Asset::PAI_OPER_TYPE_HUPAI);
+	}
 	if (CheckGangPai(pai, source_player_id)) 
 	{
 		DEBUG("玩家:{} 可以杠来自玩家:{} 牌数据:{}", _player_id, source_player_id, pai.ShortDebugString());
@@ -2039,21 +2044,11 @@ bool Player::CheckBaoHu(const Asset::PaiElement& pai/*宝牌数据*/)
 	//
 	//宝牌多种胡法的多种番型，求解最大番型
 	//
-	const auto fan_asset = _room->GetFan();
-
-	auto get_multiple = [&](const int32_t fan_type)->int32_t {
-		auto it = std::find_if(fan_asset->fans().begin(), fan_asset->fans().end(), [fan_type](const Asset::RoomFan_FanElement& element){
-			return fan_type == element.fan_type();
-		});
-		if (it == fan_asset->fans().end()) return 0;
-		return pow(2, it->multiple());
-	};
-
 	auto max_fan_score = 1;
 	auto max_fan_card = _cards_hu[0];
 	auto hupai = CheckHuPai(max_fan_card, false);
 	auto max_fan_list = _fan_list;
-	for (const auto fan : _fan_list) max_fan_score *= get_multiple(fan); //番数
+	for (const auto fan : _fan_list) max_fan_score *= _room->GetMultiple(fan); //番数
 
 	for (auto card : _cards_hu) //可以胡的牌
 	{
@@ -2063,7 +2058,7 @@ bool Player::CheckBaoHu(const Asset::PaiElement& pai/*宝牌数据*/)
 		if (!hupai) continue;
 		
 		int32_t score_base = 1;
-		for (const auto fan : _fan_list) score_base *= get_multiple(fan); //番数
+		for (const auto fan : _fan_list) score_base *= _room->GetMultiple(fan); //番数
 
 		if (score_base >= max_fan_score)
 		{
@@ -2097,7 +2092,10 @@ bool Player::CheckHuiHu(const Asset::PaiElement& pai, bool check_zimo, bool calc
 
 	int32_t count = GetHuiPaiCount();
 	if (count == 0) return false;
-	
+
+	_fan_list.clear();
+	_hui_fan_list.clear();
+
 	const auto& huipai = _game->GetHuiPai();
 	
 	auto cards_inhand = _cards_inhand; //玩家手里牌
@@ -2133,7 +2131,8 @@ bool Player::CheckHuiHu(const Asset::PaiElement& pai, bool check_zimo, bool calc
 		}
 			
 		bool can_hupai = CheckHuPai(cards_inhand_without_hupai, cards_outhand, minggang, angang, jiangang, fenggang, pai, check_zimo, calculate);
-		if (can_hupai) return true; //可以胡牌
+		if (can_hupai && calculate) _hui_fan_list.push_back(_fan_list);
+		if (can_hupai && !calculate) return true;
 	}
 
 	while (CommonUtil::CombinationWithRepeated(SET, COMB, vi))
@@ -2147,7 +2146,14 @@ bool Player::CheckHuiHu(const Asset::PaiElement& pai, bool check_zimo, bool calc
 		}
 		
 		bool can_hupai = CheckHuPai(cards_inhand_without_hupai, cards_outhand, minggang, angang, jiangang, fenggang, pai, check_zimo, calculate);
-		if (can_hupai) return true; //可以胡牌
+		if (!can_hupai) continue;
+		
+		if (calculate) {
+			_hui_fan_list.push_back(_fan_list);
+		}
+		else {
+			return true;
+		}
 
 		++cnt;
 	}

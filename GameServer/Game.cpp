@@ -556,7 +556,7 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				LOG(ERROR, "玩家:{} 在房间:{} 牌局:{} 胡牌:{}，与服务器缓存:{}不一致，怀疑外挂行为，请关注", player->GetID(), _room_id, _game_id, pai.ShortDebugString(), _oper_cache.ShortDebugString());
 			}
 
-			if (player->CheckCardsInhand() && player->CheckHuPai(pai)) //玩家点炮
+			if (player->CheckCardsInhand() && player->CheckHuPai(pai)) //玩家点炮//平胡
 			{
 				auto fan_list = player->GetFanList();
 
@@ -574,7 +574,7 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 
 				Calculate(player->GetID(), _oper_cache.source_player_id(), fan_list); //结算
 			}
-			else if (player->CheckZiMo(pai)) 
+			else if (!player->HasPai(_huipai) && player->CheckZiMo(pai)) //平胡
 			{
 				auto fan_list = player->GetFanList();
 
@@ -599,6 +599,17 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				_oper_cache.mutable_pai()->CopyFrom(_baopai);
 					
 				_room->AddLouBao(player->GetID()); //搂宝
+
+				Calculate(player->GetID(), _oper_cache.source_player_id(), fan_list); //结算
+			}
+			else if (player->HasPai(_huipai) && ((player->CheckCardsInhand() && player->CheckHuiHu(pai, false, true)) || (!player->CheckCardsInhand() && player->CheckHuiHu(pai, true, true))))
+			{
+				auto fan_list = player->GetFanList();
+				
+				_oper_cache.set_player_id(player->GetID()); //当前可操作玩家
+				_oper_cache.set_source_player_id(player->GetID());
+				_oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
+				_oper_cache.mutable_pai()->CopyFrom(_baopai);
 
 				Calculate(player->GetID(), _oper_cache.source_player_id(), fan_list); //结算
 			}
