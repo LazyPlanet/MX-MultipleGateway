@@ -2090,6 +2090,8 @@ bool Player::CheckHuiHu(const Asset::PaiElement& pai, bool check_zimo, bool calc
 
 	if (!_room->HasHuiPai()) return false; //不带会儿牌
 
+	if (!HasYaoJiu()) return false; //会牌不能代替幺九,因此前置检查
+
 	int32_t count = GetHuiPaiCount();
 	if (count == 0) return false;
 
