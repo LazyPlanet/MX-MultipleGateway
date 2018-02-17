@@ -1902,15 +1902,14 @@ void Game::CalculateGangScore(Asset::GameCalculate& game_calculate)
 		auto minggang = player->GetMingGang();
 		auto ming_count = player->GetMingGangCount(); 
 		auto an_count = player->GetAnGangCount(); 
-		auto xf_gang = player->GetXuanFeng(); 
+		auto fg_count = player->GetFengGang(); 
+		auto jg_count = player->GetJianGang(); 
 		
 		int32_t ming_score_each = GetMultiple(Asset::FAN_TYPE_MING_GANG);
 		int32_t ming_score = ming_count * ming_score_each;
 
 		int32_t an_score = an_count * GetMultiple(Asset::FAN_TYPE_AN_GANG);
-		int32_t xf_score = 1;
-		
-		for (auto xf : xf_gang) xf_score *= GetMultiple(xf);
+		int32_t xf_score = fg_count * GetMultiple(Asset::FAN_TYPE_XUAN_FENG_GANG) + jg_count * GetMultiple(Asset::FAN_TYPE_XUAN_JIAN_GANG);
 
 		int32_t score = ming_score + an_score + xf_score; //玩家杠牌赢得其他单个玩家积分
 

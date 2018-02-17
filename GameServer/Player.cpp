@@ -3619,6 +3619,9 @@ int32_t Player::CheckXuanFeng()
 	return gang;
 }
 
+//
+//重新计算旋风杠
+//
 void Player::CheckXuanFengGang()
 {
 	auto xf_card = _cards_inhand;
@@ -3834,35 +3837,6 @@ void Player::OnGangFengPai()
 	
 	auto it = _cards_inhand.find(Asset::CARD_TYPE_FENG);
 	if (it == _cards_inhand.end()) return;
-
-	/*
-	try {
-		std::unique_lock<std::mutex> lock(_card_lock, std::defer_lock);
-
-		if (lock.try_lock())
-		{
-			for (int32_t card_value = 1; card_value <= 4; ++card_value) //东南西北
-			{
-				auto it_if = std::find(it->second.begin(), it->second.end(), card_value);
-				if (it_if != it->second.end())  
-				{	
-					_game->Add2CardsPool(Asset::CARD_TYPE_FENG, card_value);
-					it->second.erase(it_if); //删除
-				}
-			}
-		}
-		else
-		{
-			ERROR("player_id:{} try locked failed.", _player_id);
-			return;
-		}
-	}
-	catch(const std::system_error& error)
-	{
-		ERROR("Delete card from player_id:{} error:{}.", _player_id, error.what());
-		return;
-	}
-	*/
 
 	for (int32_t card_value = 1; card_value <= 4; ++card_value) //东南西北
 	{
