@@ -3392,7 +3392,7 @@ bool Player::CheckAllGangPai(::google::protobuf::RepeatedField<Asset::PaiOperati
 		for (auto card_value : cards.second)
 		{
 			auto count = std::count(cards.second.begin(), cards.second.end(), card_value);
-			if (count == 4 && CheckMingPiao(Asset::PAI_OPER_TYPE_ANGANGPAI)) 
+			if ((count == 4 || (count == 3 && _game->IsHuiPai(card_type, card_value))) && CheckMingPiao(Asset::PAI_OPER_TYPE_ANGANGPAI))
 			{
 				if (_room->IsJianPing() && IsBimen()) continue; //建平玩法：不开门不让扣暗杠
 
@@ -3432,14 +3432,25 @@ bool Player::CheckAllGangPai(::google::protobuf::RepeatedField<Asset::PaiOperati
 		for (size_t i = 0; i < cards.second.size(); i = i + 3)
 		{
 			auto card_value = cards.second.at(i);
-
 			if ((card_value != cards.second.at(i + 1)) || (card_value != cards.second.at(i + 2))) continue; //外面是否碰了3张
 
 			auto it = _cards_inhand.find(card_type);
-			if (it == _cards_inhand.end()) continue;
-			
-			auto iit = std::find(it->second.begin(), it->second.end(), card_value);
-			if (iit == it->second.end()) continue; //手里有一张才满足
+			if (it != _cards_inhand.end()) 
+			{
+				auto iit = std::find(it->second.begin(), it->second.end(), card_value);
+				if (iit != it->second.end()) 
+				{
+					//证明是杠牌,可以杠
+				}
+				else if (!_game->IsHuiPai(card_type, card_value))
+				{
+					continue;
+				}
+			}
+			else if (!_game->IsHuiPai(card_type, card_value))
+			{
+				continue;
+			}
 			
 			Asset::PaiElement pai;
 			pai.set_card_type((Asset::CARD_TYPE)card_type);
@@ -3487,7 +3498,8 @@ void Player::OnGangPai(const Asset::PaiElement& pai, int64_t source_player_id)
 		auto ming_gang = pai;
 		ming_gang.set_source_player_id(source_player_id);
 
-		_minggang.push_back(ming_gang); //明杠
+		if (!_game->IsHuiPai(pai)) _minggang.push_back(ming_gang); //明杠
+		else _angang.push_back(pai); //暗杠
 	}
 	else if (count == 4)
 	{
@@ -3515,7 +3527,8 @@ void Player::OnGangPai(const Asset::PaiElement& pai, int64_t source_player_id)
 			auto ming_gang = pai;
 			ming_gang.set_source_player_id(source_player_id);
 
-			_minggang.push_back(ming_gang);
+			if (_game->IsHuiPai(pai)) _angang.push_back(pai); //暗杠
+			else _minggang.push_back(ming_gang);
 			
 			auto remove_it = std::remove(iit->second.begin(), iit->second.end(), card_value); //从墙外删除
 			iit->second.erase(remove_it, iit->second.end());

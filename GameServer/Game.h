@@ -120,6 +120,14 @@ public:
 	const std::vector<int32_t>& GetSaizi() { return _saizi_random_result; }
 
 	const Asset::PaiElement& GetHuiPai() { return _huipai; } //获取会儿牌
+	bool IsHuiPai(const Asset::PaiElement& pai) {  //是否是会儿牌
+		if (_huipai.card_type() == 0 || _huipai.card_value() == 0) return false;
+		return pai.card_type() == _huipai.card_type() && pai.card_value() == _huipai.card_value(); 
+	} 
+	bool IsHuiPai(int32_t card_type, int32_t card_value) {  //是否是会儿牌
+		if (_huipai.card_type() == 0 || _huipai.card_value() == 0) return false;
+		return card_type == _huipai.card_type() && card_value == _huipai.card_value();
+	}
 
 	bool CheckLiuJu(); //流局检查
 	bool IsLiuJu() { return _liuju; } //是否流局
