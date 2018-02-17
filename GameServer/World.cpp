@@ -12,7 +12,7 @@ namespace Adoter
 {
 
 const Asset::CommonConst* g_const = nullptr;
-std::shared_ptr<CenterSession> g_center_session = nullptr;
+//std::shared_ptr<CenterSession> g_center_session = nullptr;
 
 bool World::Load()
 {
@@ -84,7 +84,8 @@ void World::Update(int32_t diff)
 	
 	ActivityInstance.Update(diff);
 	
-	g_center_session->Update();
+	//g_center_session->Update();
+	for (auto session : _sessions) session->Update();
 }
 	
 

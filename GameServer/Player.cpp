@@ -1174,11 +1174,15 @@ void Player::SendProtocol(const pb::Message* message)
 
 void Player::SendProtocol(const pb::Message& message)
 {
+	/*
 	if (!g_center_session) 
 	{
 		LOG(ERROR, "玩家:{}尚未建立连接，目前所在服务器:{}", _player_id, _stuff.server_id());
 		return; //尚未建立网络连接
 	}
+	*/
+
+	if (!Connected()) return; //尚未建立网络连接
 
 	const pb::FieldDescriptor* field = message.GetDescriptor()->FindFieldByName("type_t");
 	if (!field) return;
@@ -1194,7 +1198,8 @@ void Player::SendProtocol(const pb::Message& message)
 	std::string content = meta.SerializeAsString();
 	if (content.empty()) return;
 
-	g_center_session->AsyncSendMessage(content);
+	//g_center_session->AsyncSendMessage(content);
+	_session->AsyncSendMessage(content);
 
 	//DEBUG("玩家:{} 发送协议，类型:{} 内容:{}", _player_id, type_t,  message.ShortDebugString());
 }
@@ -4855,12 +4860,29 @@ void PlayerManager::Remove(int64_t player_id)
 {
 	std::lock_guard<std::mutex> lock(_player_lock);
 
+	/*
 	auto player = _players[player_id];
 	if (player) player.reset();
 	
 	_players.erase(player_id);
 
 	if (g_center_session) g_center_session->RemovePlayer(player_id);
+	*/
+
+	auto it = _players.find(player_id);
+	if (it == _players.end()) return;
+
+	if (!it->second)
+	{
+		_players.erase(it);
+		return;
+	}
+
+	auto session = it->second->GetSession();
+	if (session) session->RemovePlayer(player_id);
+
+	if (it->second) it->second.reset();
+	_players.erase(it);
 }
 
 void PlayerManager::Remove(std::shared_ptr<Player> player)
@@ -4872,6 +4894,8 @@ void PlayerManager::Remove(std::shared_ptr<Player> player)
 	
 void PlayerManager::BroadCast(const pb::Message& message)
 {
+	std::lock_guard<std::mutex> lock(_player_lock);
+
 	for (auto it = _players.begin(); it != _players.end(); ++it)
 	{
 		auto player = it->second;

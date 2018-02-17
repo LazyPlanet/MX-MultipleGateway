@@ -20,13 +20,14 @@ namespace Adoter
  * */
 
 extern const Asset::CommonConst* g_const;
-extern std::shared_ptr<CenterSession> g_center_session;
+//extern std::shared_ptr<CenterSession> g_center_session;
 
 class World : public std::enable_shared_from_this<World>
 {
 private:
 	bool _stopped = false;
 	int64_t _heart_count = 0; //心跳记次
+	std::vector<std::shared_ptr<CenterSession>> _sessions;
 public:
 	static World& Instance()
 	{
@@ -35,6 +36,7 @@ public:
 	}
 
 	bool IsStopped() { return _stopped; }
+	void EmplaceSession(std::shared_ptr<CenterSession> session) { _sessions.push_back(session); }
 
 	//世界中所有刷新都在此(比如刷怪，拍卖行更新...)，当前周期为50MS.
 	void Update(int32_t diff);

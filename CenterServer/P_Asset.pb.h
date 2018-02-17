@@ -396,11 +396,16 @@ enum ROOM_EXTEND_TYPE {
   ROOM_EXTEND_TYPE_HUANGZHUANGHUANGGANG = 11,
   ROOM_EXTEND_TYPE_YIBIANGAO = 12,
   ROOM_EXTEND_TYPE_SIGUIYI = 13,
-  ROOM_EXTEND_TYPE_YIJIAFU = 14
+  ROOM_EXTEND_TYPE_YIJIAFU = 14,
+  ROOM_EXTEND_TYPE_HUIPAI = 15,
+  ROOM_EXTEND_TYPE_JUETOUHUI = 16,
+  ROOM_EXTEND_TYPE_QIONGHU = 17,
+  ROOM_EXTEND_TYPE_QIDUI = 18,
+  ROOM_EXTEND_TYPE_ZHUIFENGGANGA = 19
 };
 bool ROOM_EXTEND_TYPE_IsValid(int value);
 const ROOM_EXTEND_TYPE ROOM_EXTEND_TYPE_MIN = ROOM_EXTEND_TYPE_NULL;
-const ROOM_EXTEND_TYPE ROOM_EXTEND_TYPE_MAX = ROOM_EXTEND_TYPE_YIJIAFU;
+const ROOM_EXTEND_TYPE ROOM_EXTEND_TYPE_MAX = ROOM_EXTEND_TYPE_ZHUIFENGGANGA;
 const int ROOM_EXTEND_TYPE_ARRAYSIZE = ROOM_EXTEND_TYPE_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* ROOM_EXTEND_TYPE_descriptor();
@@ -453,11 +458,12 @@ inline bool ROOM_PAY_TYPE_Parse(
 }
 enum CITY_TYPE {
   CITY_TYPE_CHAOYANG = 1,
-  CITY_TYPE_JIANPING = 2
+  CITY_TYPE_JIANPING = 2,
+  CITY_TYPE_YINGKOU = 3
 };
 bool CITY_TYPE_IsValid(int value);
 const CITY_TYPE CITY_TYPE_MIN = CITY_TYPE_CHAOYANG;
-const CITY_TYPE CITY_TYPE_MAX = CITY_TYPE_JIANPING;
+const CITY_TYPE CITY_TYPE_MAX = CITY_TYPE_YINGKOU;
 const int CITY_TYPE_ARRAYSIZE = CITY_TYPE_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* CITY_TYPE_descriptor();
@@ -475,11 +481,16 @@ enum CARD_TYPE {
   CARD_TYPE_BINGZI = 2,
   CARD_TYPE_TIAOZI = 3,
   CARD_TYPE_FENG = 4,
-  CARD_TYPE_JIAN = 5
+  CARD_TYPE_JIAN = 5,
+  CARD_TYPE_HONGTAO = 6,
+  CARD_TYPE_FANGPIAN = 7,
+  CARD_TYPE_HEITAO = 8,
+  CARD_TYPE_MEIHUA = 9,
+  CARD_TYPE_KINGS = 10
 };
 bool CARD_TYPE_IsValid(int value);
 const CARD_TYPE CARD_TYPE_MIN = CARD_TYPE_WANZI;
-const CARD_TYPE CARD_TYPE_MAX = CARD_TYPE_JIAN;
+const CARD_TYPE CARD_TYPE_MAX = CARD_TYPE_KINGS;
 const int CARD_TYPE_ARRAYSIZE = CARD_TYPE_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* CARD_TYPE_descriptor();
@@ -519,11 +530,14 @@ enum FAN_TYPE {
   FAN_TYPE_JIA_HU_HIGHER = 23,
   FAN_TYPE_PIAO_WEIHU = 24,
   FAN_TYPE_BAOSANJIA = 25,
-  FAN_TYPE_YIJIAFU = 26
+  FAN_TYPE_YIJIAFU = 26,
+  FAN_TYPE_QIDUI = 27,
+  FAN_TYPE_QIONGHU = 28,
+  FAN_TYPE_XUAN_JIAN_GANG = 29
 };
 bool FAN_TYPE_IsValid(int value);
 const FAN_TYPE FAN_TYPE_MIN = FAN_TYPE_PINGHU;
-const FAN_TYPE FAN_TYPE_MAX = FAN_TYPE_YIJIAFU;
+const FAN_TYPE FAN_TYPE_MAX = FAN_TYPE_XUAN_JIAN_GANG;
 const int FAN_TYPE_ARRAYSIZE = FAN_TYPE_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* FAN_TYPE_descriptor();
@@ -1608,7 +1622,7 @@ class MJCard : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 group_count() const;
   inline void set_group_count(::google::protobuf::int32 value);
 
-  // optional int32 cards_count = 5 [default = 9];
+  // optional int32 cards_count = 5 [default = 15];
   inline bool has_cards_count() const;
   inline void clear_cards_count();
   static const int kCardsCountFieldNumber = 5;
@@ -7159,7 +7173,7 @@ inline void MJCard::set_group_count(::google::protobuf::int32 value) {
   // @@protoc_insertion_point(field_set:Adoter.Asset.MJCard.group_count)
 }
 
-// optional int32 cards_count = 5 [default = 9];
+// optional int32 cards_count = 5 [default = 15];
 inline bool MJCard::has_cards_count() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
@@ -7170,7 +7184,7 @@ inline void MJCard::clear_has_cards_count() {
   _has_bits_[0] &= ~0x00000010u;
 }
 inline void MJCard::clear_cards_count() {
-  cards_count_ = 9;
+  cards_count_ = 15;
   clear_has_cards_count();
 }
 inline ::google::protobuf::int32 MJCard::cards_count() const {

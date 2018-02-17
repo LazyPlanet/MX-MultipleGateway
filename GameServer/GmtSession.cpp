@@ -279,7 +279,7 @@ void GmtManager::SendProtocol(pb::Message* message)
 
 void GmtManager::SendProtocol(pb::Message& message)
 {
-    if (!g_center_session)
+	if (!Connected())
     {
         ERROR("尚未连接中心服服务器");
         return;
@@ -300,12 +300,13 @@ void GmtManager::SendProtocol(pb::Message& message)
     gmt_meta.set_inner_meta(meta.SerializeAsString());
 
     DEBUG("逻辑服务器处理来自会话:{}GMT指令后发送数据到中心服务器:{}", _session_id, gmt_meta.ShortDebugString());
-    g_center_session->SendProtocol(gmt_meta);
+	if (_session) _session->SendProtocol(gmt_meta);
 }
 
 void GmtManager::SendInnerMeta(const Asset::InnerMeta& message)
 {
-    if (!g_center_session)
+    //if (!g_center_session)
+	if (!Connected())
     {
         ERROR("尚未连接中心服服务器");
         return;
@@ -315,7 +316,8 @@ void GmtManager::SendInnerMeta(const Asset::InnerMeta& message)
     gmt_meta.set_inner_meta(message.SerializeAsString());
 
     DEBUG("逻辑服务器处理GMT指令后发送数据到中心服务器:{}", gmt_meta.ShortDebugString());
-    g_center_session->SendProtocol(gmt_meta);
+    //g_center_session->SendProtocol(gmt_meta);
+    _session->SendProtocol(gmt_meta);
 }
 
 #undef RETURN

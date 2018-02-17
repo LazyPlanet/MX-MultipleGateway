@@ -1,8 +1,10 @@
 #pragma once
 
 #include <mutex>
+#include <memory>
 
 #include "P_Header.h"
+#include "CenterSession.h"
 
 namespace Adoter
 {
@@ -10,8 +12,9 @@ namespace Adoter
 using namespace google::protobuf;
 namespace pb = google::protobuf;
 
-class GmtManager 
+class GmtManager : public std::enable_shared_from_this<GmtManager> 
 {
+	std::shared_ptr<CenterSession> _session = nullptr;
 public:
 	
 	static GmtManager& Instance()
@@ -19,6 +22,10 @@ public:
 		static GmtManager _instance;
 		return _instance;
 	}
+
+	const std::shared_ptr<CenterSession> GetSession() { return _session; }
+	void SetSession(std::shared_ptr<CenterSession> session) { _session = session; }
+	bool Connected() { if (!_session) return false; return _session->IsConnected(); }
 	
 	Asset::COMMAND_ERROR_CODE OnCommandProcess(const Asset::Command& command);
 	Asset::COMMAND_ERROR_CODE OnSendMail(const Asset::SendMail& command);

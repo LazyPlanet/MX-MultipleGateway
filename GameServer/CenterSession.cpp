@@ -43,6 +43,8 @@ bool CenterSession::OnMessageProcess(const Asset::Meta& meta)
 		auto result = message.ParseFromString(meta.stuff());
 		if (!result) return false;
 
+		GmtInstance.SetSession(std::dynamic_pointer_cast<CenterSession>(shared_from_this()));
+
 		Asset::InnerMeta inner_meta;
 		inner_meta.ParseFromString(message.inner_meta());
 		GmtInstance.OnInnerProcess(inner_meta);
@@ -305,6 +307,7 @@ void CenterSession::AddPlayer(int64_t player_id, std::shared_ptr<Player> player)
 	auto it = _players.find(player_id);
 	if (it != _players.end() && it->second) it->second.reset();
 
+	player->SetSession(std::dynamic_pointer_cast<CenterSession>(shared_from_this()));
 	_players[player_id] = player;
 }
 	

@@ -51,6 +51,7 @@ class Player : public std::enable_shared_from_this<Player>
 {
 	typedef std::function<int32_t(pb::Message*)> CallBack;
 	unordered_map<int32_t, CallBack>  _callbacks;	//每个协议的回调函数，不要传入引用
+	std::shared_ptr<CenterSession> _session = nullptr;
 private:
 	int64_t _player_id = 0; //玩家全局唯一标识
 	Asset::Player _stuff; //玩家数据，存盘数据
@@ -69,6 +70,10 @@ public:
 	
 	//const std::shared_ptr<WorldSession> GetSession() { return _session;	}
 	//bool Connected() { if (!_session) return false; return _session->IsConnect(); }
+
+	const std::shared_ptr<CenterSession> GetSession() { return _session; }
+	void SetSession(std::shared_ptr<CenterSession> session) { _session = session; }
+	bool Connected() { if (!_session) return false; return _session->IsConnected(); }
 
 	int32_t DefaultMethod(pb::Message*); //协议处理默认调用函数
 	
