@@ -3654,6 +3654,19 @@ void Player::CheckXuanFengGang()
 	}
 }
 
+void Player::CheckZhuiFengGang(const Asset::PaiElement& zhuapai)
+{
+	if (_fenggang)
+	{
+		if (zhuapai.card_type() == Asset::CARD_TYPE_FENG) ++_fenggang;
+	}
+	
+	if (_jiangang)
+	{
+		if (zhuapai.card_type() == Asset::CARD_TYPE_JIAN) ++_jiangang;
+	}
+}
+
 //玩家能不能听牌的检查
 //
 //玩家打出一张牌后，查看玩家再拿到一张牌后可以胡牌
@@ -4267,7 +4280,11 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 
 		if (IsTingPai()) ++_oper_count_tingpai; //听牌后发了//抓了多少张牌
 
-		if (_fapai_count == 1) CheckXuanFengGang(); //非庄家旋风杠检查
+		if (_fapai_count == 1) 
+		{
+			CheckXuanFengGang(); //非庄家旋风杠检查
+			CheckZhuiFengGang(card); //追风杠
+		}
 			
 		//
 		//如果玩家处于服务器托管状态，则自动出牌

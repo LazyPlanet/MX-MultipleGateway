@@ -395,6 +395,7 @@ public:
 
 	int32_t CheckXuanFeng(); //检查旋风杠
 	void CheckXuanFengGang(); //检查旋风杠//初始化状态检查//非庄家抓牌后检查
+	void CheckZhuiFengGang(const Asset::PaiElement& zhuapai); //检查追风杠
 	
 	bool CanTingPai(const Asset::PaiElement& pai);
 	bool CanTingIfGang(const Asset::PaiElement& pai);
