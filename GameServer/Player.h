@@ -261,6 +261,7 @@ private:
 	std::shared_ptr<Game> _game = nullptr; //当前游戏
 	std::unordered_set<int32_t> _fan_list = {}; //番型缓存
 	std::vector<std::unordered_set<int32_t>> _hui_fan_list; //会儿牌番数缓存,防止多次求解//用于求解最大番数
+	std::vector<Asset::PaiElement> _juetouhuis;
 	bool _debug_model = false;
 	bool _jinbao = false;
 	Asset::PaiElement _baopai; //宝牌
@@ -430,10 +431,14 @@ public:
 	bool HasKeOutHand();
 	bool HasChiPaiOutHand();
 	bool HasPengJianPai(); //是否碰了箭牌
+	void CalculateJueTouHui(const std::map<int32_t, std::vector<int32_t>>& cards_inhand, const std::map<int32_t, std::vector<int32_t>>& cards_outhand); //获取绝头会儿的数量
+	int32_t GetJueTouHuiCount() { return _juetouhuis.size(); }
 
 	bool Is28Zhang(); //是否28作掌
 	bool Is28Pai(const Asset::PaiElement& pai); //是否28牌
 	bool IsDuiDao(const Asset::PaiElement& pai, bool check_zimo); //是否对倒
+
+	bool CheckQiDui(const std::map<int32_t, std::vector<int32_t>>& cards_inhand, const std::map<int32_t, std::vector<int32_t>>& cards_outhand); //是否7对儿
 
 	int32_t GetMingGangCount() { return _minggang.size(); } //明杠数量
 	int32_t GetAnGangCount() { return _angang.size(); } //暗杠数量

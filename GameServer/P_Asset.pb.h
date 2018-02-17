@@ -482,11 +482,16 @@ enum CARD_TYPE {
   CARD_TYPE_BINGZI = 2,
   CARD_TYPE_TIAOZI = 3,
   CARD_TYPE_FENG = 4,
-  CARD_TYPE_JIAN = 5
+  CARD_TYPE_JIAN = 5,
+  CARD_TYPE_HONGTAO = 6,
+  CARD_TYPE_FANGPIAN = 7,
+  CARD_TYPE_HEITAO = 8,
+  CARD_TYPE_MEIHUA = 9,
+  CARD_TYPE_KINGS = 10
 };
 bool CARD_TYPE_IsValid(int value);
 const CARD_TYPE CARD_TYPE_MIN = CARD_TYPE_WANZI;
-const CARD_TYPE CARD_TYPE_MAX = CARD_TYPE_JIAN;
+const CARD_TYPE CARD_TYPE_MAX = CARD_TYPE_KINGS;
 const int CARD_TYPE_ARRAYSIZE = CARD_TYPE_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* CARD_TYPE_descriptor();
@@ -527,11 +532,12 @@ enum FAN_TYPE {
   FAN_TYPE_PIAO_WEIHU = 24,
   FAN_TYPE_BAOSANJIA = 25,
   FAN_TYPE_YIJIAFU = 26,
-  FAN_TYPE_QIDUI = 27
+  FAN_TYPE_QIDUI = 27,
+  FAN_TYPE_QIONGHU = 28
 };
 bool FAN_TYPE_IsValid(int value);
 const FAN_TYPE FAN_TYPE_MIN = FAN_TYPE_PINGHU;
-const FAN_TYPE FAN_TYPE_MAX = FAN_TYPE_QIDUI;
+const FAN_TYPE FAN_TYPE_MAX = FAN_TYPE_QIONGHU;
 const int FAN_TYPE_ARRAYSIZE = FAN_TYPE_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* FAN_TYPE_descriptor();
@@ -1616,7 +1622,7 @@ class MJCard : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 group_count() const;
   inline void set_group_count(::google::protobuf::int32 value);
 
-  // optional int32 cards_count = 5 [default = 9];
+  // optional int32 cards_count = 5 [default = 15];
   inline bool has_cards_count() const;
   inline void clear_cards_count();
   static const int kCardsCountFieldNumber = 5;
@@ -7167,7 +7173,7 @@ inline void MJCard::set_group_count(::google::protobuf::int32 value) {
   // @@protoc_insertion_point(field_set:Adoter.Asset.MJCard.group_count)
 }
 
-// optional int32 cards_count = 5 [default = 9];
+// optional int32 cards_count = 5 [default = 15];
 inline bool MJCard::has_cards_count() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
@@ -7178,7 +7184,7 @@ inline void MJCard::clear_has_cards_count() {
   _has_bits_[0] &= ~0x00000010u;
 }
 inline void MJCard::clear_cards_count() {
-  cards_count_ = 9;
+  cards_count_ = 15;
   clear_has_cards_count();
 }
 inline ::google::protobuf::int32 MJCard::cards_count() const {

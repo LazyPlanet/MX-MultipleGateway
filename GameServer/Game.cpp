@@ -1238,13 +1238,15 @@ void Game::Calculate(int64_t hupai_player_id/*胡牌玩家*/, int64_t dianpao_pl
 	//
 	//玩家角色性检查(比如，庄家胡牌)
 	//
+	auto hu_player = GetPlayer(hupai_player_id);
+	if (!hu_player) return;
+
+	base_score *= pow(2, hu_player->GetJueTouHuiCount()); //绝头会儿番数
+	
 	if (IsBanker(hupai_player_id)) 
 	{
 		fan_list.emplace(Asset::FAN_TYPE_ZHUANG);
 	}
-
-	auto hu_player = GetPlayer(hupai_player_id);
-	if (!hu_player) return;
 
 	if (dianpao_player_id == hupai_player_id && hu_player->IsGangOperation()) //杠上开
 	{
@@ -1454,98 +1456,6 @@ void Game::Calculate(int64_t hupai_player_id/*胡牌玩家*/, int64_t dianpao_pl
 	//3.杠牌积分
 	//
 	CalculateGangScore(message);
-	
-	/*
-	for (int i = 0; i < MAX_PLAYER_COUNT; ++i)
-	{
-		auto player = _players[i];
-		if (!player) return;
-
-		auto minggang = player->GetMingGang();
-		auto ming_count = player->GetMingGangCount(); 
-		auto an_count = player->GetAnGangCount(); 
-		auto xf_count = player->GetXuanFengCount(); 
-		
-		int32_t ming_score = ming_count * GetMultiple(Asset::FAN_TYPE_MING_GANG);
-		int32_t an_score = an_count * GetMultiple(Asset::FAN_TYPE_AN_GANG);
-		int32_t xf_score = xf_count * GetMultiple(Asset::FAN_TYPE_XUAN_FENG_GANG);
-
-		int32_t score = ming_score + an_score + xf_score; //玩家杠牌赢得其他单个玩家积分
-
-		auto record = message.mutable_record()->mutable_list(i);
-		record->set_score(record->score() + score * (MAX_PLAYER_COUNT - 1)); //增加杠牌玩家总杠积分
-
-		//
-		//1.杠牌玩家赢得积分列表
-		//
-		if (ming_count)
-		{
-			auto detail = record->mutable_details()->Add();
-			detail->set_fan_type(Asset::FAN_TYPE_MING_GANG);
-			detail->set_score(ming_score * (MAX_PLAYER_COUNT - 1));
-		}
-
-		if (an_count)
-		{
-			auto detail = record->mutable_details()->Add();
-			detail->set_fan_type(Asset::FAN_TYPE_AN_GANG);
-			detail->set_score(an_score * (MAX_PLAYER_COUNT - 1));
-		}
-		
-		if (xf_count)
-		{
-			auto detail = record->mutable_details()->Add();
-			detail->set_fan_type(Asset::FAN_TYPE_XUAN_FENG_GANG);
-			detail->set_score(xf_score * (MAX_PLAYER_COUNT - 1));
-		}
-		//
-		//2.其他玩家所输积分
-		//
-		for (int index = 0; index < MAX_PLAYER_COUNT; ++index)
-		{
-			if (index == i) continue;
-
-			auto record = message.mutable_record()->mutable_list(index);
-			record->set_score(record->score() - score); //扣除杠分
-
-			//非杠牌玩家所输积分列表
-
-			if (ming_count) //明杠，根据点杠玩家不同
-			{
-				auto detail = record->mutable_details()->Add();
-				detail->set_fan_type(Asset::FAN_TYPE_MING_GANG);
-
-				int32_t single_score = GetMultiple(Asset::FAN_TYPE_MING_GANG);
-
-				for (auto gang : minggang)
-				{
-					if (_room->IsJianPing() && player->GetID() == gang.source_player_id()) //点杠：建平玩法
-					{ 
-						detail->set_score(detail->score() - single_score * (MAX_PLAYER_COUNT - 1)); //点杠的那个人出3分
-					}
-					else 
-					{ 
-						detail->set_score(detail->score() - single_score); 
-					}
-				}
-			}
-
-			if (an_count)
-			{
-				auto detail = record->mutable_details()->Add();
-				detail->set_fan_type(Asset::FAN_TYPE_AN_GANG);
-				detail->set_score(-an_score);
-			}
-
-			if (xf_count)
-			{
-				auto detail = record->mutable_details()->Add();
-				detail->set_fan_type(Asset::FAN_TYPE_XUAN_FENG_GANG);
-				detail->set_score(-xf_score);
-			}
-		} 
-	} 
-	*/
 	
 	//
 	//4.点炮赔付

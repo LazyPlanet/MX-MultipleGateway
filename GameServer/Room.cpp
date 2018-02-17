@@ -463,6 +463,16 @@ bool Room::HasHuiPai()
 	return HasLaw(Asset::ROOM_EXTEND_TYPE_HUIPAI);
 }
 
+bool Room::HasJueTouHui()
+{
+	return HasLaw(Asset::ROOM_EXTEND_TYPE_JUETOUHUI);
+}
+
+bool Room::HasQiDui()
+{
+	return HasLaw(Asset::ROOM_EXTEND_TYPE_QIDUI);
+}
+
 bool Room::HasBaopai()
 {
 	return HasLaw(Asset::ROOM_EXTEND_TYPE_BAOPAI);

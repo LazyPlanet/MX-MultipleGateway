@@ -85,6 +85,8 @@ public:
 	bool HasSiGuiYi(); //是否支持四归一
 	bool HasYiJiaFu(); //点炮一家付
 	bool HasHuiPai(); //是否带会儿
+	bool HasJueTouHui(); //是否带绝头会儿
+	bool HasQiDui(); //是否带7对
 
 	bool IsVoiceOpen() { return _stuff.options().voice_open(); }
 
