@@ -2209,6 +2209,9 @@ bool GameManager::Load()
 	{
 		Asset::MJCard* asset_card = dynamic_cast<Asset::MJCard*>(message); 
 		if (!asset_card) return false;
+
+		if (asset_card->card_type() != Asset::CARD_TYPE_WANZI && asset_card->card_type() != Asset::CARD_TYPE_BINGZI && asset_card->card_type() != Asset::CARD_TYPE_TIAOZI 
+				&& asset_card->card_type() == Asset::CARD_TYPE_FENG && asset_card->card_type() != Asset::CARD_TYPE_JIAN) continue;
 		
 		for (int k = 0; k < asset_card->group_count(); ++k) //4组，麻将每张牌有4张
 		{
