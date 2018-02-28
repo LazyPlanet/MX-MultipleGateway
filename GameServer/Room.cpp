@@ -188,6 +188,11 @@ void Room::OnReEnter(std::shared_ptr<Player> op_player)
 	{
 		message.mutable_baopai()->CopyFrom(_game->GetBaoPai()); //宝牌
 	}
+	
+	if (HasHuiPai()) 
+	{
+		message.mutable_huipai()->CopyFrom(_game->GetHuiPai()); //会儿牌
+	}
 
 	if (!op_player->CheckCardsInhand())
 	{

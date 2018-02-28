@@ -141,7 +141,7 @@ void Game::OnStarted()
 	if (!_room->HasHuiPai()) return;
 
 	Asset::RandomSaizi saizi; //开局股子广播
-	saizi.set_reason_type(Asset::RandomSaizi_REASON_TYPE_REASON_TYPE_START);
+	saizi.set_reason_type(Asset::RandomSaizi_REASON_TYPE_REASON_TYPE_HUIPAI);
 		
 	int32_t result = CommonUtil::Random(1, 6);
 	saizi.mutable_random_result()->Add(result);
