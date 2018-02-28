@@ -35,8 +35,8 @@ public:
 	virtual void OnConnected(); //连接上服务器
 	bool OnMessageProcess(const Asset::Meta& meta); //内部协议处理
 	
-	void SendProtocol(pb::Message& message);
-	void SendProtocol(pb::Message* message);
+	void SendProtocol(const pb::Message& message);
+	void SendProtocol(const pb::Message* message);
 
     virtual bool StartReceive();
     virtual bool StartSend();

@@ -20,7 +20,6 @@ namespace Adoter
  * */
 
 extern const Asset::CommonConst* g_const;
-//extern std::shared_ptr<CenterSession> g_center_session;
 
 class World : public std::enable_shared_from_this<World>
 {
@@ -42,6 +41,7 @@ public:
 	void Update(int32_t diff);
 	//加载所有
 	bool Load();
+	virtual void BroadCast(const pb::Message& message);
 };
 
 #define WorldInstance World::Instance()

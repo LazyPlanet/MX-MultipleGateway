@@ -305,7 +305,6 @@ void GmtManager::SendProtocol(pb::Message& message)
 
 void GmtManager::SendInnerMeta(const Asset::InnerMeta& message)
 {
-    //if (!g_center_session)
 	if (!Connected())
     {
         ERROR("尚未连接中心服服务器");
@@ -316,7 +315,6 @@ void GmtManager::SendInnerMeta(const Asset::InnerMeta& message)
     gmt_meta.set_inner_meta(message.SerializeAsString());
 
     DEBUG("逻辑服务器处理GMT指令后发送数据到中心服务器:{}", gmt_meta.ShortDebugString());
-    //g_center_session->SendProtocol(gmt_meta);
     _session->SendProtocol(gmt_meta);
 }
 

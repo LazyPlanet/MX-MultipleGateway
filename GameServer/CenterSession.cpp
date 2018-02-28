@@ -105,12 +105,12 @@ bool CenterSession::OnMessageProcess(const Asset::Meta& meta)
 	return true;
 }
 	
-void CenterSession::SendProtocol(pb::Message* message)
+void CenterSession::SendProtocol(const pb::Message* message)
 {
 	SendProtocol(*message);
 }
 
-void CenterSession::SendProtocol(pb::Message& message)
+void CenterSession::SendProtocol(const pb::Message& message)
 {
 	const pb::FieldDescriptor* field = message.GetDescriptor()->FindFieldByName("type_t");
 	if (!field) return;

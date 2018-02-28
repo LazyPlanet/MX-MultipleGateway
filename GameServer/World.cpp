@@ -88,5 +88,14 @@ void World::Update(int32_t diff)
 	for (auto session : _sessions) session->Update();
 }
 	
+void World::BroadCast(const pb::Message& message)
+{
+	for (auto session : _sessions)
+	{
+		if (!session) continue;
+		session->SendProtocol(message);
+	}
+}
+	
 
 }

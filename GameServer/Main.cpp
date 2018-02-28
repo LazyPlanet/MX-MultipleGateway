@@ -138,12 +138,6 @@ int main(int argc, const char* argv[])
 		//连接中心服
 		//
 		std::string center_server_address = ConfigInstance.GetString("Center_ServerIP", "0.0.0.0");
-		/*
-		int32_t center_server_port = ConfigInstance.GetInt("Center_ServerPort", 50000); 
-		boost::asio::ip::tcp::endpoint center_endpoint(boost::asio::ip::address::from_string(center_server_address), center_server_port);
-		g_center_session = std::make_shared<CenterSession>(_io_service, center_endpoint);
-		g_center_session->AsyncConnect();
-		*/
 
 		int32_t center_server_port1 = ConfigInstance.GetInt("Center_ServerPort1", 49999); 
 		int32_t center_server_port2 = ConfigInstance.GetInt("Center_ServerPort2", 50000); 
