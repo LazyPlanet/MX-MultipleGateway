@@ -74,6 +74,7 @@ public:
 	
 	bool IsCenterServer(); //是否在中心服务器
 	void SetLocalServer(int32_t server_id);
+	void SetRoom(int64_t room_id) { _stuff.set_room_id(room_id); _dirty = true; }
 	int32_t GetLocalServer() { return _stuff.server_id(); } //玩家当前所在服务器
 
 	virtual int64_t GetID() { return _stuff.common_prop().player_id(); } //获取ID
@@ -152,6 +153,8 @@ public:
 	virtual int32_t CmdPlayBack(pb::Message* message);
 	//匹配信息
 	virtual int32_t CmdGetMatchStatistics(pb::Message* message);
+	//茶馆
+	virtual int32_t CmdClanOperate(pb::Message* message);
 public:
 	//获取所有包裹
 	const Asset::Inventory& GetInventory() { return _stuff.inventory();	}
@@ -217,6 +220,9 @@ public:
 	Asset::ACCOUNT_TYPE GetAccountType() { return _account_type; } //账号类型
 
 	void MultiplyRoomCard();
+
+	int32_t GetHosterCount() { return _stuff.clan_hosters().size(); } //拥有茶馆数量
+	int32_t GetMemberCount() { return _stuff.clan_joiners().size(); } //加入茶馆数量
 };
 
 class PlayerManager : public std::enable_shared_from_this<PlayerManager>

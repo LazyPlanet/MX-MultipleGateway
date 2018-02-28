@@ -106,7 +106,7 @@ void WorldSession::OnProcessMessage(const Asset::Meta& meta)
 		message = nullptr;
 	};
 
-	//if (meta.stuff().size() == 0) return;
+	//if (meta.stuff().size() == 0) return; //可以发只包含type_t的协议
 	
 	auto result = message->ParseFromArray(meta.stuff().c_str(), meta.stuff().size());
 	if (!result) 
@@ -150,10 +150,10 @@ void WorldSession::OnProcessMessage(const Asset::Meta& meta)
 		auto player = PlayerInstance.Get(meta.player_id());
 		if (!player) 
 		{
-			ERROR("未能找到玩家:{}", meta.player_id());
+			ERROR("未能找到玩家:{} 协议数据:{}", meta.player_id(), message->ShortDebugString());
 			return;
 		}
-		player->SendProtocol(message);
+		player->SendProtocol(message); //直接进行转发
 	}
 	else //if (meta.player_id() == 0)
 	{
@@ -548,6 +548,7 @@ void WorldSession::OnProcessMessage(const Asset::Meta& meta)
 	
 			WARN("玩家:{} 逻辑服务器:{} 进入房间:{}", _player->GetID(), server_id, enter_room->ShortDebugString());
 
+			if (room_id) _player->SetRoom(room_id); //设置房间
 			if (server_id) _player->SetLocalServer(server_id); //设置玩家当前所在服务器
 			_player->SendProtocol2GameServer(enter_room); //转发
 		}

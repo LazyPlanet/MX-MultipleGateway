@@ -764,6 +764,12 @@ void Room::OnGameOver(int64_t player_id)
 	_streak_wins.clear();
 	_loubao_players.clear();
 	_jinbao_players.clear();
+	
+	Asset::ClanRoomStatusChanged proto;
+	proto.set_status(Asset::CLAN_ROOM_STATUS_TYPE_OVER);
+	//proto.mutable_room()->CopyFrom(_stuff);
+
+	if (g_center_session) g_center_session->SendProtocol(proto);
 }
 
 void Room::AddGameRecord(const Asset::GameRecord& record)
@@ -812,7 +818,7 @@ void Room::OnDisMiss(int64_t player_id, pb::Message* message)
 {
 	if (!message) return;
 
-	if (IsGmtOpened() && (!HasStarted() || HasBeenOver())) return; //代开房没开局不允许解散
+	if ((IsGmtOpened() || IsClan()) && (!HasStarted() || HasBeenOver())) return; //代开房//茶馆房没开局不允许解散
 
 	if (_dismiss_time == 0) 
 	{
@@ -953,17 +959,27 @@ bool Room::CanStarGame()
 			LOG(INFO, "GMT开房，不消耗房卡数据:{}", _stuff.ShortDebugString());
 			return true;
 		}
-		else if (!_hoster)
+			
+		const auto room_card = dynamic_cast<const Asset::Item_RoomCard*>(AssetInstance.Get(g_const->room_card_id()));
+		if (!room_card || room_card->rounds() <= 0) return false;
+
+		auto consume_count = GetOptions().open_rands() / room_card->rounds(); //待消耗房卡数
+
+		if (IsClan()) //茶馆:开局消耗,到中心服务器消耗
 		{
-			return false; //没有房主
+			Asset::Clan clan;
+			auto has_record = RedisInstance.Get("clan:" + std::to_string(_stuff.clan_id()), clan);
+
+			if (!has_record || clan.room_card_count() < consume_count) return false;
+
+			if (_games.size() == 0) OnClanCreated(); //茶馆房
+			return true;
 		}
+
+		if (!_hoster) return false; //没有房主,正常消耗
 
 		if (_hoster && _games.size() == 0) //开局消耗
 		{
-			const auto room_card = dynamic_cast<const Asset::Item_RoomCard*>(AssetInstance.Get(g_const->room_card_id()));
-			if (!room_card || room_card->rounds() <= 0) return false;
-
-			auto consume_count = GetOptions().open_rands() / room_card->rounds(); //待消耗房卡数
 			auto pay_type = GetOptions().pay_type(); //付费方式
 		
 			switch (pay_type)
@@ -1065,6 +1081,19 @@ bool Room::CanStarGame()
 	return true;
 }
 
+void Room::OnClanCreated()
+{
+	if (!IsClan()) return;
+
+	if (!g_center_session) return;
+
+	Asset::ClanRoomStatusChanged message;
+	message.set_status(Asset::CLAN_ROOM_STATUS_TYPE_START);
+	message.mutable_room()->CopyFrom(_stuff);
+
+	g_center_session->SendProtocol(message);
+}
+
 bool Room::CanDisMiss()
 {
 	for (auto player : _players)
@@ -1108,6 +1137,41 @@ void Room::Update()
 	{
 		DoDisMiss(); //解散
 	}
+}
+
+void Room::UpdateClanStatus()
+{
+	if (!IsClan()) return; //非茶馆房间不同步
+
+	Asset::ClanRoomSync message;
+
+	Asset::RoomInformation room_information;
+	room_information.set_sync_type(Asset::ROOM_SYNC_TYPE_QUERY); //外服查询房间信息
+			
+	for (const auto player : _players)
+	{
+		if (!player) continue;
+
+		auto p = room_information.mutable_player_list()->Add();
+		p->set_position(player->GetPosition());
+		p->set_player_id(player->GetID());
+		p->set_oper_type(player->GetOperState());
+		p->mutable_common_prop()->CopyFrom(player->CommonProp());
+		p->mutable_wechat()->CopyFrom(player->GetWechat());
+		p->set_ip_address(player->GetIpAddress());
+		p->set_voice_member_id(player->GetVoiceMemberID());
+	}
+
+	Asset::RoomQueryResult room_info;
+	room_info.set_room_id(GetID());
+	room_info.set_clan_id(GetClan());
+	room_info.set_create_time(GetCreateTime());
+	room_info.mutable_options()->CopyFrom(GetOptions());
+	room_info.mutable_information()->CopyFrom(room_information);
+
+	message.set_room_status(room_info.SerializeAsString());
+
+	if (g_center_session) g_center_session->SendProtocol(message); //同步给CS
 }
 	
 /////////////////////////////////////////////////////

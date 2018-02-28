@@ -5,6 +5,7 @@
 #include <cpp_redis/cpp_redis>
 
 #include "Player.h"
+#include "Clan.h"
 #include "Timer.h"
 #include "Mall.h"
 #include "Protocol.h"
@@ -48,7 +49,8 @@ Player::Player()
 	AddHandler(Asset::META_TYPE_SHARE_ROOM_HISTORY, std::bind(&Player::CmdGetBattleHistory, this, std::placeholders::_1));
 	AddHandler(Asset::META_TYPE_SHARE_RECHARGE, std::bind(&Player::CmdRecharge, this, std::placeholders::_1));
 	AddHandler(Asset::META_TYPE_SHARE_PLAY_BACK, std::bind(&Player::CmdPlayBack, this, std::placeholders::_1));
-	AddHandler(Asset::META_TYPE_SHARE_PLAY_BACK, std::bind(&Player::CmdGetMatchStatistics, this, std::placeholders::_1));
+	AddHandler(Asset::META_TYPE_SHARE_MATCHING_STATS, std::bind(&Player::CmdGetMatchStatistics, this, std::placeholders::_1));
+	AddHandler(Asset::META_TYPE_SHARE_CLAN_OPERATION, std::bind(&Player::CmdClanOperate, this, std::placeholders::_1));
 
 	AddHandler(Asset::META_TYPE_C2S_GET_REWARD, std::bind(&Player::CmdGetReward, this, std::placeholders::_1));
 }
@@ -69,24 +71,6 @@ bool Player::Connected()
 int32_t Player::Load()
 {
 	if (_player_id == 0) return 1;
-
-	/*
-	cpp_redis::future_client client;
-	client.connect(ConfigInstance.GetString("Redis_ServerIP", "127.0.0.1"), ConfigInstance.GetInt("Redis_ServerPort", 6379));
-	if (!client.is_connected()) return 2;
-	
-	auto has_auth = client.auth(ConfigInstance.GetString("Redis_Password", "!QAZ%TGB&UJM9ol."));
-	if (has_auth.get().ko()) return 3;
-
-	auto get = client.get("player:" + std::to_string(_player_id));
-	cpp_redis::reply reply = get.get();
-	client.commit();
-
-	if (!reply.is_string()) return 4;
-
-	auto success = _stuff.ParseFromString(reply.as_string());
-	if (!success) return 5;
-	*/
 
 	auto key = "player:" + std::to_string(_player_id);
 	auto loaded = RedisInstance.Get(key, _stuff);
@@ -982,6 +966,15 @@ int32_t Player::CmdGetMatchStatistics(pb::Message* message)
 
 	return 0;
 }
+
+int32_t Player::CmdClanOperate(pb::Message* message)
+{
+	auto clan_oper = dynamic_cast<Asset::ClanOperation*>(message);
+	if (!clan_oper) return 1;
+	
+	ClanInstance.OnOperate(shared_from_this(), clan_oper);
+	return 0;
+}
 	
 void Player::MultiplyRoomCard()
 {
@@ -1177,18 +1170,6 @@ void PlayerManager::Emplace(int64_t player_id, std::shared_ptr<Player> player)
 std::shared_ptr<Player> PlayerManager::GetPlayer(int64_t player_id)
 {
 	std::lock_guard<std::mutex> lock(_mutex);
-
-	for (auto it = _players.begin(); it != _players.end(); )
-	{
-		if (!it->second)
-		{
-			it = _players.erase(it);
-		}
-		else
-		{
-			++it;
-		}
-	}
 
 	auto it = _players.find(player_id);
 	if (it == _players.end()) return nullptr;
