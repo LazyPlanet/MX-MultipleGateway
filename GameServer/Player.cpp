@@ -3480,19 +3480,15 @@ bool Player::CheckAllGangPai(::google::protobuf::RepeatedField<Asset::PaiOperati
 				{
 					//证明是杠牌,可以杠
 				}
-				/*
-				else if (!_game->IsFanPai(card_type, card_value))
+				else/* if (!_game->IsFanPai(card_type, card_value))*/
 				{
 					continue;
 				}
-				*/
 			}
-			/*
-			else if (!_game->IsFanPai(card_type, card_value))
+			else/* if (!_game->IsFanPai(card_type, card_value))*/
 			{
 				continue;
 			}
-			*/
 			
 			Asset::PaiElement pai;
 			pai.set_card_type((Asset::CARD_TYPE)card_type);
@@ -3540,8 +3536,8 @@ void Player::OnGangPai(const Asset::PaiElement& pai, int64_t source_player_id)
 		auto ming_gang = pai;
 		ming_gang.set_source_player_id(source_player_id);
 
-		/*if (!_game->IsFanPai(pai)) _minggang.push_back(ming_gang); //明杠
-		else */_angang.push_back(pai); //暗杠
+		/*if (_game->IsFanPai(pai)) _angang.push_back(ming_gang); //明杠
+		else */_minggang.push_back(pai); //暗杠
 	}
 	else if (count == 4)
 	{
@@ -4301,7 +4297,7 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 
 		if (_fapai_count == 1) 
 		{
-			if (_room->IsChaoYang() || _room->IsJianPing()) CheckXuanFengGang(); //营口麻将，不可以攒到抓牌；非庄家旋风杠检查
+			CheckXuanFengGang(); 
 			CheckZhuiFengGang(card); //追风杠
 		}
 			
