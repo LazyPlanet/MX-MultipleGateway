@@ -4119,61 +4119,7 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 
 	if (LookAtBaopai()) return 0; //生成宝牌，进宝检查
 
-	if (false && _player_id == 262560 && _cards_inhand.size() == 0)
-	{
-		_cards_inhand = {
-			{ 1, {2, 2, 7, 7, 7} },
-			{ 2, {2, 2, 2} },
-			{ 3, {3, 3, 4} },
-			{ 5, {1, 2} },
-		};
-		
-		_cards_outhand = {
-			//{ 1, { 7, 7, 7, 6, 7, 8} },
-			//{ 2, { 3, 4, 5 } },
-			//{ 4, { 3, 3, 3 } },
-		};
-
-		/*
-		Asset::PaiElement gang;
-		gang.set_card_type((Asset::CARD_TYPE)1);
-		gang.set_card_value(3);
-
-		_minggang.push_back(gang);
-		*/
-	}
-	else if (false && _player_id == 262553 && _cards_inhand.size() == 0 && _game->GetID() == 1)
-	{
-		_cards_inhand = {
-			{ 1, {5, 7} },
-			{ 2, {2, 2, 3, 5, 5, 7} },
-			//{ 3, {2, 2} },
-			{ 5, {1, 1, 2, 2, 3, 3} },
-		};
-		
-		_cards_outhand = {
-			//{ 1, { 1, 1, 1} },
-			//{ 2, { 4, 4, 4} },
-			//{ 3, { 8, 8, 8 } },
-		};
-	}
-	else if (false && _player_id == 265892 && _cards_inhand.size() == 0)
-	{
-		_cards_inhand = {
-			{ 1, {1, 1, 7, 8} },
-			{ 2, {1, 1, 1, 6, 7, 8} },
-			{ 3, {6, 6, 6} },
-		};
-	}
-	else if (false && _player_id == 265888 && _cards_inhand.size() == 0)
-	{
-		_cards_inhand = {
-			{ 1, {1, 2, 6, 8, 9} },
-			{ 2, {2, 3, 5, 7, 8} },
-			{ 3, {2, 2, 8} },
-		};
-	}
-	else if (false && _player_id == 265873 && _cards_inhand.size() == 0)
+	if (false && _player_id == 265873 && _cards_inhand.size() == 0)
 	{
 		_cards_inhand = {
 			{ 1, {1, 2, 6, 8, 9} },
@@ -4191,11 +4137,6 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 			_cards_inhand[card.card_type()].push_back(card.card_value()); //插入玩家手牌
 		}
 	}
-
-	//for (auto& cards : _cards_inhand) //整理牌
-	//{
-	//	std::sort(cards.second.begin(), cards.second.end(), [](int x, int y){ return x < y; }); //由小到大
-	//}
 
 	for (auto& cards : _cards_inhand) //整理牌
 		std::sort(cards.second.begin(), cards.second.end(), [](int x, int y){ return x < y; }); //由小到大

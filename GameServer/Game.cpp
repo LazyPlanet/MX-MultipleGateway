@@ -147,7 +147,8 @@ void Game::OnStarted()
 	saizi.mutable_random_result()->Add(result);
 
 	auto cards = FaPai(1); 
-	auto huipai = GameInstance.GetCard(cards[0]);
+	auto fanpai = GameInstance.GetCard(cards[0]);
+	auto huipai = fanpai;
 
 	switch (huipai.card_type())
 	{
@@ -181,7 +182,7 @@ void Game::OnStarted()
 		break;
 	}
 
-	saizi.mutable_pai()->CopyFrom(huipai);
+	saizi.mutable_pai()->CopyFrom(fanpai);
 
 	BroadCast(saizi); //会儿牌
 
@@ -422,7 +423,9 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 	if (!CanPaiOperate(player)) 
 	{
 		player->AlertMessage(Asset::ERROR_GAME_NO_PERMISSION); //没有权限，没到玩家操作，防止外挂
-		//return; //不允许操作
+
+		ERROR("尚未轮到该玩家:{} 操作:{}", curr_player_id, pai_operate_string);
+		return; //不允许操作
 	}
 
 	//if (CommonTimerInstance.GetTime() < _oper_cache.time_out()) ClearOperation(); //已经超时，清理缓存以及等待玩家操作的状态
@@ -2210,8 +2213,10 @@ bool GameManager::Load()
 		Asset::MJCard* asset_card = dynamic_cast<Asset::MJCard*>(message); 
 		if (!asset_card) return false;
 
-		if (asset_card->card_type() != Asset::CARD_TYPE_WANZI && asset_card->card_type() != Asset::CARD_TYPE_BINGZI && asset_card->card_type() != Asset::CARD_TYPE_TIAOZI 
-				&& asset_card->card_type() == Asset::CARD_TYPE_FENG && asset_card->card_type() != Asset::CARD_TYPE_JIAN) continue;
+		static std::set<int32_t> _valid_cards = { Asset::CARD_TYPE_WANZI, Asset::CARD_TYPE_BINGZI, Asset::CARD_TYPE_TIAOZI, Asset::CARD_TYPE_FENG, Asset::CARD_TYPE_JIAN }; 
+
+		auto it = _valid_cards.find(asset_card->card_type());
+		if (it == _valid_cards.end()) continue;
 		
 		for (int k = 0; k < asset_card->group_count(); ++k) //4组，麻将每张牌有4张
 		{
