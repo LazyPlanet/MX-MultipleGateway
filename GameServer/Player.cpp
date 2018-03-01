@@ -3415,6 +3415,8 @@ bool Player::CanTingIfGang(const Asset::PaiElement& pai)
 bool Player::CheckAllGangPai(::google::protobuf::RepeatedField<Asset::PaiOperationAlert_AlertElement>& gang_list)
 {
 	if (!_room || !_game) return false;
+	
+	if (_room->HasJueTouHui()) return false; //绝头会儿,不让杠
 
 	if (!CheckMingPiao(Asset::PAI_OPER_TYPE_GANGPAI)) return false; //明飘检查
 
