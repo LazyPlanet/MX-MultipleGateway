@@ -42,6 +42,7 @@ private:
 	std::vector<int32_t> _saizi_random_result; //开局股子缓存
 
 	Asset::PaiElement _huipai; //会儿牌
+	Asset::PaiElement _fanpai; //翻会儿的时候翻的牌
 	
 	Asset::PaiOperationCache _oper_cache; //牌操作缓存
 	std::vector<Asset::PaiOperationCache> _oper_list; //可操作列表
@@ -121,12 +122,20 @@ public:
 
 	const Asset::PaiElement& GetHuiPai() { return _huipai; } //获取会儿牌
 	bool IsHuiPai(const Asset::PaiElement& pai) {  //是否是会儿牌
-		if (_huipai.card_type() == 0 || _huipai.card_value() == 0) return false;
-		return pai.card_type() == _huipai.card_type() && pai.card_value() == _huipai.card_value(); 
+		return IsHuiPai(pai.card_type(), pai.card_value()); 
 	} 
 	bool IsHuiPai(int32_t card_type, int32_t card_value) {  //是否是会儿牌
 		if (_huipai.card_type() == 0 || _huipai.card_value() == 0) return false;
 		return card_type == _huipai.card_type() && card_value == _huipai.card_value();
+	}
+	
+	const Asset::PaiElement& GetFanPai() { return _fanpai; } //获取翻牌
+	bool IsFanPai(const Asset::PaiElement& pai) {  //是否是翻牌//墙头牌
+		return IsFanPai(pai.card_type(), pai.card_value()); 
+	} 
+	bool IsFanPai(int32_t card_type, int32_t card_value) {  //是否是翻牌//墙头牌
+		if (_fanpai.card_type() == 0 || _fanpai.card_value() == 0) return false;
+		return card_type == _fanpai.card_type() && card_value == _fanpai.card_value();
 	}
 
 	bool CheckLiuJu(); //流局检查

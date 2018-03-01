@@ -329,6 +329,7 @@ public:
 
 	virtual int32_t OnFaPai(std::vector<int32_t>& cards); //发牌
 	virtual int32_t OnFaPai(const Asset::PaiElement& pai); //纯粹发牌，没有逻辑
+	virtual bool OnFaPaiCheck(Asset::PaiOperationAlert& alert); //发牌后检查
 
 	std::vector<Asset::PAI_OPER_TYPE> CheckPai(const Asset::PaiElement& pai, int64_t source_player_id);
 	void AddZhang(const Asset::PaiElement& zhang);

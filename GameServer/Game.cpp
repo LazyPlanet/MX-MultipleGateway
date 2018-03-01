@@ -147,8 +147,8 @@ void Game::OnStarted()
 	saizi.mutable_random_result()->Add(result);
 
 	auto cards = FaPai(1); 
-	auto fanpai = GameInstance.GetCard(cards[0]);
-	auto huipai = fanpai;
+	_fanpai = GameInstance.GetCard(cards[0]);
+	auto huipai = _fanpai;
 
 	switch (huipai.card_type())
 	{
@@ -182,7 +182,7 @@ void Game::OnStarted()
 		break;
 	}
 
-	saizi.mutable_pai()->CopyFrom(fanpai);
+	saizi.mutable_pai()->CopyFrom(_fanpai);
 
 	BroadCast(saizi); //会儿牌
 
@@ -221,6 +221,7 @@ void Game::ClearState()
 {
 	_baopai.Clear();
 	_huipai.Clear();
+	_fanpai.Clear();
 
 	_oper_cache.Clear();
 
@@ -1244,8 +1245,8 @@ void Game::Calculate(int64_t hupai_player_id/*胡牌玩家*/, int64_t dianpao_pl
 	auto hu_player = GetPlayer(hupai_player_id);
 	if (!hu_player) return;
 
-	base_score *= pow(2, hu_player->GetJueTouHuiCount()); //绝头会儿番数
-	
+	base_score *= (GetMultiple(Asset::FAN_TYPE_JUETOUHUI) * pow(2, hu_player->GetJueTouHuiCount())); //绝头会儿番数
+
 	if (IsBanker(hupai_player_id)) 
 	{
 		fan_list.emplace(Asset::FAN_TYPE_ZHUANG);
