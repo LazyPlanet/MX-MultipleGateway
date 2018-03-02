@@ -2119,13 +2119,34 @@ bool Player::CheckHuiHu(const Asset::PaiElement& pai, bool check_zimo, bool calc
 	auto jiangang = _jiangang; //旋风杠，本质是明杠
 	auto fenggang = _fenggang; //旋风杠，本质是暗杠
 	
+	if (check_zimo) cards_inhand[pai.card_type()].push_back(pai.card_value()); //是否自摸抓牌
+	
 	auto it = cards_inhand.find(huipai.card_type());
 	if (it == cards_inhand.end()) return false; //由于前面GetHuiPaiCount的检查,理论上此处一定有会牌
 	 
 	auto remove_it = std::remove(it->second.begin(), it->second.end(), huipai.card_value()); //删除会牌
 	if (remove_it != it->second.end()) it->second.erase(remove_it, it->second.end());
 
-	auto cards_inhand_without_hupai = cards_inhand;
+	if (_room->HasJueTouHui()) 
+	{
+		const auto& juetous = CalculateJueTouHui(cards_inhand, cards_outhand); //支持绝头会儿
+		if (juetous.size())
+		{
+			for (const auto& juetou : juetous)
+			{
+				auto it = std::find(cards_inhand[juetou.card_type()].begin(), cards_inhand[juetou.card_type()].end(), juetou.card_value());
+				if (it == cards_inhand[juetou.card_type()].end()) return false; //理论上不会出现
+
+				cards_inhand[juetou.card_type()].erase(it); //删除一张绝头会儿
+
+				count += 1; //绝头会儿也是会牌，增加一张会儿牌
+
+				DEBUG("玩家:{} 删除绝头会:{} 增加会儿数量:{}", _player_id, juetou.ShortDebugString(), count);
+			}
+		}
+	}
+
+	auto cards_inhand_without_huipai = cards_inhand;
 
 	const auto& cards = GameInstance.GetPais();
 
@@ -2141,25 +2162,25 @@ bool Player::CheckHuiHu(const Asset::PaiElement& pai, bool check_zimo, bool calc
 		for (size_t j = 0; j < COMB; ++j)
 		{
 			auto pai_element = cards[vi[j]];
-			cards_inhand_without_hupai[pai_element.card_type()].push_back(pai_element.card_value());
+			cards_inhand_without_huipai[pai_element.card_type()].push_back(pai_element.card_value());
 		}
 			
-		bool can_hupai = CheckHuPai(cards_inhand_without_hupai, cards_outhand, minggang, angang, jiangang, fenggang, pai, check_zimo, calculate);
+		bool can_hupai = CheckHuPai(cards_inhand_without_huipai, cards_outhand, minggang, angang, jiangang, fenggang, pai, false, calculate);
 		if (can_hupai && calculate) _hui_fan_list.push_back(_fan_list);
 		if (can_hupai && !calculate) return true;
 	}
 
 	while (CommonUtil::CombinationWithRepeated(SET, COMB, vi))
 	{
-		cards_inhand_without_hupai = cards_inhand;
+		cards_inhand_without_huipai = cards_inhand;
 
 		for (size_t j = 0; j < COMB; ++j)
 		{
 			auto pai_element = cards[vi[j]];
-			cards_inhand_without_hupai[pai_element.card_type()].push_back(pai_element.card_value());
+			cards_inhand_without_huipai[pai_element.card_type()].push_back(pai_element.card_value());
 		}
 		
-		bool can_hupai = CheckHuPai(cards_inhand_without_hupai, cards_outhand, minggang, angang, jiangang, fenggang, pai, check_zimo, calculate);
+		bool can_hupai = CheckHuPai(cards_inhand_without_huipai, cards_outhand, minggang, angang, jiangang, fenggang, pai, check_zimo, calculate);
 		if (!can_hupai) continue;
 		
 		if (calculate) {
@@ -2721,7 +2742,7 @@ bool Player::CheckHuPai(const std::map<int32_t, std::vector<int32_t>>& cards_inh
 		}
 	}
 
-	if (_room->HasJueTouHui()) CalculateJueTouHui(cards_inhand, cards_outhand);
+	//if (_room->HasJueTouHui()) CalculateJueTouHui(cards_inhand, cards_outhand);
 			
 	if (_room->HasHuiPai())
 	{
@@ -2747,7 +2768,10 @@ bool Player::CheckZiMo(const Asset::PaiElement& pai, bool calculate)
 
 	if (HasTuoGuan()) return false;
 
-	return CheckHuPai(pai, true, calculate);
+	auto hupai = CheckHuPai(pai, true, calculate);
+	if (hupai) return true;
+
+	return CheckHuiHu(pai, true, calculate); //是否能胡会儿牌
 }
 	
 bool Player::CheckHuPai(const Asset::PaiElement& pai, bool check_zimo, bool calculate)
@@ -2894,9 +2918,9 @@ bool Player::IsSiGuiYi(const Asset::PaiElement& pai)
 //
 //手里四个一饼，其中一个是绝头混
 //
-void Player::CalculateJueTouHui(const std::map<int32_t, std::vector<int32_t>>& cards_inhand, const std::map<int32_t, std::vector<int32_t>>& cards_outhand)
+const std::vector<Asset::PaiElement>& Player::CalculateJueTouHui(const std::map<int32_t, std::vector<int32_t>>& cards_inhand, const std::map<int32_t, std::vector<int32_t>>& cards_outhand)
 {
-	if (_juetouhuis.size()) return;
+	if (_juetouhuis.size()) return _juetouhuis;
 
 	for (const auto& crds : cards_inhand)
 	{
@@ -2945,6 +2969,10 @@ void Player::CalculateJueTouHui(const std::map<int32_t, std::vector<int32_t>>& c
 			_juetouhuis.push_back(pai);
 		}
 	}
+
+	DEBUG("玩家:{} 拥有绝头会儿数量:{}", _player_id, _juetouhuis.size());
+
+	return _juetouhuis;
 }
 
 bool Player::CheckQiDui(const std::map<int32_t, std::vector<int32_t>>& cards_inhand, const std::map<int32_t, std::vector<int32_t>>& cards_outhand)
@@ -3736,7 +3764,14 @@ void Player::CheckZhuiFengGang(const Asset::PaiElement& zhuapai)
 		pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_ZHUIFENG_JIAN);
 	}
 	
-	if (alert.pais().size()) SendProtocol(alert); //提示Client
+	if (alert.pais().size()) SendProtocol(alert); //提示追风杠
+	
+	/*
+	
+	auto it = std::find(_cards_inhand[zhuapai.card_type()].begin(), _cards_inhand[zhuapai.card_type()].end(), zhuapai.card_value());
+	if (it == _cards_inhand[zhuapai.card_type()].end()) return;
+
+	_cards_inhand[zhuapai.card_type()].erase(it);
 			
 	auto cards = _game->FaPai(1); 
 	OnFaPai(cards); 
@@ -3744,6 +3779,7 @@ void Player::CheckZhuiFengGang(const Asset::PaiElement& zhuapai)
 	alert.Clear(); 
 
 	if (OnFaPaiCheck(alert)) SendProtocol(alert);
+	*/
 }
 
 //玩家能不能听牌的检查
@@ -3766,11 +3802,7 @@ bool Player::CanTingPai(const Asset::PaiElement& pai)
 	auto fenggang = _fenggang; //旋风杠，本质是暗杠
 
 	auto find_it = std::find(cards_inhand[pai.card_type()].begin(), cards_inhand[pai.card_type()].end(), pai.card_value());
-	if (find_it == cards_inhand[pai.card_type()].end()) 
-	{
-		DEBUG_ASSERT(false);
-		return false; //理论上一定能找到
-	}
+	if (find_it == cards_inhand[pai.card_type()].end()) return false; //理论上一定能找到
 			
 	cards_inhand[pai.card_type()].erase(find_it); //删除这张牌
 

@@ -439,7 +439,7 @@ public:
 	bool HasKeOutHand();
 	bool HasChiPaiOutHand();
 	bool HasPengJianPai(); //是否碰了箭牌
-	void CalculateJueTouHui(const std::map<int32_t, std::vector<int32_t>>& cards_inhand, const std::map<int32_t, std::vector<int32_t>>& cards_outhand); //获取绝头会儿的数量
+	const std::vector<Asset::PaiElement>& CalculateJueTouHui(const std::map<int32_t, std::vector<int32_t>>& cards_inhand, const std::map<int32_t, std::vector<int32_t>>& cards_outhand); //获取绝头会儿的数量
 	int32_t GetJueTouHuiCount() { return _juetouhuis.size(); }
 
 	bool Is28Zhang(); //是否28作掌

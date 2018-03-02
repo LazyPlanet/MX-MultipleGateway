@@ -187,6 +187,8 @@ void Game::OnStarted()
 	BroadCast(saizi); //会儿牌
 
 	_huipai = huipai;
+
+	DEBUG("房间:{} 牌局:{} 翻牌:{} 生成会牌:{}", _room_id, _game_id, _fanpai.ShortDebugString(), _huipai.ShortDebugString());
 }
 
 bool Game::OnGameOver(int64_t player_id)
