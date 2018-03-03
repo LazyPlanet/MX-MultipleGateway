@@ -2158,6 +2158,8 @@ bool Player::CheckHuiHu(const Asset::PaiElement& pai, bool check_zimo, bool calc
 	
 	if (count == 0) return false; //没有会牌，也没有绝头会儿
 
+	DEBUG("玩家:{} 拥有会儿牌数量:{}", _player_id, count);
+
 	auto cards_inhand_without_huipai = cards_inhand;
 
 	const auto& cards = GameInstance.GetPais();
@@ -2175,9 +2177,11 @@ bool Player::CheckHuiHu(const Asset::PaiElement& pai, bool check_zimo, bool calc
 		{
 			auto pai_element = cards[vi[j]];
 			cards_inhand_without_huipai[pai_element.card_type()].push_back(pai_element.card_value());
+
+			//DEBUG("玩家:{} 当前替换牌数据:{}", _player_id, pai_element.ShortDebugString());
 		}
 			
-		bool can_hupai = CheckHuPai(cards_inhand_without_huipai, cards_outhand, minggang, angang, jiangang, fenggang, pai, check_zimo, calculate);
+		bool can_hupai = CheckHuPai(cards_inhand_without_huipai, cards_outhand, minggang, angang, jiangang, fenggang, pai, true, calculate);
 		if (can_hupai && calculate) _hui_fan_list.push_back(_fan_list);
 		if (can_hupai && !calculate) return true;
 	}
@@ -2186,13 +2190,29 @@ bool Player::CheckHuiHu(const Asset::PaiElement& pai, bool check_zimo, bool calc
 	{
 		cards_inhand_without_huipai = cards_inhand;
 
+		Asset::ShunZi shunzi;
+		std::stringstream card_value_list;
+
 		for (size_t j = 0; j < COMB; ++j)
 		{
 			auto pai_element = cards[vi[j]];
 			cards_inhand_without_huipai[pai_element.card_type()].push_back(pai_element.card_value());
+
+			shunzi.mutable_pai()->Add()->CopyFrom(pai_element);
+			
 		}
+			
+		//DEBUG("玩家:{} 当前替换牌数据:{}", _player_id, shunzi.ShortDebugString());
+
+		for (auto cards : cards_inhand_without_huipai)
+		{
+			for (auto card_value : cards.second)
+				card_value_list << cards.first << ":" << card_value;
+		}
+				
+		//DEBUG("玩家:{} 当前手牌:{}", _player_id, card_value_list.str());
 		
-		bool can_hupai = CheckHuPai(cards_inhand_without_huipai, cards_outhand, minggang, angang, jiangang, fenggang, pai, check_zimo, calculate);
+		bool can_hupai = CheckHuPai(cards_inhand_without_huipai, cards_outhand, minggang, angang, jiangang, fenggang, pai, true, calculate);
 		if (!can_hupai) continue;
 		
 		if (calculate) {
@@ -2225,7 +2245,7 @@ bool Player::CheckHuiHu(const Asset::PaiElement& pai, bool check_zimo, bool calc
 
 	_fan_list = max_fan_list;
 
-	return false;
+	return _hui_fan_list.size() > 0;
 }
 
 int32_t Player::GetHuiPaiCount()
@@ -2932,7 +2952,7 @@ bool Player::IsSiGuiYi(const Asset::PaiElement& pai)
 //
 const std::vector<Asset::PaiElement>& Player::CalculateJueTouHui(const std::map<int32_t, std::vector<int32_t>>& cards_inhand, const std::map<int32_t, std::vector<int32_t>>& cards_outhand)
 {
-	//if (_juetouhuis.size()) return _juetouhuis;
+	if (_juetouhuis.size()) _juetouhuis.clear();
 
 	/*
 	for (const auto& crds : cards_inhand)
@@ -3676,7 +3696,12 @@ void Player::OnBeenQiangGangWithGivingUp(const Asset::PaiElement& pai, int64_t s
 
 const std::vector<Asset::PAI_OPER_TYPE>& Player::CheckXuanFengGang()
 {
-	if (_fapai_count > 1) return _xf_gang;
+	if (_fapai_count > 1) 
+	{
+		_xf_gang.clear();
+
+		return _xf_gang;
+	}
 
 	_xf_gang.clear();
 

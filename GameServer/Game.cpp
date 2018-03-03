@@ -559,7 +559,7 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				//
 				//旋风杠检查
 				//
-				for (auto gang : player->CheckXuanFengGang())
+				for (auto gang : player_next->CheckXuanFengGang())
 				{
 					auto pai_perator = alert.mutable_pais()->Add();
 					pai_perator->mutable_oper_list()->Add(gang);
@@ -609,7 +609,7 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 
 				Calculate(player->GetID(), _oper_cache.source_player_id(), fan_list); //结算
 			}
-			else if (!player->HasPai(_huipai) && player->CheckZiMo(pai)) //平胡
+			else if (player->CheckZiMo(pai)) //平胡
 			{
 				auto fan_list = player->GetFanList();
 
@@ -639,7 +639,7 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 
 				Calculate(player->GetID(), _oper_cache.source_player_id(), fan_list); //结算
 			}
-			else if (player->HasPai(_huipai) && ((player->CheckCardsInhand() && player->CheckHuiHu(pai, false, true)) || (!player->CheckCardsInhand() && player->CheckHuiHu(pai, true, true))))
+			else if ((player->ShouldZhuaPai() && player->CheckHuiHu(pai, false, true))/* || (player->ShouldDaPai() && player->CheckHuiHu(pai, true, true))*/)
 			{
 				auto fan_list = player->GetFanList();
 				
@@ -1114,7 +1114,7 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 			//
 			//开局状态，上家打牌，其他玩家可碰，但放弃，此时需要检查当前玩家是否可以旋风杠
 			//
-			for (auto gang : player->CheckXuanFengGang())
+			for (auto gang : player_next->CheckXuanFengGang())
 			{
 				auto pai_perator = alert.mutable_pais()->Add();
 				pai_perator->mutable_oper_list()->Add(gang);
@@ -2277,6 +2277,8 @@ bool GameManager::Load()
 				Asset::PaiElement card;
 				card.set_card_type(asset_card->card_type());
 				card.set_card_value(asset_card->cards(i).value());
+
+				DEBUG("加载牌数据:{}", card.ShortDebugString());
 
 				if (k == 0) _pais.push_back(card); //每张牌存一个
 				_cards.emplace(_cards.size() + 1, card); //从1开始的索引
