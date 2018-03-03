@@ -2128,11 +2128,14 @@ bool Player::CheckHuiHu(const Asset::PaiElement& pai, bool check_zimo, bool calc
 	
 	if (!check_zimo) cards_inhand[pai.card_type()].push_back(pai.card_value()); //是否自摸抓牌
 	
-	auto it = cards_inhand.find(huipai.card_type());
-	if (it == cards_inhand.end()) return false; //由于前面GetHuiPaiCount的检查,理论上此处一定有会牌
-	 
-	auto remove_it = std::remove(it->second.begin(), it->second.end(), huipai.card_value()); //删除会牌
-	if (remove_it != it->second.end()) it->second.erase(remove_it, it->second.end());
+	if (count)
+	{
+		auto it = cards_inhand.find(huipai.card_type());
+		if (it == cards_inhand.end()) return false; //由于前面GetHuiPaiCount的检查,理论上此处一定有会牌
+		 
+		auto remove_it = std::remove(it->second.begin(), it->second.end(), huipai.card_value()); //删除会牌
+		if (remove_it != it->second.end()) it->second.erase(remove_it, it->second.end());
+	}
 
 	if (_room->HasJueTouHui()) 
 	{
@@ -3455,6 +3458,8 @@ bool Player::CanTingIfGang(const Asset::PaiElement& pai)
 
 bool Player::CheckAllGangPai(::google::protobuf::RepeatedField<Asset::PaiOperationAlert_AlertElement>& gang_list)
 {
+	if (_room->HasJueTouHui()) return false; //绝头会儿,不让杠
+
 	return CheckAllGangPai(gang_list, _cards_inhand, _cards_outhand);
 }
 
@@ -3467,8 +3472,6 @@ bool Player::CheckAllGangPai(::google::protobuf::RepeatedField<Asset::PaiOperati
 {
 	if (!_room || !_game) return false;
 	
-	if (_room->HasJueTouHui()) return false; //绝头会儿,不让杠
-
 	if (!CheckMingPiao(Asset::PAI_OPER_TYPE_GANGPAI)) return false; //明飘检查
 
 	//
