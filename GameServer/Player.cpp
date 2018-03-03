@@ -764,13 +764,6 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 		
 		case Asset::PAI_OPER_TYPE_XUANFENG_FENG: //旋风杠
 		{
-			/*
-			if (_oper_count >= 2) 
-			{
-				return 5;
-			}
-			*/
-
 			--_oper_count;
 			
 			if (!CheckFengGangPai(_cards_inhand)) 
@@ -785,13 +778,6 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 		
 		case Asset::PAI_OPER_TYPE_XUANFENG_JIAN: //旋风杠
 		{
-			/*
-			if (_oper_count >= 2) 
-			{
-				return 6;
-			}
-			*/
-			
 			--_oper_count;
 	
 			if (!CheckJianGangPai(_cards_inhand)) 
@@ -801,6 +787,19 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 			}
 			
 			OnGangJianPai();
+		}
+		break;
+
+		case Asset::PAI_OPER_TYPE_ZHUIFENG_FENG:
+		case Asset::PAI_OPER_TYPE_ZHUIFENG_JIAN:
+		{
+			if (!CheckFengGangPai(_cards_inhand)) 
+			{
+				LOG(ERROR, "玩家:{}在房间:{}第:{}局不能旋风杠，不满足条件:{}", _player_id, _room->GetID(), _game->GetID(), debug_string);
+				return 13;
+			}
+
+			OnGangZhuiFeng(pai_operate->oper_type(), pai_operate->pai());
 		}
 		break;
 		
@@ -3710,45 +3709,47 @@ const std::vector<Asset::PAI_OPER_TYPE>& Player::CheckXuanFengGang()
 	if (CheckFengGangPai(_cards_inhand)) _xf_gang.push_back(Asset::PAI_OPER_TYPE_XUANFENG_FENG);
 	if (CheckJianGangPai(_cards_inhand)) _xf_gang.push_back(Asset::PAI_OPER_TYPE_XUANFENG_JIAN);
 
+	CheckZhuiFengGang(_cards_inhand); //追风杠
+
 	return _xf_gang;
 }
+	
+void Player::OnGangZhuiFeng(Asset::PAI_OPER_TYPE oper_type, const Asset::PaiElement& pai)
+{
+	auto it = std::find(_cards_inhand[pai.card_type()].begin(), _cards_inhand[pai.card_type()].end(), pai.card_value());
+	if (it == _cards_inhand[pai.card_type()].end()) return;
 
-void Player::CheckZhuiFengGang()
+	if (oper_type == Asset::PAI_OPER_TYPE_ZHUIFENG_FENG)
+	{
+		++_fenggang;	
+	}
+	else if (oper_type == Asset::PAI_OPER_TYPE_ZHUIFENG_JIAN)
+	{
+		++_jiangang;	
+	}
+
+	_cards_inhand[pai.card_type()].erase(it); //删除牌
+			
+	auto cards = _game->FaPai(1); 
+	OnFaPai(cards); 
+	
+	Asset::PaiOperationAlert alert; //提示协议
+	if (OnFaPaiCheck(alert)) SendProtocol(alert);
+}
+
+void Player::CheckZhuiFengGang(std::map<int32_t/*麻将牌类型*/, std::vector<int32_t>/*牌值*/>& cards)
 {
 	if (!_room || !_game) return;
 
-	Asset::PaiOperationAlert alert;
-
-	/*
 	if (_fenggang)
 	{
-		auto pai_perator = alert.mutable_pais()->Add();
-		pai_perator->mutable_pai()->CopyFrom(zhuapai);
-		pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_ZHUIFENG_FENG);
+		if (_cards_inhand[Asset::CARD_TYPE_FENG].size()) _xf_gang.push_back(Asset::PAI_OPER_TYPE_ZHUIFENG_FENG);
 	}
 	
 	if (_jiangang)
 	{
-		auto pai_perator = alert.mutable_pais()->Add();
-		pai_perator->mutable_pai()->CopyFrom(zhuapai);
-		pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_ZHUIFENG_JIAN);
+		if (_cards_inhand[Asset::CARD_TYPE_JIAN].size()) _xf_gang.push_back(Asset::PAI_OPER_TYPE_ZHUIFENG_JIAN);
 	}
-	
-	if (alert.pais().size()) SendProtocol(alert); //提示追风杠
-	
-	
-	auto it = std::find(_cards_inhand[zhuapai.card_type()].begin(), _cards_inhand[zhuapai.card_type()].end(), zhuapai.card_value());
-	if (it == _cards_inhand[zhuapai.card_type()].end()) return;
-
-	_cards_inhand[zhuapai.card_type()].erase(it);
-			
-	auto cards = _game->FaPai(1); 
-	OnFaPai(cards); 
-
-	alert.Clear(); 
-
-	if (OnFaPaiCheck(alert)) SendProtocol(alert);
-	*/
 }
 
 //玩家能不能听牌的检查
@@ -3942,11 +3943,7 @@ void Player::OnGangFengPai()
 	++_fenggang;
 	
 	auto cards = _game->TailPai(1); //从后楼给玩家取一张牌
-	if (cards.size() == 0) return;
-
 	OnFaPai(cards);
-
-	if (cards.size() == 0) return;
 
 	Asset::PaiOperationAlert alert;
 	if (OnFaPaiCheck(alert)) SendProtocol(alert);
@@ -4140,6 +4137,8 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 
 	if (!_room || !_game) return 1;
 
+	if (cards.size() == 0) return 15;
+
 	if (!ShouldZhuaPai()) 
 	{
 		LOG(ERROR, "玩家:{}在房间:{}第:{}局中不能抓牌，当前手中牌数量:{}", _player_id, _room->GetID(), _game->GetID(), GetCardCount());
@@ -4272,11 +4271,13 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 
 		if (IsTingPai()) ++_oper_count_tingpai; //听牌后发了//抓了多少张牌
 
+		/*
 		if (_fapai_count == 1) 
 		{
 			CheckXuanFengGang(); 
 			CheckZhuiFengGang(); //追风杠
 		}
+		*/
 			
 		//
 		//如果玩家处于服务器托管状态，则自动出牌
