@@ -275,11 +275,11 @@ void Game::OnPlayerReEnter(std::shared_ptr<Player> player)
 	auto player_index = GetPlayerOrder(player->GetID());
 	if (player_index < 0) return;
 
-	if (_curr_player_index != player_index && _oper_cache.player_id() == player->GetID() && (_oper_cache.oper_list().size() > 0))
+	if (_curr_player_index != player_index && _oper_cache.player_id() == player->GetID() && (_oper_cache.alert().pais().size() > 0))
 	{
 		auto player_id = player->GetID();
-		DEBUG("玩家:{}由于房间内断线重入房间，操作重新推送:{} 当前玩家索引:{} 操作玩家索引:{}", player_id, _oper_cache.ShortDebugString(), _curr_player_index, player_index);
 		
+		/*
 		Asset::PaiOperationAlert alert;
 
 		for (int32_t i = 0; i < _oper_cache.oper_list().size(); ++i)
@@ -300,8 +300,11 @@ void Game::OnPlayerReEnter(std::shared_ptr<Player> player)
 				pai_perator->mutable_pai()->CopyFrom(_oper_cache.pai());
 			}
 		}
-						
-		player->SendProtocol(alert);
+		*/
+	
+		DEBUG("玩家:{}由于房间内断线重入房间，操作重新推送:{} 当前玩家索引:{} 操作玩家索引:{}", player_id, _oper_cache.ShortDebugString(), _curr_player_index, player_index);
+
+		player->SendProtocol(_oper_cache.alert());
 
 		return;
 	}
@@ -333,7 +336,7 @@ void Game::OnPlayerReEnter(std::shared_ptr<Player> player)
 		pai_perator->mutable_pai()->CopyFrom(player->GetZhuaPai());
 		pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
 					
-		SetZiMoCache(player, card); //自摸胡牌缓存
+		//SetZiMoCache(player, card); //自摸胡牌缓存
 	}
 	//
 	//玩家摸宝之后进行抓牌正好抓到宝胡
@@ -344,7 +347,7 @@ void Game::OnPlayerReEnter(std::shared_ptr<Player> player)
 		pai_perator->mutable_pai()->CopyFrom(_baopai);
 		pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
 		
-		SetZiMoCache(player, card); //自摸胡牌缓存
+		//SetZiMoCache(player, card); //自摸胡牌缓存
 	}
 
 	//
@@ -353,7 +356,7 @@ void Game::OnPlayerReEnter(std::shared_ptr<Player> player)
 	std::vector<Asset::PaiElement> ting_list;
 	if (player->CheckTingPai(ting_list))
 	{
-		_oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
+		//_oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
 
 		for (auto pai : ting_list) 
 		{
@@ -361,7 +364,7 @@ void Game::OnPlayerReEnter(std::shared_ptr<Player> player)
 			pai_perator->mutable_pai()->CopyFrom(pai);
 			pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
 
-			_oper_cache.mutable_ting_pais()->Add()->CopyFrom(pai);
+			//_oper_cache.mutable_ting_pais()->Add()->CopyFrom(pai);
 		}
 	}
 
@@ -376,33 +379,29 @@ void Game::OnPlayerReEnter(std::shared_ptr<Player> player)
 			auto pai_perator = alert.mutable_pais()->Add();
 			pai_perator->CopyFrom(gang);
 		
-			_oper_cache.mutable_pai()->CopyFrom(gang.pai());
-			for (auto oper_type : gang.oper_list()) _oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE(oper_type));
+			//_oper_cache.mutable_pai()->CopyFrom(gang.pai());
+			//for (auto oper_type : gang.oper_list()) _oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE(oper_type));
 		}
 	}
 	
 	//
 	//旋风杠检查
 	//
-	
-	if (player->GetFaPaiCount() == 1) player->CheckXuanFengGang(); //庄家多次断线旋风杠丢失
-	
-	auto xf_gang = player->CheckXuanFeng();
-	if (xf_gang)
+	for (auto gang : player->CheckXuanFengGang())
 	{
 		auto pai_perator = alert.mutable_pais()->Add();
-		pai_perator->mutable_oper_list()->Add((Asset::PAI_OPER_TYPE)xf_gang);
-			
-		_oper_cache.mutable_oper_list()->Add((Asset::PAI_OPER_TYPE)xf_gang);
+		pai_perator->mutable_oper_list()->Add(gang);
 	}
 
 	if (alert.pais().size()) 
 	{
 		player->SendProtocol(alert); //提示Client
+		SetPaiOperation(player->GetID(), player->GetID(), alert);
 
-		_oper_cache.set_player_id(player->GetID()); //当前可操作玩家
-		_oper_cache.set_source_player_id(player->GetID()); //当前牌来自玩家，自己抓牌
-		_oper_cache.set_time_out(CommonTimerInstance.GetTime() + 30); //8秒后超时
+		//_oper_cache.set_player_id(player->GetID()); //当前可操作玩家
+		//_oper_cache.set_source_player_id(player->GetID()); //当前牌来自玩家，自己抓牌
+		//_oper_cache.set_time_out(CommonTimerInstance.GetTime() + 30); //8秒后超时
+		//_oper_cache.mutable_alert()->CopyFrom(alert);
 	}
 }
 
@@ -504,7 +503,7 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 					pai_perator->mutable_pai()->CopyFrom(card);
 					pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
 						
-					SetZiMoCache(player_next, card); //自摸胡牌缓存
+					//SetZiMoCache(player_next, card); //自摸胡牌缓存
 				}
 				//
 				//玩家进行抓牌正好抓到宝胡
@@ -515,9 +514,9 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 					pai_perator->mutable_pai()->CopyFrom(card);
 					pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
 					
-					_oper_cache.set_player_id(player_next->GetID());
-					_oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
-					_oper_cache.mutable_pai()->CopyFrom(card);
+					//_oper_cache.set_player_id(player_next->GetID());
+					//_oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
+					//_oper_cache.mutable_pai()->CopyFrom(card);
 				}
 
 				//
@@ -526,8 +525,8 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				std::vector<Asset::PaiElement> ting_list;
 				if (player_next->CheckTingPai(ting_list))
 				{
-					_oper_cache.set_player_id(player_next->GetID());
-					_oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
+					//_oper_cache.set_player_id(player_next->GetID());
+					//_oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
 
 					for (auto pai : ting_list) 
 					{
@@ -535,7 +534,7 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 						pai_perator->mutable_pai()->CopyFrom(pai);
 						pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
 					
-						_oper_cache.mutable_ting_pais()->Add()->CopyFrom(pai);
+						//_oper_cache.mutable_ting_pais()->Add()->CopyFrom(pai);
 					}
 				}
 				
@@ -545,39 +544,35 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				::google::protobuf::RepeatedField<Asset::PaiOperationAlert_AlertElement> gang_list;
 				if (player_next->CheckAllGangPai(gang_list)) 
 				{
-					_oper_cache.set_player_id(player_next->GetID());
+					//_oper_cache.set_player_id(player_next->GetID());
 
 					for (auto gang : gang_list) 
 					{
 						auto pai_perator = alert.mutable_pais()->Add();
 						pai_perator->CopyFrom(gang);
 		
-						_oper_cache.mutable_pai()->CopyFrom(gang.pai());
-						for (auto oper_type : gang.oper_list()) _oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE(oper_type));
+						//_oper_cache.mutable_pai()->CopyFrom(gang.pai());
+						//for (auto oper_type : gang.oper_list()) _oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE(oper_type));
 					}
 				}
 				
 				//
 				//旋风杠检查
 				//
-				auto xf_gang = player_next->CheckXuanFeng();
-				if (xf_gang)
+				for (auto gang : player->CheckXuanFengGang())
 				{
-					_oper_cache.set_player_id(player_next->GetID());
-
 					auto pai_perator = alert.mutable_pais()->Add();
-					pai_perator->mutable_oper_list()->Add((Asset::PAI_OPER_TYPE)xf_gang);
-						
-					_oper_cache.mutable_oper_list()->Add((Asset::PAI_OPER_TYPE)xf_gang);
+					pai_perator->mutable_oper_list()->Add(gang);
 				}
 
 				if (alert.pais().size()) 
 				{
 					player_next->SendProtocol(alert); //提示Client
+					SetPaiOperation(player_next->GetID(), player_next->GetID(), alert);
 
-					_oper_cache.set_player_id(player_next->GetID()); //当前可操作玩家
-					_oper_cache.set_source_player_id(player_next->GetID()); //当前牌来自玩家，自己抓牌
-					_oper_cache.set_time_out(CommonTimerInstance.GetTime() + 30); //8秒后超时
+					//_oper_cache.set_player_id(player_next->GetID()); //当前可操作玩家
+					//_oper_cache.set_source_player_id(player_next->GetID()); //当前牌来自玩家，自己抓牌
+					//_oper_cache.set_time_out(CommonTimerInstance.GetTime() + 30); //8秒后超时
 				}
 				else 
 				{
@@ -603,11 +598,12 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				{
 					fan_list.emplace(Asset::FAN_TYPE_JIN_BAO);
 
+					/*
 					_oper_cache.set_player_id(player->GetID()); //当前可操作玩家
 					_oper_cache.set_source_player_id(player->GetID());
 					_oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
 					_oper_cache.mutable_pai()->CopyFrom(pai);
-
+					*/
 					_room->AddJinBao(player->GetID()); //进宝
 				}
 
@@ -617,7 +613,7 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 			{
 				auto fan_list = player->GetFanList();
 
-				SetZiMoCache(player, pai); //自摸胡牌缓存
+				//SetZiMoCache(player, pai); //自摸胡牌缓存
 
 				if (player->IsJinbao()) 
 				{
@@ -632,11 +628,13 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 
 				fan_list.emplace(Asset::FAN_TYPE_LOU_BAO); 
 					
+				/*
 				_oper_cache.set_player_id(player->GetID()); //当前可操作玩家
 				_oper_cache.set_source_player_id(player->GetID());
 				_oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
 				_oper_cache.mutable_pai()->CopyFrom(_baopai);
-					
+				*/
+
 				_room->AddLouBao(player->GetID()); //搂宝
 
 				Calculate(player->GetID(), _oper_cache.source_player_id(), fan_list); //结算
@@ -645,10 +643,12 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 			{
 				auto fan_list = player->GetFanList();
 				
+				/*
 				_oper_cache.set_player_id(player->GetID()); //当前可操作玩家
 				_oper_cache.set_source_player_id(player->GetID());
 				_oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
 				_oper_cache.mutable_pai()->CopyFrom(_baopai);
+				*/
 
 				Calculate(player->GetID(), _oper_cache.source_player_id(), fan_list); //结算
 			}
@@ -708,11 +708,10 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				//
 				//旋风杠检查
 				//
-				auto gang = player->CheckXuanFeng();
-				if (gang)
+				for (auto gang : player->CheckXuanFengGang())
 				{
 					auto pai_perator = alert.mutable_pais()->Add();
-					pai_perator->mutable_oper_list()->Add((Asset::PAI_OPER_TYPE)gang);
+					pai_perator->mutable_oper_list()->Add(gang);
 				}
 				//
 				//玩家杠牌检查
@@ -729,9 +728,11 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 						auto pai_perator = alert.mutable_pais()->Add();
 						pai_perator->CopyFrom(gang);
 					
+						/*
 						_oper_cache.mutable_pai()->CopyFrom(gang.pai());
 						_oper_cache.set_source_player_id(gang.pai().source_player_id());
 						for (auto oper_type : gang.oper_list()) _oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE(oper_type));
+						*/
 					}
 				}
 				//
@@ -744,7 +745,7 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 					pai_perator->mutable_pai()->CopyFrom(zhuapai);
 					pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
 					
-					SetZiMoCache(player, zhuapai); //自摸胡牌缓存
+					//SetZiMoCache(player, zhuapai); //自摸胡牌缓存
 				}
 				//
 				//听牌检查
@@ -760,7 +761,11 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 					}
 				}
 				
-				if (alert.pais().size()) player->SendProtocol(alert); //提示Client
+				if (alert.pais().size()) 
+				{
+					player->SendProtocol(alert); //提示Client
+					SetPaiOperation(player->GetID(), player->GetID(), alert);
+				}
 
 				_curr_player_index = GetPlayerOrder(player->GetID()); //设置当前玩家索引
 				
@@ -796,8 +801,8 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				std::vector<Asset::PaiElement> pais;
 				if (player->CheckTingPai(pais)) 
 				{
-					_oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
-					_oper_cache.set_player_id(player->GetID());
+					//_oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
+					//_oper_cache.set_player_id(player->GetID());
 
 					for (auto pai : pais) 
 					{
@@ -805,20 +810,16 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 						pai_perator->mutable_pai()->CopyFrom(pai);
 						pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
 
-						_oper_cache.mutable_ting_pais()->Add()->CopyFrom(pai);
+						//_oper_cache.mutable_ting_pais()->Add()->CopyFrom(pai);
 					}
 				}
 				//
 				//旋风杠检查
 				//
-				auto xuanfeng_gang = player->CheckXuanFeng();
-				if (xuanfeng_gang)
+				for (auto gang : player->CheckXuanFengGang())
 				{
 					auto pai_perator = alert.mutable_pais()->Add();
-					pai_perator->mutable_oper_list()->Add((Asset::PAI_OPER_TYPE)xuanfeng_gang);
-					
-					_oper_cache.set_player_id(player->GetID());
-					_oper_cache.mutable_oper_list()->Add((Asset::PAI_OPER_TYPE)xuanfeng_gang);
+					pai_perator->mutable_oper_list()->Add(gang);
 				}
 				//
 				//玩家杠牌检查
@@ -828,7 +829,7 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				RepeatedField<Asset::PaiOperationAlert_AlertElement> gang_list;
 				if (player->CheckAllGangPai(gang_list)) 
 				{
-					_oper_cache.set_player_id(player->GetID());
+					//_oper_cache.set_player_id(player->GetID());
 
 					for (auto gang : gang_list) 
 					{
@@ -837,12 +838,16 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 						auto pai_perator = alert.mutable_pais()->Add();
 						pai_perator->CopyFrom(gang);
 					
-						_oper_cache.mutable_pai()->CopyFrom(gang.pai());
-						for (auto oper_type : gang.oper_list()) _oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE(oper_type));
+						//_oper_cache.mutable_pai()->CopyFrom(gang.pai());
+						//for (auto oper_type : gang.oper_list()) _oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE(oper_type));
 					}
 				}
 
-				if (alert.pais().size()) player->SendProtocol(alert); //提示Client
+				if (alert.pais().size()) 
+				{
+					player->SendProtocol(alert); //提示Client
+					SetPaiOperation(player->GetID(), player->GetID(), alert);
+				}
 				
 				if (source_player) source_player->CardsPoolPop();
 			}
@@ -871,8 +876,8 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				std::vector<Asset::PaiElement> pais;
 				if (player->CheckTingPai(pais)) 
 				{
-					_oper_cache.set_player_id(player->GetID());
-					_oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
+					//_oper_cache.set_player_id(player->GetID());
+					//_oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
 
 					for (auto pai : pais) 
 					{
@@ -880,20 +885,16 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 						pai_perator->mutable_pai()->CopyFrom(pai);
 						pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
 
-						_oper_cache.mutable_ting_pais()->Add()->CopyFrom(pai);
+						//_oper_cache.mutable_ting_pais()->Add()->CopyFrom(pai);
 					}
 				}
 				//
 				//旋风杠检查
 				//
-				auto xuanfeng_gang = player->CheckXuanFeng();
-				if (xuanfeng_gang)
+				for (auto gang : player->CheckXuanFengGang())
 				{
 					auto pai_perator = alert.mutable_pais()->Add();
-					pai_perator->mutable_oper_list()->Add((Asset::PAI_OPER_TYPE)xuanfeng_gang);
-					
-					_oper_cache.set_player_id(player->GetID());
-					_oper_cache.mutable_oper_list()->Add((Asset::PAI_OPER_TYPE)xuanfeng_gang);
+					pai_perator->mutable_oper_list()->Add(gang);
 				}
 				//
 				//玩家杠牌检查
@@ -903,7 +904,7 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				RepeatedField<Asset::PaiOperationAlert_AlertElement> gang_list;
 				if (player->CheckAllGangPai(gang_list)) 
 				{
-					_oper_cache.set_player_id(player->GetID());
+					//_oper_cache.set_player_id(player->GetID());
 
 					for (auto gang : gang_list) 
 					{
@@ -912,12 +913,16 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 						auto pai_perator = alert.mutable_pais()->Add();
 						pai_perator->CopyFrom(gang);
 					
-						_oper_cache.mutable_pai()->CopyFrom(gang.pai());
-						for (auto oper_type : gang.oper_list()) _oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE(oper_type));
+						//_oper_cache.mutable_pai()->CopyFrom(gang.pai());
+						//for (auto oper_type : gang.oper_list()) _oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE(oper_type));
 					}
 				}
 					
-				if (alert.pais().size()) player->SendProtocol(alert); //提示Client
+				if (alert.pais().size()) 
+				{
+					player->SendProtocol(alert); //提示Client
+					SetPaiOperation(player->GetID(), player->GetID(), alert);
+				}
 				
 				if (source_player) source_player->CardsPoolPop();
 			}
@@ -931,7 +936,8 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				auto player = GetPlayer(_oper_cache.source_player_id());
 				if (!player) return;
 
-				player->OnBeenQiangGangWithGivingUp(_oper_cache.pai(), _oper_cache.source_player_id()); //TODO: 建平抢杠胡点过，点杠会转成过杠，_oper_cache.source_player_id() 不是打出杠牌的玩家，而是杠牌玩家
+				if (_oper_cache.alert().pais().size() <= 0) return;
+				player->OnBeenQiangGangWithGivingUp(_oper_cache.alert().pais(0).pai(), _oper_cache.source_player_id()); //TODO: 建平抢杠胡点过，点杠会转成过杠，_oper_cache.source_player_id() 不是打出杠牌的玩家，而是杠牌玩家
 				
 				ClearOperation(); //缓存清理
 
@@ -944,11 +950,10 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				//
 				//旋风杠检查
 				//
-				auto gang = player->CheckXuanFeng();
-				if (gang)
+				for (auto gang : player->CheckXuanFengGang())
 				{
 					auto pai_perator = alert.mutable_pais()->Add();
-					pai_perator->mutable_oper_list()->Add((Asset::PAI_OPER_TYPE)gang);
+					pai_perator->mutable_oper_list()->Add(gang);
 				}
 				//
 				//玩家杠牌检查
@@ -958,7 +963,7 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				RepeatedField<Asset::PaiOperationAlert_AlertElement> gang_list;
 				if (player->CheckAllGangPai(gang_list)) 
 				{
-					_oper_cache.set_player_id(player->GetID());
+					//_oper_cache.set_player_id(player->GetID());
 
 					for (auto gang : gang_list) 
 					{
@@ -967,8 +972,8 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 						auto pai_perator = alert.mutable_pais()->Add();
 						pai_perator->CopyFrom(gang);
 					
-						_oper_cache.mutable_pai()->CopyFrom(gang.pai());
-						for (auto oper_type : gang.oper_list()) _oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE(oper_type));
+						//_oper_cache.mutable_pai()->CopyFrom(gang.pai());
+						//for (auto oper_type : gang.oper_list()) _oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE(oper_type));
 					}
 				}
 				//
@@ -981,7 +986,7 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 					pai_perator->mutable_pai()->CopyFrom(zhuapai);
 					pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
 					
-					SetZiMoCache(player, zhuapai); //自摸胡牌缓存
+					//SetZiMoCache(player, zhuapai); //自摸胡牌缓存
 				}
 				//
 				//听牌检查
@@ -997,7 +1002,11 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 					}
 				}
 				
-				if (alert.pais().size()) player->SendProtocol(alert); //提示Client
+				if (alert.pais().size()) 
+				{
+					player->SendProtocol(alert); //提示Client
+					SetPaiOperation(player->GetID(), player->GetID(), alert);
+				}
 
 				_curr_player_index = GetPlayerOrder(player->GetID()); //设置当前玩家索引
 				return;
@@ -1051,7 +1060,7 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				pai_perator->mutable_pai()->CopyFrom(card);
 				pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
 				
-				SetZiMoCache(player_next, card); //自摸胡牌缓存
+				//SetZiMoCache(player_next, card); //自摸胡牌缓存
 			}
 
 			//
@@ -1063,7 +1072,7 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				pai_perator->mutable_pai()->CopyFrom(card);
 				pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
 				
-				SetZiMoCache(player_next, card); //自摸胡牌缓存
+				//SetZiMoCache(player_next, card); //自摸胡牌缓存
 			}
 			//	
 			//听牌检查
@@ -1071,8 +1080,8 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 			std::vector<Asset::PaiElement> ting_list;
 			if (player_next->CheckTingPai(ting_list)) 
 			{
-				_oper_cache.set_player_id(player_next->GetID());
-				_oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
+				//_oper_cache.set_player_id(player_next->GetID());
+				//_oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
 
 				for (auto pai : ting_list) 
 				{
@@ -1080,7 +1089,7 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 					pai_perator->mutable_pai()->CopyFrom(pai);
 					pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
 
-					_oper_cache.mutable_ting_pais()->Add()->CopyFrom(pai);
+					//_oper_cache.mutable_ting_pais()->Add()->CopyFrom(pai);
 				}
 			}
 			//	
@@ -1089,15 +1098,15 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 			::google::protobuf::RepeatedField<Asset::PaiOperationAlert_AlertElement> gang_list;
 			if (player_next->CheckAllGangPai(gang_list)) 
 			{
-				_oper_cache.set_player_id(player_next->GetID());
+				//_oper_cache.set_player_id(player_next->GetID());
 
 				for (auto gang : gang_list) 
 				{
 					auto pai_perator = alert.mutable_pais()->Add();
 					pai_perator->CopyFrom(gang);
 						
-					_oper_cache.mutable_pai()->CopyFrom(gang.pai());
-					for (auto oper_type : gang.oper_list()) _oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE(oper_type));
+					//_oper_cache.mutable_pai()->CopyFrom(gang.pai());
+					//for (auto oper_type : gang.oper_list()) _oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE(oper_type));
 				}
 			}
 			//
@@ -1105,14 +1114,10 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 			//
 			//开局状态，上家打牌，其他玩家可碰，但放弃，此时需要检查当前玩家是否可以旋风杠
 			//
-			auto xf_gang = player_next->CheckXuanFeng();
-			if (xf_gang)
+			for (auto gang : player->CheckXuanFengGang())
 			{
 				auto pai_perator = alert.mutable_pais()->Add();
-				pai_perator->mutable_oper_list()->Add((Asset::PAI_OPER_TYPE)xf_gang);
-					
-				_oper_cache.set_player_id(player_next->GetID());
-				_oper_cache.mutable_oper_list()->Add((Asset::PAI_OPER_TYPE)xf_gang);
+				pai_perator->mutable_oper_list()->Add(gang);
 			}
 			//
 			//开局状态，当前玩家拥有中发白白，上家打了白板
@@ -1133,10 +1138,11 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				if (alert.pais().size()) 
 				{
 					player_next->SendProtocol(alert); //提示Client
+					SetPaiOperation(player_next->GetID(), player_next->GetID(), alert);
 
-					_oper_cache.set_player_id(player_next->GetID()); //当前可操作玩家
-					_oper_cache.set_source_player_id((player_next->GetID())); //当前牌来自玩家，自己抓牌，所以是自己
-					_oper_cache.set_time_out(CommonTimerInstance.GetTime() + 30); //8秒后超时
+					//_oper_cache.set_player_id(player_next->GetID()); //当前可操作玩家
+					//_oper_cache.set_source_player_id((player_next->GetID())); //当前牌来自玩家，自己抓牌，所以是自己
+					//_oper_cache.set_time_out(CommonTimerInstance.GetTime() + 30); //8秒后超时
 				}
 				else
 				{
@@ -1147,10 +1153,11 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 			else if (alert.pais().size()) 
 			{
 				player_next->SendProtocol(alert); //提示Client
+				SetPaiOperation(player_next->GetID(), player_next->GetID(), alert);
 
-				_oper_cache.set_player_id(player_next->GetID()); //当前可操作玩家
-				_oper_cache.set_source_player_id((player_next->GetID())); //当前牌来自玩家，自己抓牌，所以是自己
-				_oper_cache.set_time_out(CommonTimerInstance.GetTime() + 30); //8秒后超时
+				//_oper_cache.set_player_id(player_next->GetID()); //当前可操作玩家
+				//_oper_cache.set_source_player_id((player_next->GetID())); //当前牌来自玩家，自己抓牌，所以是自己
+				//_oper_cache.set_time_out(CommonTimerInstance.GetTime() + 30); //8秒后超时
 			}
 			else 
 			{
@@ -1638,13 +1645,17 @@ bool Game::SendCheckRtn()
 
 		for (const auto& oper : _oper_list)
 		{
-			auto it = std::find(oper.oper_list().begin(), oper.oper_list().end(), rtn_type);
-
-			if (it != oper.oper_list().end()) 
+			for (int32_t i = 0; i < oper.alert().pais().size(); ++i)
 			{
-				operation = oper;
+				for (int32_t k = 0; k < oper.alert().pais(i).oper_list().size(); ++k)
+				{
+					if (rtn_type == oper.alert().pais(i).oper_list(k))
+					{
+						operation = oper;
 
-				return true;
+						return true;
+					}
+				}
 			}
 		}
 		return false;
@@ -1657,28 +1668,33 @@ bool Game::SendCheckRtn()
 		if (result) break;
 	}
 
-	if (operation.oper_list().size() == 0) return false;
+	if (operation.alert().pais().size() == 0) return false;
 
 	int64_t player_id = operation.player_id(); 
 
-	_oper_cache.set_player_id(player_id); //当前可操作玩家
-	_oper_cache.set_source_player_id(operation.source_player_id()); //当前牌来自玩家
-	_oper_cache.mutable_pai()->CopyFrom(operation.pai()); //缓存这张牌
-	_oper_cache.set_time_out(CommonTimerInstance.GetTime() + 30); //8秒后超时
+	//_oper_cache.set_player_id(player_id); //当前可操作玩家
+	//_oper_cache.set_source_player_id(operation.source_player_id()); //当前牌来自玩家
+	//_oper_cache.mutable_pai()->CopyFrom(operation.pai()); //缓存这张牌
+	//_oper_cache.set_time_out(CommonTimerInstance.GetTime() + 30); //8秒后超时
 	
-	Asset::PaiOperationAlert alert;
+	Asset::PaiOperationAlert alert = operation.alert();
 
-	auto pai_perator = alert.mutable_pais()->Add();
-	pai_perator->mutable_pai()->CopyFrom(operation.pai());
+	//auto pai_perator = alert.mutable_pais()->Add();
+	//pai_perator->mutable_pai()->CopyFrom(operation.pai());
 
+	/*
 	for (auto rtn : operation.oper_list()) 
 	{
 		pai_perator->mutable_oper_list()->Add(rtn); //可操作牌类型
 		_oper_cache.mutable_oper_list()->Add(rtn); //缓存操作
 	}
+	*/
 
-	if (auto player_to = GetPlayer(player_id)) 
-		player_to->SendProtocol(alert); //发给目标玩家
+	auto player_to = GetPlayer(player_id); 
+	if (!player_to) return false;
+
+	player_to->SendProtocol(alert); //发给目标玩家
+	SetPaiOperation(player_id, player_id, alert);
 
 	auto it = std::find_if(_oper_list.begin(), _oper_list.end(), [player_id](const Asset::PaiOperationCache& operation) {
 		return player_id == operation.player_id();
@@ -1742,9 +1758,11 @@ bool Game::CheckPai(const Asset::PaiElement& pai, int64_t source_player_id)
 		Asset::PaiOperationCache pai_operation;
 		pai_operation.set_player_id(player->GetID());
 		pai_operation.set_source_player_id(source_player_id);
-		pai_operation.mutable_pai()->CopyFrom(pai);
 
-		for (auto result : rtn_check) pai_operation.mutable_oper_list()->Add(result);
+		auto pai_info = pai_operation.mutable_alert()->mutable_pais()->Add();
+		pai_info->mutable_pai()->CopyFrom(pai);
+		for (auto result : rtn_check) pai_info->mutable_oper_list()->Add(result);
+
 		_oper_list.push_back(pai_operation);
 	}
 
@@ -1756,9 +1774,18 @@ bool Game::IsQiangGang(int64_t player_id)
 	if (_oper_cache.player_id() != player_id) return false;
 	if (_oper_cache.source_player_id() == 0) return false;
 
-	auto it = std::find(_oper_cache.oper_list().begin(), _oper_cache.oper_list().end(), Asset::PAI_OPER_TYPE_QIANGGANG);
-	if (it == _oper_cache.oper_list().end()) return false;
-	return true;
+	//auto it = std::find(_oper_cache.oper_list().begin(), _oper_cache.oper_list().end(), Asset::PAI_OPER_TYPE_QIANGGANG);
+	//if (it == _oper_cache.oper_list().end()) return false;
+	//return true;
+	for (int32_t i = 0; i < _oper_cache.alert().pais().size(); ++i)
+	{
+		for (int32_t k = 0; k < _oper_cache.alert().pais(i).oper_list().size(); ++k)
+		{
+			if (_oper_cache.alert().pais(i).oper_list(k) == Asset::PAI_OPER_TYPE_QIANGGANG) return true;
+		}
+	}
+
+	return false;
 }
 
 bool Game::CheckQiangGang(const Asset::PaiElement& pai, int64_t source_player_id)
@@ -1779,8 +1806,13 @@ bool Game::CheckQiangGang(const Asset::PaiElement& pai, int64_t source_player_id
 		Asset::PaiOperationCache pai_operation;
 		pai_operation.set_player_id(player->GetID());
 		pai_operation.set_source_player_id(source_player_id);
-		pai_operation.mutable_pai()->CopyFrom(pai);
-		pai_operation.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_QIANGGANG);
+		
+		auto pai_info = pai_operation.mutable_alert()->mutable_pais()->Add();
+		pai_info->mutable_pai()->CopyFrom(pai);
+		pai_info->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_QIANGGANG);
+		
+		//pai_operation.mutable_pai()->CopyFrom(pai);
+		//pai_operation.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_QIANGGANG);
 
 		_oper_list.push_back(pai_operation);
 
@@ -1794,7 +1826,18 @@ void Game::OnOperateTimeOut()
 {
 
 }
+
+void Game::SetPaiOperation(int64_t player_id, int64_t source_player_id, const Asset::PaiOperationAlert& alert)
+{
+	_oper_cache.set_player_id(player_id); 
+	_oper_cache.set_source_player_id(source_player_id); 
+	_oper_cache.set_time_out(CommonTimerInstance.GetTime() + 30); 
+	_oper_cache.mutable_alert()->CopyFrom(alert);
 	
+	DEBUG("房间:{} 局数:{} 玩家:{} 源玩家:{} 设置缓存数据:{}", _room_id, _game_id, player_id, source_player_id, _oper_cache.ShortDebugString());
+}
+	
+/*
 void Game::SetPaiOperation(int64_t player_id, int64_t source_player_id, Asset::PaiElement pai, Asset::PAI_OPER_TYPE oper_type)
 {
 	_oper_cache.set_player_id(player_id); 
@@ -1802,7 +1845,7 @@ void Game::SetPaiOperation(int64_t player_id, int64_t source_player_id, Asset::P
 	_oper_cache.mutable_pai()->CopyFrom(pai);
 	_oper_cache.mutable_oper_list()->Add(oper_type);
 }
-	
+
 void Game::SetZiMoCache(std::shared_ptr<Player> player, Asset::PaiElement pai)
 {
 	if (!player) return;
@@ -1814,6 +1857,7 @@ void Game::SetZiMoCache(std::shared_ptr<Player> player, Asset::PaiElement pai)
 
 	DEBUG("房间:{} 局数:{} 玩家:{}自摸设置数据:{}", _room_id, _game_id, player->GetID(), _oper_cache.ShortDebugString());
 }
+*/
 
 std::vector<int32_t> Game::TailPai(size_t card_count)
 {
@@ -1879,16 +1923,19 @@ bool Game::CheckLiuJu()
 		Asset::PaiOperationCache pai_operation;
 		pai_operation.set_player_id(player->GetID());
 		pai_operation.set_source_player_id(player->GetID());
-		pai_operation.mutable_pai()->CopyFrom(card);
+		//pai_operation.mutable_pai()->CopyFrom(card);
+		
+		auto pai_info = pai_operation.mutable_alert()->mutable_pais()->Add();
+		pai_info->mutable_pai()->CopyFrom(card);
 
 		if (player->CheckZiMo(false)/* || player->CheckHuPai(card)*/) 
 		{
-			pai_operation.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
+			pai_info->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
 			_oper_list.push_back(pai_operation);
 		}
 		else if (player->CheckBaoHu(card))
 		{
-			pai_operation.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
+			pai_info->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
 			_oper_list.push_back(pai_operation);
 		}
 	}

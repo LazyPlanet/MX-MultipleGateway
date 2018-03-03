@@ -396,13 +396,9 @@ public:
 	void OnGangJianPai(); //旋风杠-箭杠
 
 	std::vector<Asset::PAI_OPER_TYPE> GetXuanFeng() { return _xf_gang; } //旋风杠获取
+	const std::vector<Asset::PAI_OPER_TYPE>& CheckXuanFengGang(); //检查旋风杠
 
-	bool CheckFengGangPai(); //是否可以旋风杠-风杠 
-	bool CheckJianGangPai(); //是否可以旋风杠-箭杠
-
-	int32_t CheckXuanFeng(); //检查旋风杠
-	void CheckXuanFengGang(); //检查旋风杠//初始化状态检查//非庄家抓牌后检查
-	void CheckZhuiFengGang(const Asset::PaiElement& zhuapai); //检查追风杠
+	void CheckZhuiFengGang(); //检查追风杠
 	
 	bool CanTingPai(const Asset::PaiElement& pai);
 	bool CanTingIfGang(const Asset::PaiElement& pai);
