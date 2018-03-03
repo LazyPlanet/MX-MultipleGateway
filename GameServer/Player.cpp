@@ -2521,7 +2521,7 @@ bool Player::CheckHuPai(const std::map<int32_t, std::vector<int32_t>>& cards_inh
 	}
 
 	if (!has_ke && (/*cards[Asset::CARD_TYPE_FENG].size() //朝阳：风牌不顶刻 || */cards[Asset::CARD_TYPE_JIAN].size())) has_ke = true;
-	if (!has_ke && _room->IsYingKou() && cards[Asset::CARD_TYPE_FENG].size()) has_ke = true; //营口麻将
+	//if (!has_ke && _room->IsYingKou() && cards[Asset::CARD_TYPE_FENG].size()) has_ke = true; //营口麻将
 	
 	if (!has_ke && (jiangang > 0 || fenggang > 0 || minggang.size() > 0 || angang.size() > 0)) has_ke = true;
 	
