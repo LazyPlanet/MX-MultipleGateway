@@ -385,6 +385,7 @@ public:
 	//
 	//比如玩家碰了7条，但是手里有7-8-9条，而选择暂时不杠
 	bool CheckAllGangPai(::google::protobuf::RepeatedField<Asset::PaiOperationAlert_AlertElement>& gang_list); 
+	bool CheckAllGangPai(::google::protobuf::RepeatedField<Asset::PaiOperationAlert_AlertElement>& gang_list, const std::map<int32_t, std::vector<int32_t>>& cards_inhand, const std::map<int32_t, std::vector<int32_t>>& cards_outhand); 
 
 	void OnGangPai(const Asset::PaiElement& pai, int64_t source_player_id); //杠牌
 	void OnBeenQiangGang(const Asset::PaiElement& pai, int64_t source_player_id); //杠牌

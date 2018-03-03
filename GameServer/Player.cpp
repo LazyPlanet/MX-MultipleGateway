@@ -1870,7 +1870,7 @@ std::vector<Asset::PAI_OPER_TYPE> Player::CheckPai(const Asset::PaiElement& pai,
 		DEBUG("玩家:{} 可以胡来自玩家:{} 牌数据:{}", _player_id, source_player_id, pai.ShortDebugString());
 		rtn_check.push_back(Asset::PAI_OPER_TYPE_HUPAI);
 	}
-	if (CheckHuiHu(pai, false, false)) 
+	else if (CheckHuiHu(pai, false, false)) 
 	{
 		DEBUG("玩家:{} 可以会胡来自玩家:{} 牌数据:{}", _player_id, source_player_id, pai.ShortDebugString());
 		rtn_check.push_back(Asset::PAI_OPER_TYPE_HUPAI);
@@ -2113,7 +2113,6 @@ bool Player::CheckHuiHu(const Asset::PaiElement& pai, bool check_zimo, bool calc
 	if (!HasYaoJiu()) return false; //会牌不能代替幺九,因此前置检查
 
 	int32_t count = GetHuiPaiCount();
-	if (count == 0) return false;
 
 	_fan_list.clear();
 	_hui_fan_list.clear();
@@ -2127,7 +2126,7 @@ bool Player::CheckHuiHu(const Asset::PaiElement& pai, bool check_zimo, bool calc
 	auto jiangang = _jiangang; //旋风杠，本质是明杠
 	auto fenggang = _fenggang; //旋风杠，本质是暗杠
 	
-	if (check_zimo) cards_inhand[pai.card_type()].push_back(pai.card_value()); //是否自摸抓牌
+	if (!check_zimo) cards_inhand[pai.card_type()].push_back(pai.card_value()); //是否自摸抓牌
 	
 	auto it = cards_inhand.find(huipai.card_type());
 	if (it == cards_inhand.end()) return false; //由于前面GetHuiPaiCount的检查,理论上此处一定有会牌
@@ -2153,6 +2152,8 @@ bool Player::CheckHuiHu(const Asset::PaiElement& pai, bool check_zimo, bool calc
 			}
 		}
 	}
+	
+	if (count == 0) return false; //没有会牌，也没有绝头会儿
 
 	auto cards_inhand_without_huipai = cards_inhand;
 
@@ -2173,7 +2174,7 @@ bool Player::CheckHuiHu(const Asset::PaiElement& pai, bool check_zimo, bool calc
 			cards_inhand_without_huipai[pai_element.card_type()].push_back(pai_element.card_value());
 		}
 			
-		bool can_hupai = CheckHuPai(cards_inhand_without_huipai, cards_outhand, minggang, angang, jiangang, fenggang, pai, false, calculate);
+		bool can_hupai = CheckHuPai(cards_inhand_without_huipai, cards_outhand, minggang, angang, jiangang, fenggang, pai, check_zimo, calculate);
 		if (can_hupai && calculate) _hui_fan_list.push_back(_fan_list);
 		if (can_hupai && !calculate) return true;
 	}
@@ -2928,8 +2929,9 @@ bool Player::IsSiGuiYi(const Asset::PaiElement& pai)
 //
 const std::vector<Asset::PaiElement>& Player::CalculateJueTouHui(const std::map<int32_t, std::vector<int32_t>>& cards_inhand, const std::map<int32_t, std::vector<int32_t>>& cards_outhand)
 {
-	if (_juetouhuis.size()) return _juetouhuis;
+	//if (_juetouhuis.size()) return _juetouhuis;
 
+	/*
 	for (const auto& crds : cards_inhand)
 	{
 		for (auto card_value : crds.second)
@@ -2977,6 +2979,14 @@ const std::vector<Asset::PaiElement>& Player::CalculateJueTouHui(const std::map<
 			_juetouhuis.push_back(pai);
 		}
 	}
+	*/
+	
+	RepeatedField<Asset::PaiOperationAlert_AlertElement> gang_list;
+	if (CheckAllGangPai(gang_list, cards_inhand, cards_outhand)) 
+	{
+		for (const auto& gang : gang_list) _juetouhuis.push_back(gang.pai());
+	}
+
 
 	DEBUG("玩家:{} 拥有绝头会儿数量:{}", _player_id, _juetouhuis.size());
 
@@ -3443,12 +3453,17 @@ bool Player::CanTingIfGang(const Asset::PaiElement& pai)
 	return CanTingPai(cards_inhand, cards_outhand, minggang, angang, jiangang, fenggang); 
 }
 
+bool Player::CheckAllGangPai(::google::protobuf::RepeatedField<Asset::PaiOperationAlert_AlertElement>& gang_list)
+{
+	return CheckAllGangPai(gang_list, _cards_inhand, _cards_outhand);
+}
+
 //
 //检查玩家可能的杠牌
 //
 //比如,玩家碰3个4饼,牌内4 5 6饼套副条件下不杠的情况,每次进行检查
 //
-bool Player::CheckAllGangPai(::google::protobuf::RepeatedField<Asset::PaiOperationAlert_AlertElement>& gang_list)
+bool Player::CheckAllGangPai(::google::protobuf::RepeatedField<Asset::PaiOperationAlert_AlertElement>& gang_list, const std::map<int32_t, std::vector<int32_t>>& cards_inhand, const std::map<int32_t, std::vector<int32_t>>& cards_outhand)
 {
 	if (!_room || !_game) return false;
 	
@@ -3461,7 +3476,7 @@ bool Player::CheckAllGangPai(::google::protobuf::RepeatedField<Asset::PaiOperati
 	//
 	//有4张牌，即暗杠检查
 	//
-	for (auto cards : _cards_inhand)
+	for (auto cards : cards_inhand)
 	{
 		auto card_type = cards.first;
 
@@ -3497,7 +3512,7 @@ bool Player::CheckAllGangPai(::google::protobuf::RepeatedField<Asset::PaiOperati
 	//
 	//牌内有1张牌，牌外有3张碰牌，即明杠检查
 	//
-	for (auto cards : _cards_outhand)
+	for (auto cards : cards_outhand)
 	{
 		if (cards.second.size() == 0) continue;
 
@@ -3510,8 +3525,8 @@ bool Player::CheckAllGangPai(::google::protobuf::RepeatedField<Asset::PaiOperati
 			auto card_value = cards.second.at(i);
 			if ((card_value != cards.second.at(i + 1)) || (card_value != cards.second.at(i + 2))) continue; //外面是否碰了3张
 
-			auto it = _cards_inhand.find(card_type);
-			if (it != _cards_inhand.end()) 
+			auto it = cards_inhand.find(card_type);
+			if (it != cards_inhand.end()) 
 			{
 				auto iit = std::find(it->second.begin(), it->second.end(), card_value);
 				if (iit != it->second.end()) 
@@ -3662,7 +3677,7 @@ const std::vector<Asset::PAI_OPER_TYPE>& Player::CheckXuanFengGang()
 
 	_xf_gang.clear();
 
-	if (_room->HasJueTouHui()) return _xf_gang; //绝头会不支持杠牌
+	//if (_room->HasJueTouHui()) return _xf_gang; //绝头会不支持杠牌
 
 	if (CheckFengGangPai(_cards_inhand)) _xf_gang.push_back(Asset::PAI_OPER_TYPE_XUANFENG_FENG);
 	if (CheckJianGangPai(_cards_inhand)) _xf_gang.push_back(Asset::PAI_OPER_TYPE_XUANFENG_JIAN);

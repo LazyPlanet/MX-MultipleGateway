@@ -191,7 +191,7 @@ void Room::OnReEnter(std::shared_ptr<Player> op_player)
 	
 	if (HasHuiPai()) 
 	{
-		message.mutable_huipai()->CopyFrom(_game->GetHuiPai()); //会儿牌
+		message.mutable_huipai()->CopyFrom(_game->GetFanPai()); //翻牌//不是会儿牌
 	}
 
 	if (!op_player->CheckCardsInhand())
