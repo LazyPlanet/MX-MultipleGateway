@@ -2278,8 +2278,6 @@ bool GameManager::Load()
 				card.set_card_type(asset_card->card_type());
 				card.set_card_value(asset_card->cards(i).value());
 
-				DEBUG("加载牌数据:{}", card.ShortDebugString());
-
 				if (k == 0) _pais.push_back(card); //每张牌存一个
 				_cards.emplace(_cards.size() + 1, card); //从1开始的索引
 			}

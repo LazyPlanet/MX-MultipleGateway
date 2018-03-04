@@ -44,8 +44,8 @@ public:
 	}
 };
 
+extern int32_t g_server_id;
 extern const Asset::CommonConst* g_const;
-//extern std::shared_ptr<CenterSession> g_center_session;
 
 class Player : public std::enable_shared_from_this<Player>
 {

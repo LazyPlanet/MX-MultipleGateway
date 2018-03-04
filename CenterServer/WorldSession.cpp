@@ -171,7 +171,7 @@ void WorldSession::OnProcessMessage(const Asset::Meta& meta)
 		_expire_time = 0;
 		_hi_time = CommonTimerInstance.GetTime(); 
 		
-		if (Asset::META_TYPE_C2S_LOGIN == meta.type_t()) //账号登陆
+		if (Asset::META_TYPE_C2S_LOGIN == meta.type_t()) //账号登陆：MMO选人界面
 		{
 			Asset::Login* login = dynamic_cast<Asset::Login*>(message);
 			if (!login) return; 
@@ -354,7 +354,7 @@ void WorldSession::OnProcessMessage(const Asset::Meta& meta)
 			SetRoleType(Asset::ROLE_TYPE_PLAYER, _player->GetID());
 			WorldSessionInstance.AddPlayer(connect->player_id(), shared_from_this()); //在线玩家，获取网络会话
 
-			_player->SetLocalServer(ConfigInstance.GetInt("ServerID", 1));
+			//_player->SetLocalServer(ConfigInstance.GetInt("ServerID", 1)); //架构调整，玩家直接在逻辑服务器处理逻辑
 			_player->OnEnterGame(false);
 		}
 		else if (Asset::META_TYPE_C2S_GET_ROOM_DATA == meta.type_t()) //获取房间数据
@@ -371,22 +371,14 @@ void WorldSession::OnProcessMessage(const Asset::Meta& meta)
 			_player->SetLocalServer(server_id); //设置玩家当前所在服务器
 			_player->SendProtocol2GameServer(get_data); 
 		}
-		else if (Asset::META_TYPE_C2S_ENTER_GAME == meta.type_t()) //进入游戏
+		else if (Asset::META_TYPE_C2S_ENTER_GAME == meta.type_t()) //进入游戏：MMO进入场景
 		{
 			const Asset::EnterGame* enter_game = dynamic_cast<Asset::EnterGame*>(message);
 			if (!enter_game) return; 
 
-			if (enter_game->player_id() == 0)
-			{
-				DEBUG_ASSERT(false);
-				return;
-			}
+			if (enter_game->player_id() == 0) return;
 
-			if (_player_list.find(enter_game->player_id()) == _player_list.end())
-			{
-				LOG(ERROR, "player_id:{} has not found in username:{}, maybe it is cheated.", enter_game->player_id(), _account.username());
-				return; //账号下没有该角色数据
-			}
+			if (_player_list.find(enter_game->player_id()) == _player_list.end()) return; //账号下没有该角色数据
 
 			_player = PlayerInstance.Get(enter_game->player_id());
 
@@ -411,7 +403,7 @@ void WorldSession::OnProcessMessage(const Asset::Meta& meta)
 			//
 			//对于MMORPG游戏，可以是任意一个场景或副本ID，此处记录为解决全球唯一服，通过Redis进行进程间通信，获取玩家所在服务器ID.
 			//
-			_player->SetLocalServer(ConfigInstance.GetInt("ServerID", 1));
+			//_player->SetLocalServer(ConfigInstance.GetInt("ServerID", 1)); //架构调整，玩家直接在逻辑服务器处理逻辑
 			
 			//
 			//账号未能存储成功在角色数据，则重新存储
@@ -425,16 +417,6 @@ void WorldSession::OnProcessMessage(const Asset::Meta& meta)
 			//
 			//对于已经进入游戏内操作的玩家进行托管
 			//
-			/*
-			auto session = WorldSessionInstance.GetPlayerSession(_player->GetID());
-			if (session) //已经在线
-			{
-				//session->KickOutPlayer(Asset::KICK_OUT_REASON_OTHER_LOGIN);
-				//_player->SetSession(shared_from_this()); //重新设置网路连接会话，防止之前会话失效
-				WorldSessionInstance.AddPlayer(_player->GetID(), shared_from_this()); //在线玩家
-				//LOG(ERROR, "玩家{}目前在线，被踢掉", _player->GetID());
-			}
-			*/
 			WorldSessionInstance.AddPlayer(_player->GetID(), shared_from_this()); //在线玩家
 			
 			//
@@ -445,7 +427,10 @@ void WorldSession::OnProcessMessage(const Asset::Meta& meta)
 			if (_player->OnEnterGame()) //理论上不会出现
 			{
 				_player->AlertMessage(Asset::ERROR_DATABASE);
+				return;
 			}
+			
+			_player->SendProtocol2GameServer(message); //进入逻辑服务器
 		}
 		else if (Asset::META_TYPE_C2S_SWITCH_ACCOUNT == meta.type_t()) //切换账号
 		{
@@ -476,7 +461,7 @@ void WorldSession::OnProcessMessage(const Asset::Meta& meta)
 			Asset::EnterRoom* enter_room = dynamic_cast<Asset::EnterRoom*>(message);
 			if (!enter_room) return; 
 
-			WARN("玩家:{} 当前所在服务器:{} 进入房间:{}", _player->GetID(), _player->GetLocalServer(), enter_room->ShortDebugString());
+			//WARN("玩家:{} 当前所在服务器:{} 进入房间:{}", _player->GetID(), _player->GetLocalServer(), enter_room->ShortDebugString());
 
 			auto room_type = enter_room->room().room_type();
 			auto room_id = enter_room->room().room_id();
@@ -541,12 +526,13 @@ void WorldSession::OnProcessMessage(const Asset::Meta& meta)
 				kickout_player.set_player_id(_player->GetID());
 				kickout_player.set_reason(Asset::KICK_OUT_REASON_CHANGE_SERVER);
 
-				WARN("玩家:{}进入服务器:{} 和当前缓存服务器:{} 不同，发往原服踢出:{}", _player->GetID(), server_id, _player->GetLocalServer(), kickout_player.ShortDebugString());
+				WARN("玩家:{}进入服务器:{}，房间:{}和当前缓存服务器:{}，房间:{}不同，发往原服踢出:{}", 
+						_player->GetID(), _player->GetRoom(), server_id, room_id, _player->GetLocalServer(), kickout_player.ShortDebugString());
 
 				_player->SendProtocol2GameServer(kickout_player); 
 			}
 	
-			WARN("玩家:{} 逻辑服务器:{} 进入房间:{}", _player->GetID(), server_id, enter_room->ShortDebugString());
+			WARN("玩家:{} 当前所在服务器:{} 即将进入逻辑服务器:{} 进入房间:{}", _player->GetID(), _player->GetLocalServer(), server_id, enter_room->ShortDebugString());
 
 			if (room_id) _player->SetRoom(room_id); //设置房间
 			if (server_id) _player->SetLocalServer(server_id); //设置玩家当前所在服务器
@@ -757,6 +743,21 @@ void WorldSessionManager::BroadCast2GameServer(const pb::Message& message)
 		if (!session.second) continue;
 		session.second->SendProtocol(message);
 	}
+}
+	
+void WorldSessionManager::SendProtocol2GameServer(int32_t server_id, const pb::Message& message)
+{
+	auto session = GetServerSession(server_id);
+	if (!session) return;
+
+	session->SendProtocol(message);
+}
+
+void WorldSessionManager::SendProtocol2GameServer(int32_t server_id, const pb::Message* message)
+{
+	if (server_id <= 0 || !message) return;
+
+	SendProtocol2GameServer(server_id, *message);
 }
 	
 void WorldSessionManager::BroadCast(const pb::Message& message)

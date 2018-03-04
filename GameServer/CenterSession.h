@@ -21,6 +21,8 @@ namespace pb = google::protobuf;
 
 class Player;
 
+extern int32_t g_server_id;
+
 class CenterSession : public ClientSocket
 {
 public:
@@ -33,7 +35,8 @@ public:
 	Asset::COMMAND_ERROR_CODE OnCommandProcess(const Asset::Command& command);
     
 	virtual void OnConnected(); //连接上服务器
-	bool OnMessageProcess(const Asset::Meta& meta); //内部协议处理
+	bool OnMessageProcess(const Asset::Meta& meta); //内部协议处理：包括玩家发往逻辑服务器的协议
+	bool OnInnerProcess(const Asset::Meta& meta); //服务器间协议处理
 	
 	void SendProtocol(const pb::Message& message);
 	void SendProtocol(const pb::Message* message);
@@ -50,7 +53,7 @@ public:
 	void SayHi();
 
 	void RemovePlayer(int64_t player_id);
-	void AddPlayer(int64_t player_id, std::shared_ptr<Player>);
+	void EmplacePlayer(int64_t player_id, std::shared_ptr<Player>);
 	std::shared_ptr<Player> GetPlayer(int64_t player_id);
 
 	int32_t ServerID() { return _server_id; }

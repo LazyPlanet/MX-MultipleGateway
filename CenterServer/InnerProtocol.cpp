@@ -35,10 +35,6 @@ bool WorldSession::OnInnerProcess(const Asset::Meta& meta)
 	{
 		case Asset::META_TYPE_S2S_REGISTER: //注册服务器
 		{
-			//Asset::RegisterServer message;
-			//auto result = message.ParseFromString(meta.stuff());
-			//if (!result) return false;
-
 			const auto register_server = dynamic_cast<const Asset::RegisterServer*>(message);
 			if (!register_server) return false;
 

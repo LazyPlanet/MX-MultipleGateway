@@ -74,8 +74,10 @@ public:
 	
 	bool IsCenterServer(); //是否在中心服务器
 	void SetLocalServer(int32_t server_id);
-	void SetRoom(int64_t room_id) { _stuff.set_room_id(room_id); _dirty = true; }
 	int32_t GetLocalServer() { return _stuff.server_id(); } //玩家当前所在服务器
+
+	void SetRoom(int64_t room_id) { _stuff.set_room_id(room_id); _dirty = true; }
+	int64_t GetRoom() { return _stuff.room_id(); }
 
 	virtual int64_t GetID() { return _stuff.common_prop().player_id(); } //获取ID
 	virtual void SetID(int64_t player_id) { 

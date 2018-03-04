@@ -214,7 +214,7 @@ int32_t Player::OnLogout(Asset::KICK_OUT_REASON reason)
 		if (room) room->Remove(_player_id);
 	}
 
-	_stuff.clear_server_id(); //退出游戏逻辑服务器
+	//_stuff.clear_server_id(); //退出游戏逻辑服务器//架构调整
 
 	Save(true);	//存档数据库
 	PlayerInstance.Remove(_player_id); //删除玩家
@@ -223,6 +223,8 @@ int32_t Player::OnLogout(Asset::KICK_OUT_REASON reason)
 	kickout_player.set_player_id(_player_id);
 	kickout_player.set_reason(reason);
 	SendProtocol(kickout_player);
+
+	WARN("玩家:{} 当前所在服务器:{} 成功退出逻辑服务器:{} 原因:{}", _player_id, _stuff.server_id(), g_server_id, kickout_player.ShortDebugString());
 	
 	return 0;
 }
@@ -383,9 +385,11 @@ bool Player::HasClan(int64_t clan_id)
 
 	return false;
 }
-
+	
 int32_t Player::OnEnterGame() 
 {
+	DEBUG("玩家:{}进入逻辑服务器:{}", _player_id, g_server_id);
+
 	if (Load()) 
 	{
 		LOG(ERROR, "玩家:{}加载数据失败", _player_id);
@@ -401,12 +405,12 @@ int32_t Player::OnEnterGame()
 
 	//SendPlayer(); //发送数据给玩家
 	
-	_stuff.set_login_time(CommonTimerInstance.GetTime());
-	_stuff.set_logout_time(0);
+	//_stuff.set_login_time(CommonTimerInstance.GetTime());
+	//_stuff.set_logout_time(0);
 
 	SetDirty(); //存盘
 
-	LOG_BI("player", _stuff);
+	//LOG_BI("player", _stuff);
 
 	//WorldSessionInstance.Emplace(_player_id, _session); //网络会话数据
 	PlayerInstance.Emplace(_player_id, shared_from_this()); //玩家管理
@@ -1427,7 +1431,7 @@ void Player::OnLeaveRoom(Asset::GAME_OPER_TYPE reason)
 	//
 	//逻辑服务器的退出房间，则退出
 	//
-	OnLogout(Asset::KICK_OUT_REASON_LOGOUT);
+	//OnLogout(Asset::KICK_OUT_REASON_LOGOUT); //架构调整：退出房间不进行逻辑服务器退出
 
 	//
 	//房间状态同步
@@ -1559,7 +1563,7 @@ int32_t Player::CmdGetReward(pb::Message* message)
 
 		default:
 		{
-
+			DeliverReward(reward_id);
 		}
 		break;
 	}
@@ -1596,7 +1600,7 @@ int32_t Player::CmdGetRoomData(pb::Message* message)
 		{
 			AlertMessage(Asset::ERROR_ROOM_QUERY_NOT_FORBID);
 			
-			OnLogout(Asset::KICK_OUT_REASON_LOGOUT); //查询之后退出，否则会残留在此服务器
+			//OnLogout(Asset::KICK_OUT_REASON_LOGOUT); //查询之后退出，否则会残留在此服务器//架构调整：直接驻留在本服务器内
 			return 2;
 		}
 
@@ -1627,7 +1631,7 @@ int32_t Player::CmdGetRoomData(pb::Message* message)
 
 		SendProtocol(proto);
 	
-		OnLogout(Asset::KICK_OUT_REASON_LOGOUT); //查询之后退出
+		//OnLogout(Asset::KICK_OUT_REASON_LOGOUT); //查询之后退出//架构调整：直接驻留在本服务器内
 	}
 	else
 	{

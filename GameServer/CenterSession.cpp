@@ -11,6 +11,7 @@
 namespace Adoter
 {
 
+
 CenterSession::CenterSession(boost::asio::io_service& io_service, const boost::asio::ip::tcp::endpoint& endpoint) : 
 	ClientSocket(io_service, endpoint)
 {
@@ -22,9 +23,11 @@ void CenterSession::OnConnected()
 {
 	ClientSocket::OnConnected();
 
+	g_server_id = ConfigInstance.GetInt("ServerID", 1); 
+
 	Asset::RegisterServer message;
 	message.set_role_type(Asset::ROLE_TYPE_GAME_SERVER);
-	message.set_global_id(ConfigInstance.GetInt("ServerID", 1)); //全球唯一
+	message.set_global_id(g_server_id); //全球唯一
 
 	SendProtocol(message); //注册服务器角色
 }
@@ -33,6 +36,7 @@ bool CenterSession::OnMessageProcess(const Asset::Meta& meta)
 {
 	DEBUG("接收来自中心服务器:{} {}的数据:{}", _ip_address, _remote_endpoint.port(), meta.ShortDebugString());
 		
+	/*
 	if (meta.type_t() == Asset::META_TYPE_S2S_REGISTER) //注册服务器成功
 	{
 		DEBUG("游戏逻辑服务器注册到中心服成功.");
@@ -49,22 +53,33 @@ bool CenterSession::OnMessageProcess(const Asset::Meta& meta)
 		inner_meta.ParseFromString(message.inner_meta());
 		GmtInstance.OnInnerProcess(inner_meta);
 	}
-	else if (meta.type_t() == Asset::META_TYPE_SHARE_ENTER_ROOM) //进入游戏，从中心服务器首次进入逻辑服务器通过此处
+	*/
+
+	if (Asset::META_TYPE_C2S_COUNT <= meta.type_t())
 	{
-		Asset::EnterRoom message;
-		auto result = message.ParseFromString(meta.stuff());
-		if (!result) return false;
+		OnInnerProcess(meta); //内部处理：服务器间协议
+	}
+	else if (meta.type_t() == Asset::META_TYPE_C2S_ENTER_GAME) //进入游戏，从中心服务器首次进入逻辑服务器通过此处
+	{
+		//Asset::EnterRoom message;
+		//auto result = message.ParseFromString(meta.stuff());
+		//if (!result) return false;
 
-		auto player = GetPlayer(meta.player_id());
-		if (!player) { player = std::make_shared<Player>(meta.player_id()); }
-		else { player->Load(); } //进入房间加载数据，防止数据错误，可能丢房卡情况
-		AddPlayer(meta.player_id(), player);
+		//auto player = GetPlayer(meta.player_id());
+		//if (!player) { player = std::make_shared<Player>(meta.player_id()); }
+		//else { player->Load(); } //进入房间加载数据，防止数据错误，可能丢房卡情况
+		auto player = std::make_shared<Player>(meta.player_id());
+		EmplacePlayer(meta.player_id(), player);
 
+		/*
 		if (player->OnLogin()) 
 		{
 			ERROR("玩家{}进入游戏失败", meta.player_id());
+			return false;
 		}
-		player->CmdEnterRoom(&message);
+		*/
+		//player->CmdEnterRoom(&message);
+		player->OnEnterGame();
 	}
 	else
 	{
@@ -77,14 +92,22 @@ bool CenterSession::OnMessageProcess(const Asset::Meta& meta)
 		if (!player) 
 		{
 			player = std::make_shared<Player>(meta.player_id());
-			if (player->OnLogin()) return false;
 
-			AddPlayer(meta.player_id(), player);
+			if (player->OnEnterGame()) //理论上不会出现
+			{
+				ERROR("玩家:{} 进入逻辑服务器失败，处理协议:{}", meta.player_id(), meta.type_t());
+
+				return false;
+			}
+
+			EmplacePlayer(meta.player_id(), player);
 		}
+		/*
 		else if (meta.type_t() == Asset::META_TYPE_SHARE_CREATE_ROOM)
 		{
 			player->Load(); //创建房间加载数据，防止数据错误，可能丢房卡情况
 		}
+		*/
 
 		pb::Message* msg = ProtocolInstance.GetMessage(meta.type_t());	
 		if (!msg) 
@@ -298,7 +321,7 @@ void CenterSession::RemovePlayer(int64_t player_id)
 	_players.erase(it); 
 }
 	
-void CenterSession::AddPlayer(int64_t player_id, std::shared_ptr<Player> player)
+void CenterSession::EmplacePlayer(int64_t player_id, std::shared_ptr<Player> player)
 {
 	if (player_id <= 0 || !player) return;
 	
