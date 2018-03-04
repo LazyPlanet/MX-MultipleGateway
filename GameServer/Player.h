@@ -285,6 +285,8 @@ private:
 	std::vector<Asset::PaiElement> _angang; //暗杠
 	int32_t _jiangang = 0; //旋风杠，本质是明杠
 	int32_t _fenggang = 0; //旋风杠，本质是暗杠
+	std::vector<Asset::PaiElement> _zhui_fenggang; //追风杠
+	std::vector<Asset::PaiElement> _zhui_jiangang; //追风杠
 
 	//int32_t _oper_count = 0; //牌操作次数
 	int32_t _fapai_count = 0; //发牌次数
@@ -448,10 +450,15 @@ public:
 
 	int32_t GetMingGangCount() { return _minggang.size(); } //明杠数量
 	int32_t GetAnGangCount() { return _angang.size(); } //暗杠数量
+	int32_t GetZhuiJianCount() { return _zhui_fenggang.size(); } //追风杠，本质是明杠
+	int32_t GetZhuiFengCount() { return _zhui_jiangang.size(); } //追风杠，本质是暗杠
 	int32_t GetXuanFengCount() { return _jiangang + _fenggang; } //旋风杠数量
 	
 	const std::vector<Asset::PaiElement>& GetMingGang() { return _minggang; } //明杠
 	const std::vector<Asset::PaiElement>& GetAnGang() { return _angang; } //暗杠
+	const std::vector<Asset::PaiElement>& GetZhuiFengGang() { return _zhui_fenggang; } //追风杠
+	const std::vector<Asset::PaiElement>& GetZhuiJianGang() { return _zhui_jiangang; } //追风杠
+
 	int32_t GetJianGang() { return _jiangang; } //旋风杠，本质是明杠
 	int32_t GetFengGang() { return _fenggang; } //旋风杠，本质是暗杠
 

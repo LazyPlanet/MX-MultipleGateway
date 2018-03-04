@@ -1955,8 +1955,8 @@ void Game::CalculateGangScore(Asset::GameCalculate& game_calculate)
 		auto minggang = player->GetMingGang();
 		auto ming_count = player->GetMingGangCount(); 
 		auto an_count = player->GetAnGangCount(); 
-		auto fg_count = player->GetFengGang(); 
-		auto jg_count = player->GetJianGang(); 
+		auto fg_count = player->GetFengGang() + player->GetZhuiFengCount(); 
+		auto jg_count = player->GetJianGang() + player->GetZhuiJianCount(); 
 		
 		int32_t ming_score_each = GetMultiple(Asset::FAN_TYPE_MING_GANG);
 		int32_t ming_score = ming_count * ming_score_each;

@@ -239,17 +239,31 @@ void Room::OnReEnter(std::shared_ptr<Player> op_player)
 			}
 		}
 
-		const auto minggang = player->GetMingGang();
+		const auto& minggang = player->GetMingGang();
 		for (auto gang : minggang)
 		{
 			auto pai = player_list->mutable_minggang_list()->Add();
 			pai->CopyFrom(gang);
 		}
 		
-		const auto angang = player->GetAnGang();
+		const auto& angang = player->GetAnGang();
 		for (auto gang : angang)
 		{
 			auto pai = player_list->mutable_angang_list()->Add();
+			pai->CopyFrom(gang);
+		}
+		
+		const auto& zhuifeng_gang = player->GetZhuiFengGang();
+		for (auto gang : zhuifeng_gang)
+		{
+			auto pai = player_list->mutable_zhuifeng_gang_list()->Add();
+			pai->CopyFrom(gang);
+		}
+		
+		const auto& zhuijian_gang = player->GetZhuiJianGang();
+		for (auto gang : zhuijian_gang)
+		{
+			auto pai = player_list->mutable_zhuijian_gang_list()->Add();
 			pai->CopyFrom(gang);
 		}
 

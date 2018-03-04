@@ -3754,11 +3754,11 @@ void Player::OnGangZhuiFeng(Asset::PAI_OPER_TYPE oper_type, const Asset::PaiElem
 
 	if (oper_type == Asset::PAI_OPER_TYPE_ZHUIFENG_FENG)
 	{
-		++_fenggang;	
+		_zhui_fenggang.push_back(pai);
 	}
 	else if (oper_type == Asset::PAI_OPER_TYPE_ZHUIFENG_JIAN)
 	{
-		++_jiangang;	
+		_zhui_jiangang.push_back(pai);
 	}
 
 	_cards_inhand[pai.card_type()].erase(it); //删除牌
@@ -4602,7 +4602,10 @@ void Player::ClearCards()
  	_minggang.clear(); //清理杠牌
 	_angang.clear(); //清理杠牌
 
-	_jiangang = _fenggang = 0; //清理旋风杠
+	_zhui_fenggang.clear(); //追风杠
+	_zhui_jiangang.clear(); //追风杠
+
+	_jiangang = _fenggang = 0; //旋风杠
 	
 	_oper_count_tingpai = 0;
 	_fapai_count = /*_oper_count = */0; 
