@@ -656,6 +656,8 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 				return 3;
 			}
 
+			if (_game->IsHuiPai(pai)) return 18; //会牌不让打
+
 			auto& pais = _cards_inhand[pai.card_type()]; //获取该类型的牌
 			
 			auto it = std::find(pais.begin(), pais.end(), pai.card_value()); //查找第一个满足条件的牌即可
@@ -764,7 +766,7 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 		
 		case Asset::PAI_OPER_TYPE_XUANFENG_FENG: //旋风杠
 		{
-			--_oper_count;
+			//--_oper_count;
 			
 			if (!CheckFengGangPai(_cards_inhand)) 
 			{
@@ -778,7 +780,7 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 		
 		case Asset::PAI_OPER_TYPE_XUANFENG_JIAN: //旋风杠
 		{
-			--_oper_count;
+			//--_oper_count;
 	
 			if (!CheckJianGangPai(_cards_inhand)) 
 			{
@@ -796,7 +798,7 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 			if (!CheckFengGangPai(_cards_inhand)) 
 			{
 				LOG(ERROR, "玩家:{}在房间:{}第:{}局不能旋风杠，不满足条件:{}", _player_id, _room->GetID(), _game->GetID(), debug_string);
-				return 13;
+				return 15;
 			}
 
 			OnGangZhuiFeng(pai_operate->oper_type(), pai_operate->pai());
@@ -813,13 +815,13 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 			if (it == pais.end()) 
 			{
 				LOG(ERROR, "玩家:{}在房间:{}第:{}局不能听牌:{}, 原因:没找到牌", _player_id, _room->GetID(), _game->GetID(), pai.ShortDebugString());
-				return 13; //没有这张牌
+				return 16; //没有这张牌
 			}
 
 			if (!CanTingPai(pai)) 
 			{
 				LOG(ERROR, "玩家:{}在房间:{}第:{}局不能听牌:{}, 原因:不满足牌型", _player_id, _room->GetID(), _game->GetID(), pai.ShortDebugString());
-				return 14; //不能听牌
+				return 17; //不能听牌
 			}
 
 			pais.erase(it); //删除牌
@@ -854,7 +856,7 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 		break;
 	}
 
-	++_oper_count;
+	//++_oper_count;
 
 	//
 	//处理杠流泪场景，须在_game->OnPaiOperate下进行判断
@@ -3210,6 +3212,8 @@ bool Player::CheckChiPai(const Asset::PaiElement& pai)
 
 	if (_has_ting || HasTuoGuan()) return false; //已经听牌，不再提示
 
+	if (_game->IsHuiPai(pai)) return false; //会牌不让吃
+
 	if (ShouldDaPai()) return false;
 
 	if (!CheckMingPiao(Asset::PAI_OPER_TYPE_CHIPAI)) return false; //明飘检查
@@ -3224,18 +3228,41 @@ bool Player::CheckChiPai(const Asset::PaiElement& pai)
 
 	int32_t card_value = pai.card_value();
 
+	Asset::PaiElement chi_pai1, chi_pai2;
+
+	chi_pai1.set_card_type(pai.card_type());
+	chi_pai2.set_card_type(pai.card_type());
+
 	//吃牌总共有有三种方式:
 	//
 	//比如上家出4万，可以吃的条件是：2/3; 5/6; 3/5 三种方法.
 	
 	if (std::find(it->second.begin(), it->second.end(), card_value - 1) != it->second.end() && 
-		std::find(it->second.begin(), it->second.end(), card_value - 2) != it->second.end()) return true; 
+		std::find(it->second.begin(), it->second.end(), card_value - 2) != it->second.end()) 
+	{
+		chi_pai1.set_card_value(card_value - 1);
+		chi_pai2.set_card_value(card_value - 2);
+
+		if (!_game->IsHuiPai(chi_pai1) && !_game->IsHuiPai(chi_pai2)) return true;
+	}
 	
 	if (std::find(it->second.begin(), it->second.end(), card_value + 1) != it->second.end() && 
-		std::find(it->second.begin(), it->second.end(), card_value + 2) != it->second.end()) return true; 
+		std::find(it->second.begin(), it->second.end(), card_value + 2) != it->second.end()) 
+	{
+		chi_pai1.set_card_value(card_value + 1);
+		chi_pai2.set_card_value(card_value + 2);
+
+		if (!_game->IsHuiPai(chi_pai1) && !_game->IsHuiPai(chi_pai2)) return true;
+	}
 
 	if (std::find(it->second.begin(), it->second.end(), card_value - 1) != it->second.end() && 
-		std::find(it->second.begin(), it->second.end(), card_value + 1) != it->second.end()) return true; 
+		std::find(it->second.begin(), it->second.end(), card_value + 1) != it->second.end()) 
+	{
+		chi_pai1.set_card_value(card_value - 1);
+		chi_pai2.set_card_value(card_value + 1);
+
+		if (!_game->IsHuiPai(chi_pai1) && !_game->IsHuiPai(chi_pai2)) return true;
+	}
 
 	return false;
 }
@@ -3941,6 +3968,8 @@ void Player::OnGangFengPai()
 	}
 
 	++_fenggang;
+
+	_fapai_count = 0; //重置检查
 	
 	auto cards = _game->TailPai(1); //从后楼给玩家取一张牌
 	OnFaPai(cards);
@@ -4570,7 +4599,7 @@ void Player::ClearCards()
 	_jiangang = _fenggang = 0; //清理旋风杠
 	
 	_oper_count_tingpai = 0;
-	_fapai_count = _oper_count = 0; 
+	_fapai_count = /*_oper_count = */0; 
 	_has_ting = _jinbao = false;
 	_tuoguan_server = false;
 	_last_oper_type = _oper_type = Asset::PAI_OPER_TYPE_BEGIN; //初始化操作

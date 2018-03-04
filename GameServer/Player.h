@@ -286,7 +286,7 @@ private:
 	int32_t _jiangang = 0; //旋风杠，本质是明杠
 	int32_t _fenggang = 0; //旋风杠，本质是暗杠
 
-	int32_t _oper_count = 0; //牌操作次数
+	//int32_t _oper_count = 0; //牌操作次数
 	int32_t _fapai_count = 0; //发牌次数
 	int32_t _oper_count_tingpai = 0; //听牌后操作次数
 	bool _has_ting = false; //听牌
