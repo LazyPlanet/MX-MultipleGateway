@@ -130,11 +130,13 @@ int32_t Player::OnLogout()
 {
 	//_expire_time = CommonTimerInstance.GetTime() + 300; //30分钟之内没有上线，则删除
 
-	if (!IsCenterServer()) 
+	if (IsInRoom()) 
 	{
 		ERROR("玩家:{}游戏进行中，服务器:{}，房间:{} 不能从大厅退出", _player_id, _stuff.server_id(), _stuff.room_id());
-		//WorldSessionInstance.RemovePlayer(_player_id); //网络会话数据
-		//return 1; //玩家在游戏进行中，不能退出//多网关模式,直接退出
+
+		WorldSessionInstance.RemovePlayer(_player_id); //网络会话数据
+		PlayerInstance.Remove(_player_id); //玩家管理
+		return 1; //玩家在游戏进行中，不能退出//多网关模式,直接退出
 	}
 
 	_stuff.set_login_time(0);
@@ -194,7 +196,7 @@ int32_t Player::OnEnterCenter()
 			
 	//SetLocalServer(ConfigInstance.GetInt("ServerID", 1)); //架构调整
 
-	DEBUG("玩家:{}退出游戏逻辑服务器进入游戏大厅，数据内容:{}", _player_id, _stuff.ShortDebugString());
+	DEBUG("玩家:{} 退出游戏逻辑服务器进入游戏大厅，数据内容:{}", _player_id, _stuff.ShortDebugString());
 
 	auto session = WorldSessionInstance.GetPlayerSession(_player_id);
 	if (!session || !session->IsConnect()) OnLogout(); //玩家管理//分享界面退出
@@ -603,7 +605,7 @@ bool Player::HandleProtocol(int32_t type_t, pb::Message* message)
 {
 	if (!message) return false;
 
-	DEBUG("当前玩家{}所在服务器:{} 接收协议数据:{}", _player_id, _stuff.server_id(), message->ShortDebugString());
+	DEBUG("当前玩家:{}所在服务器:{} 接收协议数据:{}", _player_id, _stuff.server_id(), message->ShortDebugString());
 	//
 	//如果中心服务器没有协议处理回调，则发往游戏服务器进行处理
 	//

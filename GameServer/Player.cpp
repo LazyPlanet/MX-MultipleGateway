@@ -214,10 +214,9 @@ int32_t Player::OnLogout(Asset::KICK_OUT_REASON reason)
 		if (room) room->Remove(_player_id);
 	}
 
-	//_stuff.clear_server_id(); //退出游戏逻辑服务器//架构调整
-
 	Save(true);	//存档数据库
-	PlayerInstance.Remove(_player_id); //删除玩家
+
+	if (reason == Asset::KICK_OUT_REASON_LOGOUT) PlayerInstance.Remove(_player_id); //删除玩家
 
 	Asset::KickOutPlayer kickout_player; //通知中心服务器退出
 	kickout_player.set_player_id(_player_id);
@@ -490,7 +489,8 @@ int32_t Player::CreateRoom(pb::Message* message)
 				{
 					AlertMessage(Asset::ERROR_ROOM_CARD_NOT_ENOUGH); //房卡不足
 
-					LOG(ERROR, "玩家:{}开房房卡不足，当前房卡数量:{}需要消耗房卡数量:{}，开局数量:{}，单个房卡可以开房数量:{}", _player_id, _stuff.common_prop().room_card_count(), consume_count, open_rands, room_card->rounds());
+					LOG(ERROR, "玩家:{}开房房卡不足，当前房卡数量:{}需要消耗房卡数量:{}，开局数量:{}，单个房卡可以开房数量:{}", 
+							_player_id, _stuff.common_prop().room_card_count(), consume_count, open_rands, room_card->rounds());
 					return 5;
 				}
 			}
@@ -1278,6 +1278,8 @@ int32_t Player::DefaultMethod(pb::Message* message)
 
 bool Player::HandleProtocol(int32_t type_t, pb::Message* message)
 {
+	if (!message) return false;
+
 	SetOffline(false); //玩家在线
 
 	_pings_count = 0;
@@ -1431,7 +1433,7 @@ void Player::OnLeaveRoom(Asset::GAME_OPER_TYPE reason)
 	//
 	//逻辑服务器的退出房间，则退出
 	//
-	//OnLogout(Asset::KICK_OUT_REASON_LOGOUT); //架构调整：退出房间不进行逻辑服务器退出
+	OnLogout(Asset::KICK_OUT_REASON_LEAVE_ROOM); //架构调整：退出房间不进行逻辑服务器退出//退出房间
 
 	//
 	//房间状态同步
