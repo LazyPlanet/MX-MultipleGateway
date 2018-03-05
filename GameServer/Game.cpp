@@ -587,7 +587,8 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 		{
 			if (player->GetID() != _oper_cache.player_id())
 			{
-				LOG(ERROR, "玩家:{} 在房间:{} 牌局:{} 胡牌:{}，与服务器缓存:{}不一致，怀疑外挂行为，请关注", player->GetID(), _room_id, _game_id, pai.ShortDebugString(), _oper_cache.ShortDebugString());
+				LOG(ERROR, "玩家:{} 在房间:{} 牌局:{} 胡牌:{}，与服务器缓存:{}不一致，怀疑外挂行为，请关注", 
+						player->GetID(), _room_id, _game_id, pai.ShortDebugString(), _oper_cache.ShortDebugString());
 			}
 
 			if (player->CheckCardsInhand() && player->CheckHuPai(pai)) //玩家点炮//平胡
@@ -1698,7 +1699,7 @@ bool Game::SendCheckRtn()
 	if (!player_to) return false;
 
 	player_to->SendProtocol(alert); //发给目标玩家
-	SetPaiOperation(player_id, player_id, alert);
+	SetPaiOperation(player_id, operation.source_player_id(), alert);
 
 	auto it = std::find_if(_oper_list.begin(), _oper_list.end(), [player_id](const Asset::PaiOperationCache& operation) {
 		return player_id == operation.player_id();
