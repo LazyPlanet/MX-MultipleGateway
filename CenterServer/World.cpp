@@ -9,6 +9,8 @@
 namespace Adoter
 {
 
+int32_t g_server_id = 0;
+
 const Asset::CommonConst* g_const = nullptr;
 std::shared_ptr<GmtSession> g_gmt_client = nullptr;
 
@@ -46,6 +48,8 @@ bool World::Load()
 	//
 	//游戏内初始化
 	//
+	
+	g_server_id = ConfigInstance.GetInt("ServerID", 1); 
 
 	//特殊ID定义表
 	pb::Message* message = AssetInstance.Get(458753); 

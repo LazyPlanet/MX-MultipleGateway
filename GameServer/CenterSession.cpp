@@ -86,7 +86,11 @@ bool CenterSession::OnMessageProcess(const Asset::Meta& meta)
 		if (meta.player_id() == 0) return false;
 		
 		auto player = GetPlayer(meta.player_id());
-		if (!player && meta.type_t() == Asset::META_TYPE_SHARE_SAY_HI) return true; //防止玩家退出后收到心跳而进入游戏服务器
+		if (!player && meta.type_t() == Asset::META_TYPE_SHARE_SAY_HI) 
+		{
+			ERROR("玩家:{} 尚未注册，不能接收心跳", meta.player_id());
+			return true; //防止玩家退出后收到心跳而进入游戏服务器
+		}
 
 		if (!player) 
 		{
@@ -277,7 +281,7 @@ bool CenterSession::Update()
 	
 	++_heart_count;
 	
-	if (_heart_count % 20 != 0) return true; //1秒
+	if (_heart_count % 20 != 0) return true; //1s
 	
 	std::lock_guard<std::mutex> lock(_player_lock);
 
@@ -297,10 +301,9 @@ bool CenterSession::Update()
 
 	if (_heart_count % 1200 == 0) SayHi(); //心跳(60s)
 	
-	if (_heart_count % 36000 == 0) //30mins
+	if (_heart_count % 600 == 0) //30s
 	{
-		int32_t server_id = ConfigInstance.GetInt("ServerID", 1);
-		DEBUG("游戏逻辑服务器:{}在线玩家数量:{}", server_id, _players.size());
+		DEBUG("游戏逻辑服务器:{}在线玩家数量:{}", g_server_id, _players.size());
 	}
 
 	return true;

@@ -22,6 +22,7 @@ namespace Adoter
 {
 
 namespace spd = spdlog;
+extern int32_t g_server_id;
 extern const Asset::CommonConst* g_const;
 
 using namespace std::chrono;
@@ -166,6 +167,10 @@ int32_t Player::OnEnterGame(bool is_login)
 	}
 
 	if (is_login) SendPlayer(); //发送数据给玩家
+
+	Asset::EnterGame enter_game;
+	enter_game.set_player_id(_player_id);
+	SendProtocol2GameServer(enter_game); //通知逻辑服务器
 	
 	_stuff.set_login_time(CommonTimerInstance.GetTime());
 	_stuff.set_logout_time(0);
@@ -225,9 +230,22 @@ void Player::SetLocalServer(int32_t server_id)
 	
 bool Player::IsCenterServer() 
 { 
-	int32_t curr_server_id = ConfigInstance.GetInt("ServerID", 1);
+	bool is_center = _stuff.server_id() == 0 || _stuff.server_id() == g_server_id;
 
-	return _stuff.server_id() == 0 || _stuff.server_id() == curr_server_id;
+	if (!is_center) 
+	{
+		auto gs_session = WorldSessionInstance.GetServerSession(GetLocalServer());
+
+		if (!gs_session) 
+		{
+			WARN("玩家:{} 是否在中心服:{}", _player_id, is_center);
+			return true; //如果逻辑服务器尚未在线，则认为玩家还在中心服务器
+		}
+
+		WARN("玩家:{} 是否在中心服:{}", _player_id, is_center);
+	}
+
+	return is_center;
 }
 	
 int64_t Player::ConsumeRoomCard(Asset::ROOM_CARD_CHANGED_TYPE changed_type, int64_t count)
@@ -588,6 +606,24 @@ Asset::ERROR_CODE Player::CommonCheck(int32_t type_t)
 				LOG(ERROR, "玩家:{} 创建房间失败:{} 账号信息:{}", _player_id, _account_type, _stuff.account());
 				return Asset::ERROR_ROOM_FRIEND_NOT_FORBID; //游客禁止进入好友房
 			}
+		
+			int64_t server_id = WorldSessionInstance.RandomServer(); //随机一个逻辑服务器
+
+			if (server_id != GetLocalServer())
+			{
+
+				Asset::KickOutPlayer kickout_player; //通知当前游戏逻辑服务器下线
+				kickout_player.set_player_id(_player_id);
+				kickout_player.set_reason(Asset::KICK_OUT_REASON_CHANGE_SERVER);
+
+				WARN("玩家:{} 创建房间，随机服务器:{} 当前所在服务器:{} 踢出原服", _player_id, server_id, GetLocalServer());
+				
+				SendProtocol2GameServer(kickout_player); 
+			}
+
+			if (server_id > 0) SetLocalServer(server_id); //开房随机
+
+			WARN("玩家:{} 当前所在服务器:{} 开房随机服务器:{}", _player_id, _stuff.server_id(), server_id);
 		}
 		break;
 

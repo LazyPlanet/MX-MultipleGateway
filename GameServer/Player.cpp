@@ -3510,6 +3510,8 @@ bool Player::CanTingIfGang(const Asset::PaiElement& pai)
 
 bool Player::CheckAllGangPai(::google::protobuf::RepeatedField<Asset::PaiOperationAlert_AlertElement>& gang_list)
 {
+	if (!_room || !_game) return false;
+
 	if (_room->HasJueTouHui()) return false; //绝头会儿,不让杠
 
 	return CheckAllGangPai(gang_list, _cards_inhand, _cards_outhand);
@@ -3941,6 +3943,9 @@ bool Player::CheckFengGangPai(std::map<int32_t/*麻将牌类型*/, std::vector<i
 
 	if (!_room->HasXuanFengGang()) return false; //不支持旋风杠
 
+	const auto& huipai = _game->GetHuiPai();
+	if (huipai.card_type() == Asset::CARD_TYPE_FENG) return false;
+
 	auto it = cards.find(Asset::CARD_TYPE_FENG);
 	if (it == cards.end()) return false;
 
@@ -4045,6 +4050,9 @@ bool Player::CheckJianGangPai(std::map<int32_t/*麻将牌类型*/, std::vector<i
 	if (!_room || !_game) return false;
 
 	if (!_room->HasXuanFengGang()) return false; //不支持旋风杠
+	
+	const auto& huipai = _game->GetHuiPai();
+	if (huipai.card_type() == Asset::CARD_TYPE_JIAN) return false;
 
 	auto it = cards.find(Asset::CARD_TYPE_JIAN);
 	if (it == cards.end()) return false;
