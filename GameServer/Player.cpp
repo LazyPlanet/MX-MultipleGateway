@@ -387,7 +387,7 @@ bool Player::HasClan(int64_t clan_id)
 	
 int32_t Player::OnEnterGame() 
 {
-	DEBUG("玩家:{}进入逻辑服务器:{}", _player_id, g_server_id);
+	DEBUG("玩家:{} 进入逻辑服务器:{}", _player_id, g_server_id);
 
 	if (Load()) 
 	{
@@ -437,7 +437,7 @@ void Player::SendPlayer()
 int32_t Player::CmdCreateRoom(pb::Message* message)
 {
 	int32_t result = CreateRoom(message);
-	if (result) OnLogout(); //创建失败
+	if (result) OnLogout(Asset::KICK_OUT_REASON_LEAVE_ROOM); //创建失败
 
 	return result;
 }
@@ -931,7 +931,7 @@ void Player::SyncCommonProperty(Asset::SyncCommonProperty_SYNC_REASON_TYPE reaso
 int32_t Player::CmdEnterRoom(pb::Message* message) 
 {
 	int32_t result = EnterRoom(message);
-	if (result) OnLogout(); //进入失败
+	if (result) OnLogout(Asset::KICK_OUT_REASON_LEAVE_ROOM); //进入失败
 
 	return result;
 }
@@ -1662,7 +1662,6 @@ int32_t Player::CmdUpdateRoom(pb::Message* message)
 	
 	return 0;
 }
-
 
 int32_t Player::CmdLoadScene(pb::Message* message)
 {
@@ -4591,7 +4590,7 @@ void Player::OnGameOver()
 {
 	ClearCards();
 	
-	if (HasTuoGuan()) OnLogout(Asset::KICK_OUT_REASON_LOGOUT);
+	if (HasTuoGuan()) OnLogout(Asset::KICK_OUT_REASON_LEAVE_ROOM);
 }
 
 int32_t Player::CmdSayHi(pb::Message* message)

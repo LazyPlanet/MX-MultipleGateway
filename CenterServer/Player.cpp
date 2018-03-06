@@ -238,11 +238,11 @@ bool Player::IsCenterServer()
 
 		if (!gs_session) 
 		{
-			WARN("玩家:{} 是否在中心服:{}", _player_id, is_center);
+			//WARN("玩家:{} 是否在中心服:{}", _player_id, is_center);
 			return true; //如果逻辑服务器尚未在线，则认为玩家还在中心服务器
 		}
 
-		WARN("玩家:{} 是否在中心服:{}", _player_id, is_center);
+		//WARN("玩家:{} 是否在中心服:{}", _player_id, is_center);
 	}
 
 	return is_center;

@@ -53,7 +53,7 @@ public:
 	void SayHi();
 
 	void RemovePlayer(int64_t player_id);
-	void EmplacePlayer(int64_t player_id, std::shared_ptr<Player>);
+	void AddPlayer(int64_t player_id, std::shared_ptr<Player>);
 	std::shared_ptr<Player> GetPlayer(int64_t player_id);
 
 	int32_t ServerID() { return _server_id; }
