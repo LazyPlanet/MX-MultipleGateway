@@ -2490,7 +2490,7 @@ bool Player::CheckHuPai(const std::map<int32_t, std::vector<int32_t>>& cards_inh
 			
 	if (!HasYaoJiu(cards_inhand, cards_outhand, minggang, angang, jiangang, fenggang)) return false;
 
-	if (_room->HasQiDui() && CheckQiDui(cards_inhand, cards_outhand)) 
+	if (CheckQiDui(cards_inhand, cards_outhand)) 
 	{
 		_fan_list.emplace(Asset::FAN_TYPE_QIDUI); //7对儿,不会有其他番数
 		return true;
@@ -2774,7 +2774,8 @@ bool Player::CheckHuPai(const std::map<int32_t, std::vector<int32_t>>& cards_inh
 	if (IsMingPiao()) 
 	{
 		_fan_list.emplace(Asset::FAN_TYPE_MING_PIAO); //明飘
-		if (_room->IsJianPing()) 
+
+		if (_room->IsJianPing()) //建平麻将
 		{
 			_fan_list.erase(Asset::FAN_TYPE_PIAO_HU); //建平玩法：明飘不带飘胡番数
 			_fan_list.erase(Asset::FAN_TYPE_JIA_HU_NORMAL); //建平玩法：明飘不带夹胡番数
@@ -2829,6 +2830,10 @@ bool Player::CheckHuPai(const Asset::PaiElement& pai, bool check_zimo, bool calc
 	
 bool Player::IsMingPiao()
 {
+	if (!_room || !_game) return false;
+
+	if (_room->IsYingKou()) return false; //营口没明飘番数
+
 	auto curr_count = GetCardCount();
 
 	return curr_count == 1 || curr_count == 2;
@@ -3025,11 +3030,15 @@ const std::vector<Asset::PaiElement>& Player::CalculateJueTouHui(const std::map<
 
 bool Player::CheckQiDui(const std::map<int32_t, std::vector<int32_t>>& cards_inhand, const std::map<int32_t, std::vector<int32_t>>& cards_outhand)
 {
+	if (!_room || !_game) return false;
+
+	if (!_room->HasQiDui()) return false;
+
 	if (cards_outhand.size()) return false; //吃碰显然不是
 
 	for (auto crds : cards_inhand)
 	{
-		if (crds.second.size() % 2) return false;
+		if (crds.second.size() % 2) return false; //必须双数才能是7对儿
 
 		for (size_t i = 0; i < crds.second.size() / 2; ++i)
 		{
