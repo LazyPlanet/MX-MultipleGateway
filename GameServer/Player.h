@@ -387,7 +387,7 @@ public:
 	//
 	//比如玩家碰了7条，但是手里有7-8-9条，而选择暂时不杠
 	bool CheckAllGangPai(::google::protobuf::RepeatedField<Asset::PaiOperationAlert_AlertElement>& gang_list); 
-	bool CheckAllGangPai(::google::protobuf::RepeatedField<Asset::PaiOperationAlert_AlertElement>& gang_list, const std::map<int32_t, std::vector<int32_t>>& cards_inhand, const std::map<int32_t, std::vector<int32_t>>& cards_outhand); 
+	bool CheckAllGangPai(::google::protobuf::RepeatedField<Asset::PaiOperationAlert_AlertElement>& gang_list, const std::map<int32_t, std::vector<int32_t>>& cards_inhand, const std::map<int32_t, std::vector<int32_t>>& cards_outhand, const Asset::PaiElement& pai); 
 
 	void OnGangPai(const Asset::PaiElement& pai, int64_t source_player_id); //杠牌
 	void OnBeenQiangGang(const Asset::PaiElement& pai, int64_t source_player_id); //杠牌
@@ -439,7 +439,7 @@ public:
 	bool HasKeOutHand();
 	bool HasChiPaiOutHand();
 	bool HasPengJianPai(); //是否碰了箭牌
-	const std::vector<Asset::PaiElement>& CalculateJueTouHui(const std::map<int32_t, std::vector<int32_t>>& cards_inhand, const std::map<int32_t, std::vector<int32_t>>& cards_outhand); //获取绝头会儿的数量
+	const std::vector<Asset::PaiElement>& CalculateJueTouHui(const std::map<int32_t, std::vector<int32_t>>& cards_inhand, const std::map<int32_t, std::vector<int32_t>>& cards_outhand, const Asset::PaiElement& pai); //获取绝头会儿的数量
 	int32_t GetJueTouHuiCount() { return _juetouhuis.size(); }
 
 	bool Is28Zhang(); //是否28作掌

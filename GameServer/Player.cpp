@@ -642,7 +642,8 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 	
 	if (!_room || !_game) return 2; //还没加入房间或者还没开始游戏
 
-	if (!pai_operate->position()) pai_operate->set_position(GetPosition()); //设置玩家座位
+	pai_operate->set_position(GetPosition()); //设置玩家座位
+	pai_operate->mutable_pai()->set_source_player_id(_player_id); //标记玩家
 			
 	auto debug_string = pai_operate->ShortDebugString();
 	const auto& pai = pai_operate->pai(); 
@@ -2146,7 +2147,7 @@ bool Player::CheckHuiHu(const Asset::PaiElement& pai, bool check_zimo, bool calc
 
 	if (_room->HasJueTouHui()) 
 	{
-		const auto& juetous = CalculateJueTouHui(cards_inhand, cards_outhand); //支持绝头会儿
+		const auto& juetous = CalculateJueTouHui(cards_inhand, cards_outhand, pai); //支持绝头会儿
 		if (juetous.size())
 		{
 			for (const auto& juetou : juetous)
@@ -2782,8 +2783,6 @@ bool Player::CheckHuPai(const std::map<int32_t, std::vector<int32_t>>& cards_inh
 		}
 	}
 
-	//if (_room->HasJueTouHui()) CalculateJueTouHui(cards_inhand, cards_outhand);
-			
 	if (_room->HasHuiPai())
 	{
 		const auto& fanpai = _game->GetFanPai();
@@ -2962,66 +2961,15 @@ bool Player::IsSiGuiYi(const Asset::PaiElement& pai)
 //
 //手里四个一饼，其中一个是绝头混
 //
-const std::vector<Asset::PaiElement>& Player::CalculateJueTouHui(const std::map<int32_t, std::vector<int32_t>>& cards_inhand, const std::map<int32_t, std::vector<int32_t>>& cards_outhand)
+const std::vector<Asset::PaiElement>& Player::CalculateJueTouHui(const std::map<int32_t, std::vector<int32_t>>& cards_inhand, const std::map<int32_t, std::vector<int32_t>>& cards_outhand, const Asset::PaiElement& pai)
 {
 	if (_juetouhuis.size()) _juetouhuis.clear();
 
-	/*
-	for (const auto& crds : cards_inhand)
-	{
-		for (auto card_value : crds.second)
-		{
-			auto count = std::count(crds.second.begin(), crds.second.end(), card_value);
-			if (count == 4) 
-			{
-				Asset::PaiElement pai;	
-				pai.set_card_type((Asset::CARD_TYPE)crds.first);
-				pai.set_card_value(card_value);
-
-				auto it = std::find_if(_juetouhuis.begin(), _juetouhuis.end(), [pai](const Asset::PaiElement& pai_element){
-							return pai.card_type() == pai_element.card_type() && pai.card_value() == pai_element.card_value();
-						});
-				if (it != _juetouhuis.end()) continue; //防止重复
-
-				_juetouhuis.push_back(pai);
-			}
-		}
-	}
-	
-	for (const auto& crds : cards_outhand) 
-	{
-		if (crds.second.size() == 0) continue;
-		
-		if (crds.second.size() % 3 != 0) continue; //理论上不会出现
-
-		for (size_t i = 0; i < crds.second.size(); i = i + 3)
-		{
-			auto card_value = crds.second.at(i);
-			if ((card_value != crds.second.at(i + 1)) || (card_value != crds.second.at(i + 2))) continue; //外面是否碰了3张
-
-			const auto it = cards_inhand.find(crds.first);
-			if (it == cards_inhand.end() || it->second.size() == 0) continue;
-
-			Asset::PaiElement pai;	
-			pai.set_card_type((Asset::CARD_TYPE)crds.first);
-			pai.set_card_value(card_value);
-
-			auto iit = std::find_if(_juetouhuis.begin(), _juetouhuis.end(), [pai](const Asset::PaiElement& pai_element){
-						return pai.card_type() == pai_element.card_type() && pai.card_value() == pai_element.card_value();
-					});
-			if (iit != _juetouhuis.end()) continue; //防止重复
-
-			_juetouhuis.push_back(pai);
-		}
-	}
-	*/
-	
 	RepeatedField<Asset::PaiOperationAlert_AlertElement> gang_list;
-	if (CheckAllGangPai(gang_list, cards_inhand, cards_outhand)) 
+	if (CheckAllGangPai(gang_list, cards_inhand, cards_outhand, pai)) 
 	{
 		for (const auto& gang : gang_list) _juetouhuis.push_back(gang.pai());
 	}
-
 
 	DEBUG("玩家:{} 拥有绝头会儿数量:{}", _player_id, _juetouhuis.size());
 
@@ -3523,7 +3471,8 @@ bool Player::CheckAllGangPai(::google::protobuf::RepeatedField<Asset::PaiOperati
 
 	if (_room->HasJueTouHui()) return false; //绝头会儿,不让杠
 
-	return CheckAllGangPai(gang_list, _cards_inhand, _cards_outhand);
+	Asset::PaiElement pai; //尚无具体用途
+	return CheckAllGangPai(gang_list, _cards_inhand, _cards_outhand, pai);
 }
 
 //
@@ -3531,7 +3480,7 @@ bool Player::CheckAllGangPai(::google::protobuf::RepeatedField<Asset::PaiOperati
 //
 //比如,玩家碰3个4饼,牌内4 5 6饼套副条件下不杠的情况,每次进行检查
 //
-bool Player::CheckAllGangPai(::google::protobuf::RepeatedField<Asset::PaiOperationAlert_AlertElement>& gang_list, const std::map<int32_t, std::vector<int32_t>>& cards_inhand, const std::map<int32_t, std::vector<int32_t>>& cards_outhand)
+bool Player::CheckAllGangPai(::google::protobuf::RepeatedField<Asset::PaiOperationAlert_AlertElement>& gang_list, const std::map<int32_t, std::vector<int32_t>>& cards_inhand, const std::map<int32_t, std::vector<int32_t>>& cards_outhand, const Asset::PaiElement& pai)
 {
 	if (!_room || !_game) return false;
 	
@@ -3590,6 +3539,8 @@ bool Player::CheckAllGangPai(::google::protobuf::RepeatedField<Asset::PaiOperati
 		{
 			auto card_value = cards.second.at(i);
 			if ((card_value != cards.second.at(i + 1)) || (card_value != cards.second.at(i + 2))) continue; //外面是否碰了3张
+
+			if (pai.card_type() == card_type && pai.card_value() == card_value && pai.source_player_id() != _player_id) continue; //玩家碰了3张，其他玩家打了1张
 
 			auto it = cards_inhand.find(card_type);
 			if (it != cards_inhand.end()) 
