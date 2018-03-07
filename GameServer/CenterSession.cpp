@@ -49,6 +49,8 @@ bool CenterSession::OnMessageProcess(const Asset::Meta& meta)
 			player = std::make_shared<Player>(meta.player_id()); //创建玩家
 
 			AddPlayer(meta.player_id(), player);
+
+			WARN("逻辑服务器:{} 创建玩家:{}", g_server_id, meta.player_id());
 		}
 
 		player->OnEnterGame();
@@ -57,14 +59,6 @@ bool CenterSession::OnMessageProcess(const Asset::Meta& meta)
 	{
 		if (meta.player_id() == 0) return false;
 		
-		auto player = GetPlayer(meta.player_id());
-
-		if (!player) 
-		{
-			ERROR("玩家:{} 尚未存在逻辑服务器，可能没有登录成功:{}", meta.player_id(), meta.type_t());
-			return false;
-		}
-
 		pb::Message* msg = ProtocolInstance.GetMessage(meta.type_t());	
 		if (!msg) 
 		{
@@ -75,6 +69,14 @@ bool CenterSession::OnMessageProcess(const Asset::Meta& meta)
 		auto message = msg->New();
 		auto result = message->ParseFromArray(meta.stuff().c_str(), meta.stuff().size());
 		if (!result) return false;		//非法协议
+		
+		auto player = GetPlayer(meta.player_id());
+
+		if (!player) 
+		{
+			ERROR("玩家:{} 尚未存在逻辑服务器:{}，可能没有登录成功:{}", meta.player_id(), g_server_id, message->ShortDebugString());
+			return false;
+		}
 
 		player->HandleProtocol(meta.type_t(), message);
 
