@@ -48,7 +48,7 @@ Player::Player()
 	AddHandler(Asset::META_TYPE_SHARE_SIGN, std::bind(&Player::CmdSign, this, std::placeholders::_1));
 	AddHandler(Asset::META_TYPE_SHARE_COMMON_PROPERTY, std::bind(&Player::CmdGetCommonProperty, this, std::placeholders::_1));
 	AddHandler(Asset::META_TYPE_SHARE_SAY_HI, std::bind(&Player::CmdSayHi, this, std::placeholders::_1));
-	AddHandler(Asset::META_TYPE_SHARE_GAME_SETTING, std::bind(&Player::CmdGameSetting, this, std::placeholders::_1));
+	//AddHandler(Asset::META_TYPE_SHARE_GAME_SETTING, std::bind(&Player::CmdGameSetting, this, std::placeholders::_1));
 	AddHandler(Asset::META_TYPE_SHARE_ROOM_HISTORY, std::bind(&Player::CmdGetBattleHistory, this, std::placeholders::_1));
 	//AddHandler(Asset::META_TYPE_SHARE_RECHARGE, std::bind(&Player::CmdRecharge, this, std::placeholders::_1));//逻辑服务器处理
 	AddHandler(Asset::META_TYPE_SHARE_PLAY_BACK, std::bind(&Player::CmdPlayBack, this, std::placeholders::_1));
@@ -626,7 +626,7 @@ Asset::ERROR_CODE Player::CommonCheck(int32_t type_t)
 
 			if (server_id > 0) SetLocalServer(server_id); //开房随机
 
-			WARN("玩家:{} 当前所在服务器:{} 开房随机服务器:{}", _player_id, _stuff.server_id(), server_id);
+			//WARN("玩家:{} 当前所在服务器:{} 开房随机服务器:{}", _player_id, _stuff.server_id(), server_id);
 		}
 		break;
 
