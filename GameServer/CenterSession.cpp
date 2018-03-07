@@ -74,7 +74,7 @@ bool CenterSession::OnMessageProcess(const Asset::Meta& meta)
 
 		if (!player) 
 		{
-			ERROR("玩家:{} 尚未存在逻辑服务器:{}，可能没有登录成功:{}", meta.player_id(), g_server_id, message->ShortDebugString());
+			ERROR("玩家:{} 尚未存在逻辑服务器:{} 可能没有登录成功 协议:{}", meta.player_id(), g_server_id, message->ShortDebugString());
 			return false;
 		}
 
