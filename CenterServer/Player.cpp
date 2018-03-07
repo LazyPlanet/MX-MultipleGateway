@@ -89,9 +89,9 @@ int32_t Player::Load()
 //
 //数据存储，如果玩家当前在中心服则以中心服为准
 //
-//如果玩家已经不在中心服，则去游戏逻辑服进行存储
+//如果玩家已经不在中心服，则去游戏逻辑服进行存储，以免数据覆盖
 //
-//以免数据覆盖
+//尽量减少中心服的数据存储
 //
 int32_t Player::Save(bool force)
 {
@@ -107,7 +107,7 @@ int32_t Player::Save(bool force)
 
 	_dirty = false;
 	
-	DEBUG("玩家:{}保存数据成功，内容:{}", _player_id, _stuff.ShortDebugString());
+	DEBUG("玩家:{} 服务器:{} 保存数据成功，内容:{}", _player_id, g_server_id, _stuff.ShortDebugString());
 		
 	return 0;
 }

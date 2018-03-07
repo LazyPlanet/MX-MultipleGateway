@@ -503,6 +503,8 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 
 			auto clan_ptr = std::make_shared<Clan>(clan);
 			OnCreated(clan_id, clan_ptr); //创建成功
+
+			player->OnClanCreated(clan_id);
 		}
 		break;
 	
@@ -542,6 +544,14 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 			
 			auto result = clan->OnAgree(player, message);
 			message->set_oper_result(result); 
+
+			if (result == 0) //加入成功
+			{
+				auto des_player = PlayerInstance.Get(message->dest_player_id());
+				if (!des_player) return 12;
+
+				des_player->OnClanJoin(message->clan_id());
+			}
 		}
 		break;
 		
