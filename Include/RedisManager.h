@@ -458,10 +458,12 @@ public:
 		auto reply = incrby.get();
 		if (reply.is_integer()) clan_id = reply.as_integer();
 
+		/*
 		if (clan_id == 0) return 0;
 
 		int64_t server_id = ConfigInstance.GetInt("ServerID", 1); //服务器ID
 		clan_id = (server_id << 32) + clan_id; 
+		*/
 
 		return clan_id;
 	}
