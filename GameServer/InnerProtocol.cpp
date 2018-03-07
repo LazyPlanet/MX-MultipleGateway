@@ -49,10 +49,16 @@ bool CenterSession::OnInnerProcess(const Asset::Meta& meta)
 		
 		case Asset::META_TYPE_S2S_KICKOUT_PLAYER: //防止玩家退出后收到踢出继续初始化
 		{
+			const auto kick_player = dynamic_cast<const Asset::KickOutPlayer*>(message);
+			if (!kick_player) return false;
+
 			auto player = GetPlayer(meta.player_id());
 			if (!player) return false;
+			
+			WARN("玩家:{} 被踢出服务器:{} 原因:{}", meta.player_id(), g_server_id, message->ShortDebugString());
 
-			player->Logout(message);
+			if (kick_player->reason() == Asset::KICK_OUT_REASON_CHANGE_SERVER) player->OnLogout(kick_player->reason()); //强制踢出
+			else player->Logout(message);
 		}
 		break;
 

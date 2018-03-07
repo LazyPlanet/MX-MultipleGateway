@@ -50,7 +50,7 @@ bool CenterSession::OnMessageProcess(const Asset::Meta& meta)
 
 			AddPlayer(meta.player_id(), player);
 
-			WARN("逻辑服务器:{} 创建玩家:{}", g_server_id, meta.player_id());
+			WARN("逻辑服务器:{} 初始化玩家数据:{}", g_server_id, meta.player_id());
 		}
 
 		player->OnEnterGame();

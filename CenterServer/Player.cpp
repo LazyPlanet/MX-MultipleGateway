@@ -81,7 +81,7 @@ int32_t Player::Load()
 
 	_loaded = true;
 
-	DEBUG("玩家:{}加载数据成功，内容:{}", _player_id, _stuff.ShortDebugString());
+	DEBUG("玩家:{} 加载数据成功，内容:{}", _player_id, _stuff.ShortDebugString());
 
 	return 0;
 }
@@ -513,7 +513,7 @@ bool Player::SendProtocol2GameServer(const pb::Message& message)
 	meta.set_stuff(message.SerializeAsString());
 	meta.set_player_id(_player_id); 
 
-	DEBUG("玩家:{}发送到游戏逻辑服务器:{}，内容:{}", _player_id, _stuff.server_id(), debug_string);
+	DEBUG("玩家:{} 发送到游戏逻辑服务器:{}，协议类型:{} 内容:{}", _player_id, _stuff.server_id(), type_t, debug_string);
 
 	_gs_session->SendMeta(meta); 
 
@@ -615,12 +615,11 @@ Asset::ERROR_CODE Player::CommonCheck(int32_t type_t)
 
 			if (server_id != GetLocalServer())
 			{
-
 				Asset::KickOutPlayer kickout_player; //通知当前游戏逻辑服务器下线
 				kickout_player.set_player_id(_player_id);
 				kickout_player.set_reason(Asset::KICK_OUT_REASON_CHANGE_SERVER);
 
-				WARN("玩家:{} 创建房间，随机服务器:{} 当前所在服务器:{} 踢出原服", _player_id, server_id, GetLocalServer());
+				WARN("玩家:{} 创建房间，随机服务器:{} 当前所在服务器:{} 踢出当前服务器", _player_id, server_id, GetLocalServer());
 				
 				SendProtocol2GameServer(kickout_player); 
 			}

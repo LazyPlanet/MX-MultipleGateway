@@ -103,11 +103,7 @@ int32_t Player::Save(bool force)
 	if (!force && !IsDirty()) return 1;
 
 	auto success = RedisInstance.SavePlayer(_player_id, _stuff);
-	if (!success) 
-	{
-		LOG(ERROR, "保存玩家:{}数据:{}失败", _player_id, _stuff.ShortDebugString());
-		return 2;
-	}
+	if (!success) return 2;
 	
 	_dirty = false;
 
@@ -213,17 +209,23 @@ int32_t Player::OnLogout(Asset::KICK_OUT_REASON reason)
 		auto room = RoomInstance.Get(_stuff.room_id());
 		if (room) room->Remove(_player_id);
 	}
+	
+	_stuff.set_login_time(0);
+	_stuff.set_logout_time(CommonTimerInstance.GetTime());
 
 	Save(true);	//存档数据库
-
-	if (reason == Asset::KICK_OUT_REASON_LOGOUT) PlayerInstance.Remove(_player_id); //删除玩家
 
 	Asset::KickOutPlayer kickout_player; //通知中心服务器退出
 	kickout_player.set_player_id(_player_id);
 	kickout_player.set_reason(reason);
 	SendProtocol(kickout_player);
 
-	WARN("玩家:{} 当前所在服务器:{} 成功退出逻辑服务器:{} 原因:{}", _player_id, _stuff.server_id(), g_server_id, kickout_player.ShortDebugString());
+	if (reason == Asset::KICK_OUT_REASON_LOGOUT || reason == Asset::KICK_OUT_REASON_CHANGE_SERVER) //切换服务器直接退出
+	{
+		PlayerInstance.Remove(_player_id); //删除玩家
+
+		WARN("玩家:{} 当前所在服务器:{} 成功退出逻辑服务器:{} 原因:{}", _player_id, _stuff.server_id(), g_server_id, kickout_player.ShortDebugString());
+	}
 	
 	return 0;
 }
@@ -404,8 +406,8 @@ int32_t Player::OnEnterGame()
 
 	//SendPlayer(); //发送数据给玩家
 	
-	//_stuff.set_login_time(CommonTimerInstance.GetTime());
-	//_stuff.set_logout_time(0);
+	_stuff.set_login_time(CommonTimerInstance.GetTime());
+	_stuff.set_logout_time(0);
 
 	SetDirty(); //存盘
 
