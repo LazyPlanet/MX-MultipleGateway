@@ -803,7 +803,7 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 		case Asset::PAI_OPER_TYPE_ZHUIFENG_FENG:
 		case Asset::PAI_OPER_TYPE_ZHUIFENG_JIAN:
 		{
-			if (!CheckFengGangPai(_cards_inhand)) 
+			if (!CheckZhuiFengGang(_cards_inhand)) 
 			{
 				LOG(ERROR, "玩家:{}在房间:{}第:{}局不能旋风杠，不满足条件:{}", _player_id, _room->GetID(), _game->GetID(), debug_string);
 				return 15;
@@ -2427,7 +2427,7 @@ bool Player::CheckHuPai(const std::map<int32_t, std::vector<int32_t>>& cards_inh
 
 			if (cards[Asset::CARD_TYPE_FENG].size() || cards[Asset::CARD_TYPE_JIAN].size()) qingyise = false;
 		
-			if (has_count) qingyise = true; //都是非数字牌
+			if (has_count == 0) qingyise = true; //都是非数字牌
 		}
 
 		if (qingyise) hunyise = false; //只能有一种
