@@ -699,11 +699,9 @@ void Room::OnGameOver(int64_t player_id)
 	{
 		auto city_type = GetCity();
 
-		if (city_type == Asset::CITY_TYPE_CHAOYANG) //朝阳
-		{
-			_banker_index = (_banker_index + 1) % MAX_PLAYER_COUNT; //下庄
-		}
-		else if (city_type == Asset::CITY_TYPE_JIANPING) //建平
+		_banker_index = (_banker_index + 1) % MAX_PLAYER_COUNT; //下庄
+
+		if (city_type == Asset::CITY_TYPE_JIANPING) //建平
 		{
 			_banker_index = GetPlayerOrder(player_id); //谁胡下一局谁坐庄
 		}
