@@ -148,6 +148,13 @@ void Game::OnStarted()
 
 	auto cards = FaPai(1); 
 	_fanpai = GameInstance.GetCard(cards[0]);
+
+	if (true) //调试
+	{
+		_fanpai.set_card_type(Asset::CARD_TYPE_JIAN);
+		_fanpai.set_card_value(1);
+	}
+	
 	auto huipai = _fanpai;
 
 	switch (huipai.card_type())
@@ -187,6 +194,13 @@ void Game::OnStarted()
 	BroadCast(saizi); //会儿牌
 
 	_huipai = huipai;
+				
+	//营口麻将由于有会儿牌特殊处理：检查
+	auto banker = GetPlayer(_banker_player_id);
+	if (!banker) return;
+			
+	Asset::PaiOperationAlert alert; //提示协议
+	if (banker->OnFaPaiCheck(alert)) banker->SendProtocol(alert);
 
 	DEBUG("房间:{} 牌局:{} 翻牌:{} 生成会牌:{}", _room_id, _game_id, _fanpai.ShortDebugString(), _huipai.ShortDebugString());
 }

@@ -401,7 +401,7 @@ public:
 	std::vector<Asset::PAI_OPER_TYPE> GetXuanFeng() { return _xf_gang; } //旋风杠获取
 	const std::vector<Asset::PAI_OPER_TYPE>& CheckXuanFengGang(); //检查旋风杠
 
-	void CheckZhuiFengGang(std::map<int32_t/*麻将牌类型*/, std::vector<int32_t>/*牌值*/>& cards); //检查追风杠
+	bool CheckZhuiFengGang(std::map<int32_t/*麻将牌类型*/, std::vector<int32_t>/*牌值*/>& cards); //检查追风杠
 	void OnGangZhuiFeng(Asset::PAI_OPER_TYPE oper_type, const Asset::PaiElement& pai);
 	
 	bool CanTingPai(const Asset::PaiElement& pai);

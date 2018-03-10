@@ -3713,15 +3713,21 @@ const std::vector<Asset::PAI_OPER_TYPE>& Player::CheckXuanFengGang()
 	
 void Player::OnGangZhuiFeng(Asset::PAI_OPER_TYPE oper_type, const Asset::PaiElement& pai)
 {
+	if (!_room || !_game) return;
+
 	auto it = std::find(_cards_inhand[pai.card_type()].begin(), _cards_inhand[pai.card_type()].end(), pai.card_value());
 	if (it == _cards_inhand[pai.card_type()].end()) return;
 
 	if (oper_type == Asset::PAI_OPER_TYPE_ZHUIFENG_FENG)
 	{
+		if (_fenggang == 0) return;
+
 		_zhui_fenggang.push_back(pai);
 	}
 	else if (oper_type == Asset::PAI_OPER_TYPE_ZHUIFENG_JIAN)
 	{
+		if (_jiangang == 0) return;
+
 		_zhui_jiangang.push_back(pai);
 	}
 
@@ -3734,19 +3740,27 @@ void Player::OnGangZhuiFeng(Asset::PAI_OPER_TYPE oper_type, const Asset::PaiElem
 	if (OnFaPaiCheck(alert)) SendProtocol(alert);
 }
 
-void Player::CheckZhuiFengGang(std::map<int32_t/*麻将牌类型*/, std::vector<int32_t>/*牌值*/>& cards)
+bool Player::CheckZhuiFengGang(std::map<int32_t/*麻将牌类型*/, std::vector<int32_t>/*牌值*/>& cards)
 {
-	if (!_room || !_game) return;
+	if (!_room || !_game) return false;
 
-	if (_fenggang)
+	bool has_zhuifeng = false;
+
+	if (_fenggang && _cards_inhand[Asset::CARD_TYPE_FENG].size()) 
 	{
-		if (_cards_inhand[Asset::CARD_TYPE_FENG].size()) _xf_gang.push_back(Asset::PAI_OPER_TYPE_ZHUIFENG_FENG);
+		has_zhuifeng = true;
+
+		_xf_gang.push_back(Asset::PAI_OPER_TYPE_ZHUIFENG_FENG);
 	}
 	
-	if (_jiangang)
+	if (_jiangang && _cards_inhand[Asset::CARD_TYPE_JIAN].size()) 
 	{
-		if (_cards_inhand[Asset::CARD_TYPE_JIAN].size()) _xf_gang.push_back(Asset::PAI_OPER_TYPE_ZHUIFENG_JIAN);
+		has_zhuifeng = true;
+
+		_xf_gang.push_back(Asset::PAI_OPER_TYPE_ZHUIFENG_JIAN);
 	}
+
+	return has_zhuifeng;
 }
 
 //玩家能不能听牌的检查
@@ -4160,6 +4174,15 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 			{ 5, {1, 2, 2, 2, 3} },
 		};
 	}
+	else if (true && _player_id == 722042 && _cards_inhand.size() == 0)
+	{
+		_cards_inhand = {
+			{ 1, {1, 2, 3, 7, 7, 8} },
+			{ 3, {1, 7, 7, 8} },
+			//{ 4, {1, 2, 3, 4, 4} },
+			{ 5, {1, 2, 2, 3} },
+		};
+	}
 	else
 	{
 		for (auto card_index : cards) //发牌到玩家手里
@@ -4195,63 +4218,11 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 		{
 			_fapai_count = 1; //默认已经发牌
 
-			//CheckXuanFengGang(); //庄家起手，旋风杠检查
-
-			Asset::PaiOperationAlert alert; //提示协议
-			if (OnFaPaiCheck(alert)) SendProtocol(alert);
-
-			/*
-			//
-			//是否可以胡牌
-			//
-			if (CheckZiMo())
+			if (!_room->HasHuiPai()) //带会儿牌，产生会儿牌之后进行判断
 			{
-				auto pai_perator = alert.mutable_pais()->Add();
-				pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
+				Asset::PaiOperationAlert alert; //提示协议
+				if (OnFaPaiCheck(alert)) SendProtocol(alert);
 			}
-
-			//
-			//听牌检查
-			//
-			std::vector<Asset::PaiElement> ting_list;
-			if (CheckTingPai(ting_list))
-			{
-				for (auto pai : ting_list) 
-				{
-					auto pai_perator = alert.mutable_pais()->Add();
-					pai_perator->mutable_pai()->CopyFrom(pai);
-					pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
-				}
-			}
-			
-			//
-			//明杠和暗杠检查(开始只可能是暗杠)
-			//
-			::google::protobuf::RepeatedField<Asset::PaiOperationAlert_AlertElement> gang_list;
-			if (CheckAllGangPai(gang_list)) 
-			{
-				for (auto gang : gang_list) 
-				{
-					auto pai_perator = alert.mutable_pais()->Add();
-					pai_perator->CopyFrom(gang);
-				
-					_game->SetPaiOperation(_player_id, _player_id, gang.pai(), Asset::PAI_OPER_TYPE_ANGANGPAI); //多个暗杠只提示最后一个
-				}
-			}
-			
-			//
-			//是否旋风杠
-			//
-			for (auto gang : _xf_gang)
-			{
-				auto pai_perator = alert.mutable_pais()->Add();
-				pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE(gang));
-		
-				_game->SetPaiOperation(_player_id, _player_id, Asset::PaiElement(), gang);
-			}
-
-			if (alert.pais().size()) SendProtocol(alert); //上来即有旋风杠或者胡牌
-			*/
 		}
 	}
 	else if (cards.size() == 1)
