@@ -109,6 +109,19 @@ bool GmtSession::OnInnerProcess(const Asset::InnerMeta& meta)
 			OnActivityControl(message);
 		}
 		break;
+		
+		case Asset::INNER_TYPE_BIND_PLAYER: //绑定玩家
+		{
+			Asset::BindPlayer message;
+			auto result = message.ParseFromString(meta.stuff());
+			if (!result) return false;
+		
+			auto player_ptr = PlayerInstance.Get(message.player_id());
+			if (!player_ptr) return false;
+
+			player_ptr->SendGmtProtocol(message, _session_id); //发给逻辑服务器处理
+		}
+		break;
 
 		default:
 		{

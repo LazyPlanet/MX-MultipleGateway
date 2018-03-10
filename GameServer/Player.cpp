@@ -4855,6 +4855,13 @@ bool Player::Is28Pai(const Asset::PaiElement& pai)
 
 	return false;
 }
+	
+void Player::OnBind(std::string account)
+{
+	_stuff.set_agent_account(account);
+
+	_dirty = true;
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //

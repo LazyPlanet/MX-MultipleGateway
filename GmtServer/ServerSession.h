@@ -58,6 +58,7 @@ public:
 	bool OnInnerProcess(const Asset::InnerMeta& meta); //内部协议处理
 	Asset::COMMAND_ERROR_CODE OnCommandProcess(const Asset::Command& command);
 	Asset::COMMAND_ERROR_CODE OnSendMail(const Asset::SendMail& command);
+	Asset::COMMAND_ERROR_CODE OnBindPlayer(const Asset::BindPlayer& command);
 	Asset::COMMAND_ERROR_CODE OnSystemBroadcast(const Asset::SystemBroadcast& command);
 	Asset::COMMAND_ERROR_CODE OnActivityControl(const Asset::ActivityControl& command);
 

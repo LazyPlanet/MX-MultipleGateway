@@ -245,8 +245,6 @@ bool ServerSession::OnInnerProcess(const Asset::InnerMeta& meta)
 			auto result = message.ParseFromString(meta.stuff());
 			if (!result) return false;
 	
-			//auto redis = make_unique<Redis>();
-
 			Asset::Player player; //玩家数据
 			auto success = RedisInstance.GetPlayer(message.player_id(), player);
 			if (!success) message.set_error_code(Asset::COMMAND_ERROR_CODE_NO_PLAYER);
@@ -255,6 +253,26 @@ bool ServerSession::OnInnerProcess(const Asset::InnerMeta& meta)
 			message.set_error_code(Asset::COMMAND_ERROR_CODE_SUCCESS);
 
 			SendProtocol(message);
+		}
+		break;
+		
+		case Asset::INNER_TYPE_BIND_PLAYER:
+		{
+			Asset::BindPlayer message;
+			auto result = message.ParseFromString(meta.stuff());
+			if (!result) return false;
+			
+			if (IsGmtServer())
+			{
+				OnBindPlayer(message);
+			}
+			else //处理游戏服务器返回的数据
+			{
+				auto gmt_server = ServerSessionInstance.GetGmtServer(meta.session_id());
+				if (!gmt_server) return false;
+			
+				gmt_server->SendProtocol(message);
+			}
 		}
 		break;
 
@@ -469,7 +487,6 @@ Asset::COMMAND_ERROR_CODE ServerSession::OnSendMail(const Asset::SendMail& comma
 	{
 		Asset::Player player; //玩家数据
 
-		///auto redis = make_unique<Redis>();
 		auto success = RedisInstance.GetPlayer(player_id, player);
 		if (!success)
 		{
@@ -530,6 +547,36 @@ Asset::COMMAND_ERROR_CODE ServerSession::OnSendMail(const Asset::SendMail& comma
 		ServerSessionInstance.BroadCastProtocol(command);
 	}
 	
+	RETURN(Asset::COMMAND_ERROR_CODE_SUCCESS); //成功执行
+}
+	
+Asset::COMMAND_ERROR_CODE ServerSession::OnBindPlayer(const Asset::BindPlayer& command)
+{
+	const auto player_id = command.player_id(); 
+	if (player_id <= 0) 
+	{
+		RETURN(Asset::COMMAND_ERROR_CODE_NO_PLAYER);
+	}
+
+	Asset::Player player; //玩家数据
+
+	auto success = RedisInstance.GetPlayer(player_id, player);
+	if (!success)
+	{
+		RETURN(Asset::COMMAND_ERROR_CODE_NO_PLAYER); //数据错误：未找到玩家
+	}
+
+	if (player.logout_time() == 0 && player.login_time() != 0) //玩家目前在线
+	{
+		ServerSessionInstance.BroadCastProtocol(command);
+	}
+	else
+	{
+		player.set_agent_account(command.agent_account());
+		//存盘
+		RedisInstance.SavePlayer(player_id, player);
+	}
+		
 	RETURN(Asset::COMMAND_ERROR_CODE_SUCCESS); //成功执行
 }
 	

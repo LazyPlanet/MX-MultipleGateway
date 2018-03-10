@@ -107,6 +107,8 @@ public:
 	const std::string GetHeadImag();
 	const std::string GetIpAddress();
 
+	void OnBind(std::string account);
+
 	int32_t GetLocalServer() { return _stuff.server_id(); } //玩家当前所在服务器
 	void SetLocalServer(int32_t server_id) { return _stuff.set_server_id(server_id); }
 
