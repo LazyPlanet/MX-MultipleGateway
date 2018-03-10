@@ -1182,6 +1182,7 @@ void Room::UpdateClanStatus()
 	room_info.set_create_time(GetCreateTime());
 	room_info.mutable_options()->CopyFrom(GetOptions());
 	room_info.mutable_information()->CopyFrom(room_information);
+	room_info.set_curr_count(GetGamesCount());
 
 	message.set_room_status(room_info.SerializeAsString());
 
