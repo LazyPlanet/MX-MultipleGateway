@@ -4,6 +4,7 @@
 #include "Timer.h"
 #include "Player.h"
 #include "RedisManager.h"
+#include "NameLimit.h"
 
 namespace Adoter
 {
@@ -467,6 +468,11 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 			{
 				message->set_oper_result(Asset::ERROR_CLAN_NAME_UPPER);
 				return 3;
+			}
+			if (NameInstance.IsValid(trim_name))
+			{
+				message->set_oper_result(Asset::ERROR_CLAN_NAME_INVALID);
+				return 6;
 			}
 			if (player->GetHosterCount() > clan_limit->create_upper_limit())
 			{

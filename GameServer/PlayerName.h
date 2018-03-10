@@ -6,7 +6,6 @@
 
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
-
 #include <boost/algorithm/string.hpp>
 
 #include <pbjson.hpp>

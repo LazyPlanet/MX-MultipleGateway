@@ -24,3 +24,4 @@ ln -sf ../GameServer/PlayerCoolDown.h .
 ln -sf ../GameServer/PlayerName.h .
 ln -sf ../GameServer/Mall.h .
 ln -sf ../GameServer/Activity.h .
+ln -sf ../GameServer/NameLimit.h .
