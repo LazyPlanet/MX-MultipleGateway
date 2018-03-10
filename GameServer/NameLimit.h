@@ -43,6 +43,8 @@ public:
 		if (!result) return false;
 
 		for (const auto& name : _pingbi.name()) _names.push_back(name);
+
+		DEBUG("加载屏蔽字库:{}", _names.size());
 		
 		return true;
 	}
