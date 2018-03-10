@@ -196,6 +196,8 @@ public:
 	virtual int32_t CmdGameSetting(pb::Message* message);
 	//系统聊天
 	virtual int32_t CmdSystemChat(pb::Message* message);
+	//茶馆
+	virtual int32_t CmdClanOperate(pb::Message* message);
 
 	//踢下线
 	virtual int32_t OnKickOut(pb::Message* message);

@@ -15,6 +15,7 @@
 #include "PlayerCommonReward.h"
 #include "PlayerCommonLimit.h"
 #include "PlayerMatch.h"
+#include "Clan.h"
 
 namespace Adoter
 {
@@ -46,6 +47,7 @@ Player::Player()
 	AddHandler(Asset::META_TYPE_C2S_LOAD_SCENE, std::bind(&Player::CmdLoadScene, this, std::placeholders::_1));
 	AddHandler(Asset::META_TYPE_C2S_GET_ROOM_DATA, std::bind(&Player::CmdGetRoomData, this, std::placeholders::_1));
 	AddHandler(Asset::META_TYPE_C2S_UPDATE_ROOM, std::bind(&Player::CmdUpdateRoom, this, std::placeholders::_1));
+	AddHandler(Asset::META_TYPE_SHARE_CLAN_OPERATION, std::bind(&Player::CmdClanOperate, this, std::placeholders::_1));
 	
 	//中心服务器协议处理
 	AddHandler(Asset::META_TYPE_S2S_KICKOUT_PLAYER, std::bind(&Player::OnKickOut, this, std::placeholders::_1));
@@ -634,6 +636,15 @@ void Player::OnGameStart()
 	if (_room && _room->IsFriend()) AddFriendRoomRounds(); //好友房对战局数
 
 	ClearCards();  //游戏数据
+}
+
+int32_t Player::CmdClanOperate(pb::Message* message)
+{
+	auto clan_oper = dynamic_cast<Asset::ClanOperation*>(message);
+	if (!clan_oper) return 1;
+	
+	ClanInstance.OnOperate(shared_from_this(), clan_oper);
+	return 0;
 }
 
 int32_t Player::CmdPaiOperate(pb::Message* message)
