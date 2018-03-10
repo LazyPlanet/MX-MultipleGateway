@@ -75,7 +75,7 @@ public:
 	std::shared_ptr<Clan> Get(int64_t clan_id);
 
 	int32_t OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation* message);
-	void OnCreated(int64_t clan_id, std::shared_ptr<Clan> clan); //创建成功
+	void OnCreated(const Asset::ClanOperation* message); //创建成功
 };
 
 #define ClanInstance ClanManager::Instance()

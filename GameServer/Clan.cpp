@@ -469,7 +469,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 				message->set_oper_result(Asset::ERROR_CLAN_NAME_UPPER);
 				return 3;
 			}
-			if (NameInstance.IsValid(trim_name))
+			if (!NameInstance.IsValid(trim_name))
 			{
 				message->set_oper_result(Asset::ERROR_CLAN_NAME_INVALID);
 				return 6;
@@ -507,8 +507,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 
 			message->mutable_clan()->CopyFrom(clan); //回传Client
 
-			auto clan_ptr = std::make_shared<Clan>(clan);
-			OnCreated(clan_id, clan_ptr); //创建成功
+			OnCreated(message); //创建成功
 
 			player->OnClanCreated(clan_id);
 		}
@@ -620,11 +619,13 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 	return 0;
 }
 	
-void ClanManager::OnCreated(int64_t clan_id, std::shared_ptr<Clan> clan)
+void ClanManager::OnCreated(const Asset::ClanOperation* message)
 {
-	if (clan_id <= 0 || !clan) return;
-		
-	Emplace(clan_id, clan);
+	if (!message) return;
+
+	Asset::ClanOperationSync proto;
+	proto.mutable_operation()->CopyFrom(*message);
+	WorldInstance.BroadCast(proto);
 }
 
 }

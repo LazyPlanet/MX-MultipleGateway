@@ -109,6 +109,15 @@ bool WorldSession::OnInnerProcess(const Asset::Meta& meta)
 		}
 		break;
 		
+		case Asset::META_TYPE_S2S_CLAN_OPERATION:
+		{
+			const auto oper_sync = dynamic_cast<const Asset::ClanOperationSync*>(message);
+			if (!oper_sync) return false;
+
+			ClanInstance.OnGameServerBack(*oper_sync);
+		}
+		break;
+		
 		default:
 		{
 			auto player = PlayerInstance.Get(meta.player_id());

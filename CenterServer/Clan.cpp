@@ -42,7 +42,7 @@ int32_t Clan::OnApply(std::shared_ptr<Player> player, Asset::ClanOperation* mess
 	}
 
 	message->set_oper_result(Asset::ERROR_SUCCESS);
-	player->SendProtocol(message);
+	//player->SendProtocol(message);
 
 	_dirty = true;
 	return 0;
@@ -352,6 +352,7 @@ void ClanManager::Update(int32_t diff)
 		}
 	}
 
+	Load();
 }
 	
 void ClanManager::Load()
@@ -377,6 +378,8 @@ void ClanManager::Load()
 
 		Emplace(clan.clan_id(), clan_ptr);
 	}
+		
+	ERROR("加载茶馆数据成功，加载成功数量:{}", clan_list.size());
 
 	_loaded = true;
 }
@@ -413,7 +416,7 @@ void ClanManager::Emplace(int64_t clan_id, std::shared_ptr<Clan> clan)
 
 	_clans[clan_id] = clan;
 
-	DEBUG("添加茶馆:{}成功，当前茶馆数量:{}", clan_id, _clans.size());
+	DEBUG("添加茶馆:{} 成功，当前茶馆数量:{}", clan_id, _clans.size());
 }
 
 std::shared_ptr<Clan> ClanManager::GetClan(int64_t clan_id)
@@ -454,6 +457,8 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 	{
 		case Asset::CLAN_OPER_TYPE_CREATE: //创建
 		{
+			player->SendProtocol2GameServer(message);
+			/*
 			auto clan_limit = dynamic_cast<Asset::ClanLimit*>(AssetInstance.Get(g_const->clan_id()));
 			if (!clan_limit) return 6;
 
@@ -511,6 +516,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 			OnCreated(clan_id, clan_ptr); //创建成功
 
 			player->OnClanCreated(clan_id);
+			*/
 		}
 		break;
 	
@@ -625,6 +631,33 @@ void ClanManager::OnCreated(int64_t clan_id, std::shared_ptr<Clan> clan)
 	if (clan_id <= 0 || !clan) return;
 		
 	Emplace(clan_id, clan);
+
+	DEBUG("创建茶馆:{} 成功", clan_id);
+}
+	
+void ClanManager::OnGameServerBack(const Asset::ClanOperationSync& message)
+{
+	const auto& operation = message.operation();
+
+	auto clan_id = operation.clan_id();
+	
+	switch (operation.oper_type())
+	{
+		case Asset::CLAN_OPER_TYPE_CREATE: //创建
+		{
+			auto clan_ptr = std::make_shared<Clan>(operation.clan());
+			OnCreated(clan_id, clan_ptr); //创建成功
+		}
+		break;
+
+
+		default:
+		{
+		}
+		break;
+	}
+
+	DEBUG("接收逻辑服务器返回茶馆操作数据:{}", operation.ShortDebugString());
 }
 
 }

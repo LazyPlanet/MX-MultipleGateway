@@ -461,6 +461,7 @@ void Player::SendProtocol(const pb::Message& message)
 
 	//auto debug_string = message.ShortDebugString();
 	//DEBUG("send protocol to player_id:{} protocol_name:{} content:{}", _player_id, enum_value->name().c_str(), debug_string);
+	DEBUG("玩家:{} 发送协议:{}", _player_id, message.ShortDebugString());
 }
 	
 void Player::SendMeta(const Asset::Meta& meta)
