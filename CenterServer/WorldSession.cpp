@@ -248,7 +248,7 @@ void WorldSession::OnProcessMessage(const Asset::Meta& meta)
 				_player->Save(true); //存盘，防止数据库无数据
 				_user.mutable_player_list()->Add(player_id);
 				
-				LOG(INFO, "账号:{}下尚未创建角色，创建角色:{} 账号数据:{}", login->account().username(), player_id, _user.ShortDebugString());
+				LOG(INFO, "账号:{} 下尚未创建角色，创建角色:{} 账号数据:{}", login->account().username(), player_id, _user.ShortDebugString());
 			}
 
 			if (_player_list.size()) _player_list.clear(); 
@@ -295,7 +295,7 @@ void WorldSession::OnProcessMessage(const Asset::Meta& meta)
 				auto has_key = RedisInstance.Get(_user.client_info().imei(), account);
 				if (!has_key) 
 				{
-					LOG(ERROR, "玩家账号游客登录错误，手机唯一识别码:{}已经存在游客账号,不能再次游客登录，防止刷卡.", _user.client_info().imei());
+					LOG(ERROR, "玩家账号游客登录错误，手机唯一识别码:{} 已经存在游客账号,不能再次游客登录，防止刷卡.", _user.client_info().imei());
 					return;
 				}
 			}

@@ -149,10 +149,10 @@ void Game::OnStarted()
 	auto cards = FaPai(1); 
 	_fanpai = GameInstance.GetCard(cards[0]);
 
-	if (true) //调试
+	if (false) //调试
 	{
-		_fanpai.set_card_type(Asset::CARD_TYPE_JIAN);
-		_fanpai.set_card_value(1);
+		_fanpai.set_card_type(Asset::CARD_TYPE_BINGZI);
+		_fanpai.set_card_value(7);
 	}
 	
 	auto huipai = _fanpai;
@@ -195,8 +195,7 @@ void Game::OnStarted()
 
 	_huipai = huipai;
 				
-	//营口麻将由于有会儿牌特殊处理：检查
-	auto banker = GetPlayer(_banker_player_id);
+	auto banker = GetPlayer(_banker_player_id); //会儿牌特殊处理：发完牌对庄家进行牌型检查
 	if (!banker) return;
 			
 	Asset::PaiOperationAlert alert; //提示协议

@@ -2990,7 +2990,7 @@ bool Player::CheckQiDui(const std::map<int32_t, std::vector<int32_t>>& cards_inh
 	{
 		if (crds.second.size() % 2) return false; //必须双数才能是7对儿
 
-		for (size_t i = 0; i < crds.second.size() / 2; ++i)
+		for (size_t i = 0; i < crds.second.size() / 2; i = i + 2)
 		{
 			if (crds.second[i] != crds.second[i + 1]) return false;
 		}
@@ -4166,20 +4166,29 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 
 	if (LookAtBaopai()) return 0; //生成宝牌，进宝检查
 
-	if (true && _player_id == 722038 && _cards_inhand.size() == 0)
+	if (true && _player_id == 722077 && _cards_inhand.size() == 0) //14
 	{
 		_cards_inhand = {
-			{ 3, {7, 7, 8} },
-			{ 4, {1, 2, 3, 4, 4} },
-			{ 5, {1, 2, 2, 2, 3} },
+			{ 1, {2, 2, 3, 3, 4, 4} },
+			{ 3, {3, 3, 3} },
+			{ 4, {1, 2, 3} },
+			{ 5, {1, 2} },
 		};
 	}
-	else if (true && _player_id == 722042 && _cards_inhand.size() == 0)
+	else if (true && _player_id == 722076 && _cards_inhand.size() == 0) //13
 	{
 		_cards_inhand = {
-			{ 1, {1, 2, 3, 7, 7, 8} },
-			{ 3, {1, 7, 7, 8} },
-			//{ 4, {1, 2, 3, 4, 4} },
+			{ 1, {2, 2, 3, 3, 4, 4} },
+			{ 2, {2, 2} },
+			{ 3, {1, 1, 3} },
+			{ 5, {2, 2} },
+		};
+	}
+	else if (true && _player_id == 722038 && _cards_inhand.size() == 0) //13
+	{
+		_cards_inhand = {
+			{ 1, {2, 3, 3} },
+			{ 3, {1, 2, 2, 3, 3, 4} },
 			{ 5, {1, 2, 2, 3} },
 		};
 	}
