@@ -99,9 +99,8 @@ int32_t Player::Save(bool force)
 
 	if (!force && !IsDirty()) return 1;
 
-	if (!IsCenterServer()) return 2; 
+	if (!force && !IsCenterServer()) return 2; 
 
-	//auto redis = make_unique<Redis>();
 	auto success = RedisInstance.SavePlayer(_player_id, _stuff); 
 	if (!success) return 3;
 
