@@ -920,13 +920,29 @@ int32_t Player::CmdGameSetting(pb::Message* message)
 	
 int32_t Player::CmdGetBattleHistory(pb::Message* message)
 {
-	auto battle_history = dynamic_cast<const Asset::BattleHistory*>(message);
+	auto battle_history = dynamic_cast<Asset::BattleHistory*>(message);
 	if (!battle_history) return 1;
+		
+	Asset::RoomHistory history;
+	auto room_id = battle_history->room_id();
 
-	int32_t start_index = battle_history->start_index();
-	int32_t end_index = battle_history->end_index();
+	if (room_id > 0)
+	{
+		if (!RedisInstance.GetRoomHistory(room_id, history))
+		{
+			AlertMessage(Asset::ERROR_ROOM_NO_RECORD);
+			return 2; //没有记录
+		}
+		
+		auto record = battle_history->mutable_history_list()->Add();
+		record->CopyFrom(history);
 
-	BattleHistory(start_index, end_index);
+		SendProtocol(message);
+	}
+	else
+	{
+		BattleHistory(battle_history->start_index(), battle_history->end_index()); //战绩列表
+	}
 
 	return 0;
 }
@@ -1068,33 +1084,13 @@ void Player::BattleHistory(int32_t start_index, int32_t end_index)
 
 	room_list.clear(); 
 
-	/*
-	cpp_redis::future_client client;
-	client.connect(ConfigInstance.GetString("Redis_ServerIP", "127.0.0.1"), ConfigInstance.GetInt("Redis_ServerPort", 6379));
-	if (!client.is_connected()) return;
-	
-	auto has_auth = client.auth(ConfigInstance.GetString("Redis_Password", "!QAZ%TGB&UJM9ol."));
-	if (has_auth.get().ko()) return;
-	*/
-
 	for (int32_t i = start_index - 1; i < end_index; ++i)
 	{
 		if (i < 0 || i >= _stuff.room_history().size()) continue; //安全检查
 
 		Asset::RoomHistory history;
 		auto room_id = _stuff.room_history(i);
-		/*
-		auto get = client.get("room_history:" + std::to_string(room_id));
-		cpp_redis::reply reply = get.get();
-		client.commit();
 
-		if (!reply.is_string()) continue;
-
-		auto success = history.ParseFromString(reply.as_string());
-		if (!success) continue;
-		*/
-
-		//auto redis_cli = make_unique<Redis>();
 		if (!RedisInstance.GetRoomHistory(room_id, history)) 
 		{
 			auto record = message.mutable_history_list()->Add();
