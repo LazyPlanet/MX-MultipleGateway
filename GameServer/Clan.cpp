@@ -624,7 +624,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 		break;
 	}
 			
-	OnResult(message); //执行成功
+	OnResult(message); //执行成功：广播执行结果
 
 	return 0;
 }

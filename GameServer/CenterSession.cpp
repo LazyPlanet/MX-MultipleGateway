@@ -258,7 +258,7 @@ bool CenterSession::Update()
 	
 	if (_heart_count % 600 == 0) //30s
 	{
-		DEBUG("游戏逻辑服务器:{}在线玩家数量:{}", g_server_id, _players.size());
+		DEBUG("游戏逻辑服务器:{} 在线玩家数量:{}", g_server_id, _players.size());
 	}
 
 	return true;

@@ -16,6 +16,18 @@ void Clan::Update()
 {
 	if (_dirty) Save();
 }
+	
+bool Clan::Load()
+{
+	Asset::Clan clan;
+	auto load = RedisInstance.Get("clan:" + std::to_string(_clan_id), clan);
+
+	if (!load) return false;
+
+	_stuff = clan;
+
+	return true;
+}
 
 int32_t Clan::OnApply(std::shared_ptr<Player> player, Asset::ClanOperation* message)
 {
@@ -43,7 +55,6 @@ int32_t Clan::OnApply(std::shared_ptr<Player> player, Asset::ClanOperation* mess
 	}
 
 	message->set_oper_result(Asset::ERROR_SUCCESS);
-	//player->SendProtocol(message);
 
 	_dirty = true;
 	return 0;
@@ -610,6 +621,10 @@ void ClanManager::OnGameServerBack(const Asset::ClanOperationSync& message)
 
 		default:
 		{
+			auto clan_ptr = Get(clan_id);
+			if (!clan_ptr) return;
+
+			clan_ptr->Load();
 		}
 		break;
 	}

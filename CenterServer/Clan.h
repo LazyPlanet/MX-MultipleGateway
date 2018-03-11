@@ -23,6 +23,7 @@ public:
 	Clan(const Asset::Clan& clan) { _clan_id = clan.clan_id(); _stuff = clan; }
 
 	const Asset::Clan& Get() { return _stuff; }
+	bool Load();
 	int64_t GetID() { return _stuff.clan_id(); }
 	int64_t GetHoster() { return _stuff.hoster_id(); }
 
