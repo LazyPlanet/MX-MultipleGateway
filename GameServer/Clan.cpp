@@ -538,16 +538,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 		
 		case Asset::CLAN_OPER_TYPE_MEMEBER_AGEE: //同意加入
 		{
-			if (clan->GetHoster() != player->GetID())
-			{
-				message->set_oper_result(Asset::ERROR_CLAN_NO_PERMISSION);
-				return 11;
-			}
-			
-			auto result = clan->OnAgree(player, message);
-			message->set_oper_result(result); 
-
-			if (result == 0) //加入成功
+			if (message->has_oper_result() && message->oper_result() == 0) //加入成功
 			{
 				auto des_player = PlayerInstance.Get(message->dest_player_id());
 				if (!des_player) return 12;

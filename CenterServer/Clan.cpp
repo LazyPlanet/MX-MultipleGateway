@@ -86,7 +86,7 @@ int32_t Clan::OnAgree(std::shared_ptr<Player> player, Asset::ClanOperation* mess
 
 	if (it == _stuff.mutable_message_list()->end()) return Asset::ERROR_CLAN_NO_RECORD; //尚未申请记录
 	
-	if (oper_type == it->oper_type()) return Asset::ERROR_SUCCESS; //状态一致
+	//if (oper_type == it->oper_type()) return Asset::ERROR_SUCCESS; //状态一致
 
 	it->set_oper_time(TimerInstance.GetTime());
 	it->set_oper_type(oper_type);
@@ -105,8 +105,8 @@ int32_t Clan::OnAgree(std::shared_ptr<Player> player, Asset::ClanOperation* mess
 	member_ptr->set_name(it->name());
 	member_ptr->set_status(Asset::CLAN_MEM_STATUS_TYPE_AVAILABLE);
 
-	message->set_oper_result(Asset::ERROR_SUCCESS);
-	player->SendProtocol(message);
+	//message->set_oper_result(Asset::ERROR_SUCCESS);
+	//player->SendProtocol(message);
 
 	_dirty = true;
 	return 0;
@@ -472,7 +472,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 	{
 		case Asset::CLAN_OPER_TYPE_CREATE: //创建
 		{
-			//player->SendProtocol2GameServer(message);
+			player->SendProtocol2GameServer(message);
 		}
 		break;
 	
@@ -512,13 +512,19 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 			
 			auto result = clan->OnAgree(player, message);
 			message->set_oper_result(result); 
+			
+			player->SendProtocol2GameServer(message); //通知逻辑服务器加入成功
 
 			if (result == 0) //加入成功
 			{
 				auto des_player = PlayerInstance.Get(message->dest_player_id());
 				if (!des_player) return 12;
 
+				message->mutable_clan()->CopyFrom(clan->Get()); //茶馆信息
+
 				des_player->OnClanJoin(message->clan_id());
+				des_player->SendProtocol(message); //通知玩家馆长同意
+				des_player->SendProtocol2GameServer(message); //通知逻辑服务器加入成功
 			}
 		}
 		break;
@@ -574,7 +580,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 		
 		case Asset::CLAN_OPER_TYPE_CLAN_LIST_QUERY:
 		{
-			//player->SendProtocol2GameServer(message);
+			player->SendProtocol2GameServer(message);
 		}
 		break;
 	
@@ -586,7 +592,6 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 		break;
 	}
 			
-	player->SendProtocol2GameServer(message); //逻辑服务器同步状态
 
 	return 0;
 }
