@@ -201,14 +201,9 @@ void Clan::OnQueryRoomList(std::shared_ptr<Player> player, Asset::ClanOperation*
 
 void Clan::Save(bool force)
 {
-	if (force)
-	{
-		RedisInstance.Save("clan:" + std::to_string(_clan_id), _stuff);
-	}
-	else if (!_dirty)
-	{
-		return;
-	}
+	if (!force && !_dirty) return;
+		
+	RedisInstance.Save("clan:" + std::to_string(_clan_id), _stuff);
 
 	_dirty = false;
 }
@@ -363,7 +358,7 @@ void ClanManager::Load()
 	bool has_record = RedisInstance.GetArray("clan:*", clan_list);	
 	if (!has_record)
 	{
-		ERROR("加载茶馆数据失败，加载成功数量:{}", clan_list.size());
+		WARN("加载茶馆数据失败，可能是本服尚未创建茶馆，加载成功数量:{}", clan_list.size());
 		return;
 	}
 
@@ -379,7 +374,7 @@ void ClanManager::Load()
 		Emplace(clan.clan_id(), clan_ptr);
 	}
 		
-	ERROR("加载茶馆数据成功，加载成功数量:{}", clan_list.size());
+	DEBUG("加载茶馆数据成功，加载成功数量:{}", clan_list.size());
 
 	_loaded = true;
 }
