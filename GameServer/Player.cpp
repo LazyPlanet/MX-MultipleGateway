@@ -2366,278 +2366,20 @@ bool Player::CheckHuPai(const std::map<int32_t, std::vector<int32_t>>& cards_inh
 	
 	bool zhanlihu = false, jiahu = false, bianhu = false, duanmen = false, qingyise = false, hunyise = false, piao = false; //积分
 
-	//
-	//1.是否可以缺门、清一色
-	//
-	{
-		int32_t has_count = 0; //万饼条数量
-
-		auto gang_list = minggang;
-		gang_list.insert(gang_list.end(), angang.begin(), angang.end());
-
-		//是否含有万子
-		auto it_wanzi = std::find_if(gang_list.begin(), gang_list.end(), [](const Asset::PaiElement& pai){
-					return pai.card_type() == Asset::CARD_TYPE_WANZI;
-				});
-		if (cards[Asset::CARD_TYPE_WANZI].size() > 0 || it_wanzi != gang_list.end()) ++has_count;
-
-		//是否含有饼子
-		auto it_bingzi = std::find_if(gang_list.begin(), gang_list.end(), [](const Asset::PaiElement& pai){
-					return pai.card_type() == Asset::CARD_TYPE_BINGZI;
-				});
-		if (cards[Asset::CARD_TYPE_BINGZI].size() > 0 || it_bingzi != gang_list.end()) ++has_count; 
-		
-		//是否含有条子
-		auto it_tiaozi = std::find_if(gang_list.begin(), gang_list.end(), [](const Asset::PaiElement& pai){
-					return pai.card_type() == Asset::CARD_TYPE_TIAOZI;
-				});
-		if (cards[Asset::CARD_TYPE_TIAOZI].size() > 0 || it_tiaozi != gang_list.end()) ++has_count; 
-
-		if (!_room->HasDuanMen()) //不可以缺门
-		{
-			if (has_count < 3) //少于三门显然不行，检查是否清一色
-			{
-				if (_room->HasQingYiSe()) //可以清一色
-				{
-					if (has_count == 2) { return false; } //不可缺门
-					else { hunyise = true; } //<= 1//是清一色
-				}
-				else //断门还不可以清一色
-				{
-					return false;
-				}
-			}
-		}
-		else //可以断门
-		{
-			if (has_count < 3) duanmen = true;
-
-			if (_room->HasQingYiSe()) //可以清一色
-			{
-				if (has_count <= 1) 
-				{
-					hunyise = true;
-					duanmen = false; //清一色不算断门
-				}
-			}
-		}
-
-		//营口玩法
-		//
-		//清一色和混清一色
-		qingyise = hunyise; //假设是混清一色
-
-		if (hunyise)
-		{
-			for (const auto& gang : gang_list)
-			{
-				if (gang.card_type() == Asset::CARD_TYPE_FENG || gang.card_type() == Asset::CARD_TYPE_JIAN)
-				{
-					qingyise = false;
-					break;
-				}
-			}
-
-			if (cards[Asset::CARD_TYPE_FENG].size() || cards[Asset::CARD_TYPE_JIAN].size()) qingyise = false;
-		
-			if (has_count == 0) qingyise = true; //都是非数字牌
-		}
-
-		if (qingyise) hunyise = false; //只能有一种
-	}
-
-	//
-	//2.是否可以站立胡
-	//
-	{
-		if (_room->HasZhanLi()) //可以站立胡
-		{
-			if (cards_outhand.size() == 0 && minggang.size() == 0) zhanlihu = true;
-		}
-		else
-		{
-			if (cards_outhand.size() == 0 && minggang.size() == 0) return false; //没开门
-		}
-	}
+	bool hupai = false;
 	
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//
-	//3.是否有幺九
+	// 番数数据
 	//
-			
-	if (!HasYaoJiu(cards_inhand, cards_outhand, minggang, angang, jiangang, fenggang)) return false;
-
-	if (CheckQiDui(cards_inhand, cards_outhand)) 
-	{
-		_fan_list.emplace(Asset::FAN_TYPE_QIDUI); //7对儿,不会有其他番数
-		return true;
-	}
-
-	//
-	//4.是否可以满足胡牌的要求
-	//
-	std::vector<Card_t> card_list;
-	for (auto crds : cards) //不同牌类别的牌
-	{
-		for (auto value : crds.second)
-			card_list.push_back(Card_t(crds.first, value));
-	}
-
-	bool can_hu = CanHuPai(card_list); //胡牌牌型检查
-	if (!can_hu) return false;
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	//
-	//5.是否含有刻
-	//
-	bool has_ke = false; //胡牌时至少有一刻子或杠或有中发白其中一对
-			
-	if (HasKeOutHand()) has_ke = true;
+	defer {
+
+	if (!hupai) return false;
 	
-	int32_t shunzi_count = 0, ke_count = 0; 
+	if (!calculate) return true; //可以胡牌，但非结算
 
-	for (auto r : _hu_result)
-	{
-		 bool is_shunzi = std::get<2>(r);
-		 if (is_shunzi) ++shunzi_count;
-				 
-		 bool is_ke = std::get<1>(r);
-		 if (is_ke) ++ke_count;
-	}
-
-	if (!has_ke && (/*cards[Asset::CARD_TYPE_FENG].size() //朝阳：风牌不顶刻 || */cards[Asset::CARD_TYPE_JIAN].size())) has_ke = true;
-	//if (!has_ke && _room->IsYingKou() && cards[Asset::CARD_TYPE_FENG].size()) has_ke = true; //营口麻将
-	
-	if (!has_ke && (jiangang > 0 || fenggang > 0 || minggang.size() > 0 || angang.size() > 0)) has_ke = true;
-	
-	if (!has_ke && ke_count == 0) return false;
-
-	//
-	//依赖牌型检查
-	//
-	if (_room->IsJianPing() && !_room->HasZhang28() && Is28Zhang()) return false; //建平玩法：28不能作掌
-	
-	//6.飘胡检查，严重依赖上面的刻的数量
-	//
-	if (shunzi_count == 0) 
-	{
-		piao = true; 
-
-		if (!IsPiao()) piao = false; //尝试处理：玩家吃了三套副一样的，如[7 7 7 8 8 8 9 9 9]牌型
-	}
-	
-	//
-	//7.特殊情况检查
-	//
-	//防止出现玩家已经碰了6饼，但是牌内含有2、3、4、5、6万，7、8饼
-	//
-	//收到1、4、7万胡牌的情况
-	//
-	//这里对牌内牌进行胡牌检查
-	//
-	{
-		//7-1.胡牌检查
-		//
-		auto cards_inhand_check = cards_inhand;
-		//if (!check_zimo && pai.card_type() && pai.card_value()) cards_inhand_check[pai.card_type()].push_back(pai.card_value()); //放入可以操作的牌
-			
-		for (auto& card : cards_inhand_check)
-			std::sort(card.second.begin(), card.second.end(), [](int x, int y){ return x < y; }); //由小到大，排序
-	
-		std::vector<Card_t> card_list;
-		for (auto crds : cards_inhand_check) //胡牌逻辑检查
-		{
-			for (auto value : crds.second)
-				card_list.push_back(Card_t(crds.first, value));
-		}
-
-		_hu_result.clear();
-		_shunzis.clear();
-
-		bool can_hu = CanHuPai(card_list);	
-		if (!can_hu) return false;
-
-		//7-2.刻数据检查
-		//
-		if (!has_ke)
-		{
-			int32_t ke_count = 0; //刻数最多12张
-			for (auto r : _hu_result)
-			{
-				 bool is_ke = std::get<1>(r);
-				 if (is_ke) ++ke_count;
-			}
-			if (ke_count) has_ke = true; //牌内不能构成则没有刻
-		}
-
-		if (_shunzis.size() == 0 && !HasChiPaiOutHand()) piao = true; //牌内没有顺子，处理牌型[3 3 3]，墙外碰[2 2 2 4 4 4]情况
-		if (_room->IsJianPing() && !piao && _room->HasMingPiao() && HasPengJianPai()) return false; //建平玩法：中发白其中之一只要碰就算明飘，本局必须胡飘，不勾选则正常
-	}
-
-	if (!has_ke) return false;
-
-	//
-	//8.建平玩法：四归一不允许胡牌
-	//
-	do {
-		if (!_room->IsJianPing() || !_room->HasSiGuiYi()) break;
-
-		if (!check_zimo && IsSiGuiYi(pai)) return false;
-		if (check_zimo && IsSiGuiYi()) return false;
-
-	} while(false);
-	
-	//
-	//9.建平玩法：一边高不允许胡牌
-	//
-	do {
-		if (!_room->IsJianPing() || !_room->HasYiBianGao()) break;
-
-		auto cards_inhand_check = cards_inhand;
-		
-		for (const auto& shunzi : _shunzis) //牌内顺子_shunzis
-		{
-			if (shunzi.pai().size() != 3) continue;
-
-			auto count = std::count_if(_shunzis.begin(), _shunzis.end(), [shunzi](const Asset::ShunZi& shunzi_element){
-						if (shunzi_element.pai().size() != 3) return false;
-
-						for (int32_t i = 0; i < 3; ++i)
-						{
-							if (shunzi.pai(i).card_type() != shunzi_element.pai(i).card_type()) return false;
-							if (shunzi.pai(i).card_value() != shunzi_element.pai(i).card_value()) return false;
-						}
-
-						return true;
-					});
-			if (count > 1) //牌型[2 2 2 7 7 7 8 9]满足条件但不是一边高
-			{
-				bool has_pai = true;
-
-				for (const auto& pai : shunzi.pai()) //检查手里是否真的含有这些数量的牌
-				{
-					auto card_count = std::count_if(cards_inhand_check[pai.card_type()].begin(), cards_inhand_check[pai.card_type()].end(), [pai](int32_t card_value){
-								return card_value == pai.card_value();
-							});
-					if (card_count != count) 
-					{
-						has_pai = false;
-						break;
-					}
-				}
-
-				if (has_pai) return false; //确实含有这些牌数据
-			}
-		}
-
-	} while(false);
-
-	if (!calculate) return true;
-	
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// 番数数据
-//
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
 	//
 	//1.是否夹胡
 	//
@@ -2765,6 +2507,288 @@ bool Player::CheckHuPai(const std::map<int32_t, std::vector<int32_t>>& cards_inh
 		auto count = std::count(cards[fanpai.card_type()].begin(), cards[fanpai.card_type()].end(), fanpai.card_value());
 		if (count == 3) _fan_list.emplace(Asset::FAN_TYPE_QIANG_TOU_HUI); //墙头会儿//墙头绝
 	}
+
+	return _fan_list.size() > 0;
+	
+	};
+	
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//
+	// 胡牌，牌型检查
+	//
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	//
+	//1.是否可以缺门、清一色
+	//
+	{
+		int32_t has_count = 0; //万饼条数量
+
+		auto gang_list = minggang;
+		gang_list.insert(gang_list.end(), angang.begin(), angang.end());
+
+		//是否含有万子
+		auto it_wanzi = std::find_if(gang_list.begin(), gang_list.end(), [](const Asset::PaiElement& pai){
+					return pai.card_type() == Asset::CARD_TYPE_WANZI;
+				});
+		if (cards[Asset::CARD_TYPE_WANZI].size() > 0 || it_wanzi != gang_list.end()) ++has_count;
+
+		//是否含有饼子
+		auto it_bingzi = std::find_if(gang_list.begin(), gang_list.end(), [](const Asset::PaiElement& pai){
+					return pai.card_type() == Asset::CARD_TYPE_BINGZI;
+				});
+		if (cards[Asset::CARD_TYPE_BINGZI].size() > 0 || it_bingzi != gang_list.end()) ++has_count; 
+		
+		//是否含有条子
+		auto it_tiaozi = std::find_if(gang_list.begin(), gang_list.end(), [](const Asset::PaiElement& pai){
+					return pai.card_type() == Asset::CARD_TYPE_TIAOZI;
+				});
+		if (cards[Asset::CARD_TYPE_TIAOZI].size() > 0 || it_tiaozi != gang_list.end()) ++has_count; 
+
+		if (!_room->HasDuanMen()) //不可以缺门
+		{
+			if (has_count < 3) //少于三门显然不行，检查是否清一色
+			{
+				if (_room->HasQingYiSe()) //可以清一色
+				{
+					if (has_count == 2) { return false; } //不可缺门
+					else { hunyise = true; } //<= 1//是清一色
+				}
+				else //断门还不可以清一色
+				{
+					return false;
+				}
+			}
+		}
+		else //可以断门
+		{
+			if (has_count < 3) duanmen = true;
+
+			if (_room->HasQingYiSe()) //可以清一色
+			{
+				if (has_count <= 1) 
+				{
+					hunyise = true;
+					duanmen = false; //清一色不算断门
+				}
+			}
+		}
+
+		//营口玩法
+		//
+		//清一色和混清一色
+		qingyise = hunyise; //假设是混清一色
+
+		if (hunyise)
+		{
+			for (const auto& gang : gang_list)
+			{
+				if (gang.card_type() == Asset::CARD_TYPE_FENG || gang.card_type() == Asset::CARD_TYPE_JIAN)
+				{
+					qingyise = false;
+					break;
+				}
+			}
+
+			if (cards[Asset::CARD_TYPE_FENG].size() || cards[Asset::CARD_TYPE_JIAN].size()) qingyise = false;
+		
+			if (has_count == 0) qingyise = true; //都是非数字牌
+		}
+
+		if (qingyise) hunyise = false; //只能有一种
+	}
+	
+	//
+	//2.是否有幺九
+	//
+			
+	if (!HasYaoJiu(cards_inhand, cards_outhand, minggang, angang, jiangang, fenggang)) return false;
+	
+	//
+	//3.是否七小对：不进行开门检查
+	//
+	if (CheckQiDui(cards_inhand, cards_outhand)) 
+	{
+		_fan_list.emplace(Asset::FAN_TYPE_QIDUI); //7对儿,不会有其他番数
+	
+		hupai = true;
+
+		return true;
+	}
+
+	//
+	//4.是否可以站立胡
+	//
+	{
+		if (_room->HasZhanLi()) //可以站立胡
+		{
+			if (cards_outhand.size() == 0 && minggang.size() == 0) zhanlihu = true;
+		}
+		else
+		{
+			if (cards_outhand.size() == 0 && minggang.size() == 0) return false; //没开门
+		}
+	}
+	
+	//
+	//5.是否可以满足胡牌的要求
+	//
+	std::vector<Card_t> card_list;
+	for (auto crds : cards) //不同牌类别的牌
+	{
+		for (auto value : crds.second)
+			card_list.push_back(Card_t(crds.first, value));
+	}
+
+	bool can_hu = CanHuPai(card_list); //胡牌牌型检查
+	if (!can_hu) return false;
+	
+	//
+	//6.是否含有刻
+	//
+	bool has_ke = false; //胡牌时至少有一刻子或杠或有中发白其中一对
+			
+	if (HasKeOutHand()) has_ke = true;
+	
+	int32_t shunzi_count = 0, ke_count = 0; 
+
+	for (auto r : _hu_result)
+	{
+		 bool is_shunzi = std::get<2>(r);
+		 if (is_shunzi) ++shunzi_count;
+				 
+		 bool is_ke = std::get<1>(r);
+		 if (is_ke) ++ke_count;
+	}
+
+	if (!has_ke && (/*cards[Asset::CARD_TYPE_FENG].size() //朝阳：风牌不顶刻 || */cards[Asset::CARD_TYPE_JIAN].size())) has_ke = true;
+	
+	if (!has_ke && (jiangang > 0 || fenggang > 0 || minggang.size() > 0 || angang.size() > 0)) has_ke = true;
+	
+	if (!has_ke && ke_count == 0) return false;
+
+	//
+	//依赖牌型检查
+	//
+	if (_room->IsJianPing() && !_room->HasZhang28() && Is28Zhang()) return false; //建平玩法：28不能作掌
+	
+	//7.飘胡检查，严重依赖上面的刻的数量
+	//
+	if (shunzi_count == 0) 
+	{
+		piao = true; 
+
+		if (!IsPiao()) piao = false; //尝试处理：玩家吃了三套副一样的，如[7 7 7 8 8 8 9 9 9]牌型
+	}
+	
+	//
+	//8.特殊情况检查
+	//
+	//防止出现玩家已经碰了6饼，但是牌内含有2、3、4、5、6万，7、8饼
+	//
+	//收到1、4、7万胡牌的情况
+	//
+	//这里对牌内牌进行胡牌检查
+	//
+	{
+		//7-1.胡牌检查
+		//
+		auto cards_inhand_check = cards_inhand;
+		//if (!check_zimo && pai.card_type() && pai.card_value()) cards_inhand_check[pai.card_type()].push_back(pai.card_value()); //放入可以操作的牌
+			
+		for (auto& card : cards_inhand_check)
+			std::sort(card.second.begin(), card.second.end(), [](int x, int y){ return x < y; }); //由小到大，排序
+	
+		std::vector<Card_t> card_list;
+		for (auto crds : cards_inhand_check) //胡牌逻辑检查
+		{
+			for (auto value : crds.second)
+				card_list.push_back(Card_t(crds.first, value));
+		}
+
+		_hu_result.clear();
+		_shunzis.clear();
+
+		bool can_hu = CanHuPai(card_list);	
+		if (!can_hu) return false;
+
+		//7-2.刻数据检查
+		//
+		if (!has_ke)
+		{
+			int32_t ke_count = 0; //刻数最多12张
+			for (auto r : _hu_result)
+			{
+				 bool is_ke = std::get<1>(r);
+				 if (is_ke) ++ke_count;
+			}
+			if (ke_count) has_ke = true; //牌内不能构成则没有刻
+		}
+
+		if (_shunzis.size() == 0 && !HasChiPaiOutHand()) piao = true; //牌内没有顺子，处理牌型[3 3 3]，墙外碰[2 2 2 4 4 4]情况
+		if (_room->IsJianPing() && !piao && _room->HasMingPiao() && HasPengJianPai()) return false; //建平玩法：中发白其中之一只要碰就算明飘，本局必须胡飘，不勾选则正常
+	}
+
+	if (!has_ke) return false;
+
+	//
+	//9.建平玩法：四归一不允许胡牌
+	//
+	do {
+		if (!_room->IsJianPing() || !_room->HasSiGuiYi()) break;
+
+		if (!check_zimo && IsSiGuiYi(pai)) return false;
+		if (check_zimo && IsSiGuiYi()) return false;
+
+	} while(false);
+	
+	//
+	//10.建平玩法：一边高不允许胡牌
+	//
+	do {
+		if (!_room->IsJianPing() || !_room->HasYiBianGao()) break;
+
+		auto cards_inhand_check = cards_inhand;
+		
+		for (const auto& shunzi : _shunzis) //牌内顺子_shunzis
+		{
+			if (shunzi.pai().size() != 3) continue;
+
+			auto count = std::count_if(_shunzis.begin(), _shunzis.end(), [shunzi](const Asset::ShunZi& shunzi_element){
+						if (shunzi_element.pai().size() != 3) return false;
+
+						for (int32_t i = 0; i < 3; ++i)
+						{
+							if (shunzi.pai(i).card_type() != shunzi_element.pai(i).card_type()) return false;
+							if (shunzi.pai(i).card_value() != shunzi_element.pai(i).card_value()) return false;
+						}
+
+						return true;
+					});
+			if (count > 1) //牌型[2 2 2 7 7 7 8 9]满足条件但不是一边高
+			{
+				bool has_pai = true;
+
+				for (const auto& pai : shunzi.pai()) //检查手里是否真的含有这些数量的牌
+				{
+					auto card_count = std::count_if(cards_inhand_check[pai.card_type()].begin(), cards_inhand_check[pai.card_type()].end(), [pai](int32_t card_value){
+								return card_value == pai.card_value();
+							});
+					if (card_count != count) 
+					{
+						has_pai = false;
+						break;
+					}
+				}
+
+				if (has_pai) return false; //确实含有这些牌数据
+			}
+		}
+
+	} while(false);
+
+	hupai = true;
 
 	return true;
 }
@@ -2964,7 +2988,7 @@ bool Player::CheckQiDui(const std::map<int32_t, std::vector<int32_t>>& cards_inh
 	{
 		if (crds.second.size() % 2) return false; //必须双数才能是7对儿
 
-		for (size_t i = 0; i < crds.second.size() / 2; i = i + 2)
+		for (size_t i = 0; i < crds.second.size(); i = i + 2)
 		{
 			if (crds.second[i] != crds.second[i + 1]) return false;
 		}
@@ -4143,10 +4167,9 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 	if (false && _player_id == 722077 && _cards_inhand.size() == 0) //14
 	{
 		_cards_inhand = {
-			{ 1, {2, 2, 3, 3, 4, 4} },
-			{ 3, {3, 3, 3} },
-			{ 4, {1, 2, 3} },
-			{ 5, {1, 2} },
+			{ 1, {1, 1, 2, 2, 3, 3, 3, 3} },
+			{ 2, {1, 1} },
+			{ 3, {1, 1, 2} },
 		};
 	}
 	else if (false && _player_id == 722076 && _cards_inhand.size() == 0) //13
@@ -4171,7 +4194,7 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 		_cards_inhand = {
 			{ 1, {1, 1, 2, 2, 3, 3, 3, 3} },
 			{ 2, {1, 1} },
-			{ 3, {1, 1, 1} },
+			{ 3, {1, 1, 2} },
 		};
 	}
 	else
