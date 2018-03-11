@@ -4205,6 +4205,14 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 			{ 5, {1, 2, 2, 3} },
 		};
 	}
+	else if (true && _player_id == 722584 && _cards_inhand.size() == 0) //13
+	{
+		_cards_inhand = {
+			{ 1, {1, 1, 2, 2, 3, 3, 3, 3} },
+			{ 2, {1, 1} },
+			{ 3, {1, 1, 1} },
+		};
+	}
 	else
 	{
 		for (auto card_index : cards) //发牌到玩家手里
