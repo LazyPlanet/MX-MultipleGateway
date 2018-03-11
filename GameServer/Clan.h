@@ -47,7 +47,7 @@ public:
 	int32_t OnDisAgree(std::shared_ptr<Player> player, Asset::ClanOperation* message);
 	int32_t OnRecharge(std::shared_ptr<Player> player, int32_t count);
 	void OnQueryMemberStatus(std::shared_ptr<Player> player, Asset::ClanOperation* message);
-	void OnQueryRoomList(std::shared_ptr<Player> player, Asset::ClanOperation* message);
+	//void OnQueryRoomList(std::shared_ptr<Player> player, Asset::ClanOperation* message);
 };
 
 class ClanManager : public std::enable_shared_from_this<ClanManager>
@@ -75,7 +75,9 @@ public:
 	std::shared_ptr<Clan> Get(int64_t clan_id);
 
 	int32_t OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation* message);
-	void OnCreated(const Asset::ClanOperation* message); //创建成功
+	void OnResult(const Asset::ClanOperation* message); //创建成功
+	void OnQueryClanList(std::shared_ptr<Player> player, Asset::ClanOperation* message);
+	bool GetClan(int64_t clan_id, Asset::Clan& clan);
 };
 
 #define ClanInstance ClanManager::Instance()

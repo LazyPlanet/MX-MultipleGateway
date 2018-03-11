@@ -179,6 +179,7 @@ void Clan::OnQueryMemberStatus(std::shared_ptr<Player> player, Asset::ClanOperat
 //
 //Client根据列表查询详细数据
 //
+/*
 void Clan::OnQueryRoomList(std::shared_ptr<Player> player, Asset::ClanOperation* message)
 {
 	if (!player || !message) return;
@@ -198,17 +199,13 @@ void Clan::OnQueryRoomList(std::shared_ptr<Player> player, Asset::ClanOperation*
 		room_battle->CopyFrom(it->second);
 	}
 }
+*/
 
 void Clan::Save(bool force)
 {
-	if (force)
-	{
-		RedisInstance.Save("clan:" + std::to_string(_clan_id), _stuff);
-	}
-	else if (!_dirty)
-	{
-		return;
-	}
+	if (!force && !_dirty) return;
+		
+	RedisInstance.Save("clan:" + std::to_string(_clan_id), _stuff);
 
 	_dirty = false;
 }
@@ -507,7 +504,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 
 			message->mutable_clan()->CopyFrom(clan); //回传Client
 
-			OnCreated(message); //创建成功
+			//OnCreated(message); //创建成功
 
 			player->OnClanCreated(clan_id);
 		}
@@ -515,27 +512,27 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 	
 		case Asset::CLAN_OPER_TYPE_JOIN: //申请加入
 		{
-			auto result = clan->OnApply(player, message); //申请成功
-			message->set_oper_result(result); 
+			//auto result = clan->OnApply(player, message); //申请成功
+			//message->set_oper_result(result); 
 		}
 		break;
 	
 		case Asset::CLAN_OPER_TYPE_EDIT: //修改基本信息
 		{
-			auto result = clan->OnChangedInformation(player, message);
-			message->set_oper_result(result); 
+			//auto result = clan->OnChangedInformation(player, message);
+			//message->set_oper_result(result); 
 		}
 		break;
 	
 		case Asset::CLAN_OPER_TYPE_DISMISS: //解散
 		{
-			if (clan->GetHoster() != player->GetID())
-			{
-				message->set_oper_result(Asset::ERROR_CLAN_NO_PERMISSION);
-				return 10;
-			}
+			//if (clan->GetHoster() != player->GetID())
+			//{
+			//	message->set_oper_result(Asset::ERROR_CLAN_NO_PERMISSION);
+			//	return 10;
+			//}
 
-			Remove(message->clan_id());
+			//Remove(message->clan_id());
 		}
 		break;
 		
@@ -562,6 +559,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 		
 		case Asset::CLAN_OPER_TYPE_MEMEBER_DISAGEE: //拒绝加入
 		{
+			/*
 			if (clan->GetHoster() != player->GetID())
 			{
 				message->set_oper_result(Asset::ERROR_CLAN_NO_PERMISSION);
@@ -570,6 +568,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 			
 			auto result = clan->OnDisAgree(player, message);
 			message->set_oper_result(result); 
+			*/
 		}
 		break;
 		
@@ -603,29 +602,115 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 		}
 		break;
 
+		/*
 		case Asset::CLAN_OPER_TYPE_ROOM_LIST_QUERY:
 		{
 			clan->OnQueryRoomList(player, message);
 		}
 		break;
-	
+		*/
+		
+		case Asset::CLAN_OPER_TYPE_CLAN_LIST_QUERY:
+		{
+			//player->SendProtocol2GameServer(message);
+		}
+		break;
+
 		default:
 		{
+			ERROR("玩家:{} 茶馆操作尚未处理:{}", player->GetID(), message->ShortDebugString());
 			return 0;
 		}
 		break;
 	}
+			
+	OnResult(message); //执行成功
 
 	return 0;
 }
 	
-void ClanManager::OnCreated(const Asset::ClanOperation* message)
+void ClanManager::OnResult(const Asset::ClanOperation* message)
 {
 	if (!message) return;
 
 	Asset::ClanOperationSync proto;
 	proto.mutable_operation()->CopyFrom(*message);
+
 	WorldInstance.BroadCast(proto);
+}
+
+bool ClanManager::GetClan(int64_t clan_id, Asset::Clan& clan)
+{
+	return RedisInstance.Get("clan:" + std::to_string(clan_id), clan);
+}
+
+void ClanManager::OnQueryClanList(std::shared_ptr<Player> player, Asset::ClanOperation* message)
+{
+	if (!player || !message) return;
+
+	const auto& _stuff = player->Get();
+	
+	auto clan_query_start_index = message->query_start_index();
+	auto clan_query_end_index = message->query_end_index();
+
+	std::vector<int64_t> clan_list;
+
+	switch (message->brief_type())
+	{
+		case Asset::BRIEF_TYPE_HOSTER:
+		{
+			if (clan_query_start_index < 0 || clan_query_start_index >= _stuff.clan_hosters().size()) return;
+			if (clan_query_end_index < 0 || clan_query_end_index >= _stuff.clan_hosters().size()) return;
+	
+			for (int32_t i = clan_query_start_index; i < clan_query_end_index; ++i)
+			{
+				auto clan_id = _stuff.clan_hosters(i);
+				clan_list.push_back(clan_id);
+			}
+		}
+		break;
+		
+		case Asset::BRIEF_TYPE_JOINER:
+		{
+			if (clan_query_start_index < 0 || clan_query_start_index >= _stuff.clan_joiners().size()) return;
+			if (clan_query_end_index < 0 || clan_query_end_index >= _stuff.clan_joiners().size()) return;
+	
+			for (int32_t i = clan_query_start_index; i < clan_query_end_index; ++i)
+			{
+				auto clan_id = _stuff.clan_joiners(i);
+				clan_list.push_back(clan_id);
+			}
+		}
+		break;
+
+		default:
+		{
+			ERROR("玩家:{} 查询茶馆列表参数错误:{}", player->GetID(), message->ShortDebugString());
+			return;
+		}
+		break;
+	}
+
+
+	for (const auto& clan_id : clan_list)
+	{
+		if (clan_id <= 0) continue;
+
+		Asset::Clan clan;
+	
+		bool has_clan = GetClan(clan_id, clan);
+		if (!has_clan) continue;
+
+		auto brief = message->mutable_clan_list()->Add();
+		brief->set_clan_id(clan.clan_id());
+		brief->set_name(clan.name());
+		brief->set_created_time(clan.created_time());
+		brief->set_hoster_id(clan.hoster_id());
+		brief->set_hoster_name(clan.hoster_name());
+		brief->set_mem_count(clan.member_list().size());
+	}
+
+	DEBUG("玩家:{} 查询茶馆列表:{}", player->GetID(), message->ShortDebugString());
 }
 
 }

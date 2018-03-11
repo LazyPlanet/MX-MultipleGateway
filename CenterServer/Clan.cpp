@@ -9,6 +9,7 @@
 namespace Adoter
 {
 
+extern int32_t g_server_id;
 extern const Asset::CommonConst* g_const;
 
 void Clan::Update()
@@ -183,10 +184,10 @@ void Clan::OnQueryRoomList(std::shared_ptr<Player> player, Asset::ClanOperation*
 {
 	if (!player || !message) return;
 
-	auto room_query_start_index = message->room_query_start_index();
+	auto room_query_start_index = message->query_start_index();
 	if (room_query_start_index < 0 || room_query_start_index >= _stuff.room_list().size()) return;
 
-	auto room_query_end_index = message->room_query_end_index();
+	auto room_query_end_index = message->query_end_index();
 	if (room_query_end_index < 0 || room_query_end_index >= _stuff.room_list().size()) return;
 
 	for (int32_t i = room_query_start_index; i < room_query_end_index; ++i)
@@ -431,87 +432,36 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 {
 	if (!message || !player) return 1;
 	
+	if (message->server_id() == g_server_id)
+	{
+		WARN("服务器:{} 收到茶馆操作数据:{}, g_server_id, message->ShortDebugString()"); //收到本服发送的协议数据，不再处理
+		return 3;
+	}
+	
 	defer {
 		player->SendProtocol(message); //返回结果
 	};
 			
 	std::shared_ptr<Clan> clan = nullptr;
 	
-	if (message->oper_type() != Asset::CLAN_OPER_TYPE_CREATE) 
+	if (message->oper_type() != Asset::CLAN_OPER_TYPE_CREATE && message->oper_type() != Asset::CLAN_OPER_TYPE_CLAN_LIST_QUERY) 
 	{
 		clan = ClanInstance.Get(message->clan_id());
 
-		if (!clan) //只有创建茶馆无需检查
+		if (!clan) //创建茶馆//列表查询无需检查
 		{
 			message->set_oper_result(Asset::ERROR_CLAN_NOT_FOUND); //没找到茶馆
 			return 2;
 		}
 	}
 
+	message->set_server_id(g_server_id);
+
 	switch (message->oper_type())
 	{
 		case Asset::CLAN_OPER_TYPE_CREATE: //创建
 		{
-			player->SendProtocol2GameServer(message);
-			/*
-			auto clan_limit = dynamic_cast<Asset::ClanLimit*>(AssetInstance.Get(g_const->clan_id()));
-			if (!clan_limit) return 6;
-
-			const auto& trim_name = message->name();
-
-			if (trim_name.empty()) 
-			{
-				message->set_oper_result(Asset::ERROR_CLAN_NAME_EMPTY);
-				return 2;
-			}
-			if ((int32_t)trim_name.size() > clan_limit->name_limit())
-			{
-				message->set_oper_result(Asset::ERROR_CLAN_NAME_UPPER);
-				return 3;
-			}
-			if (NameInstance.IsValid(trim_name))
-			{
-				message->set_oper_result(Asset::ERROR_CLAN_NAME_INVALID);
-				return 6;
-			}
-			if (player->GetHosterCount() > clan_limit->create_upper_limit())
-			{
-				message->set_oper_result(Asset::ERROR_CLAN_HOSTER_UPPER);
-				return 4;
-			}
-			auto clan_id = RedisInstance.CreateClan();
-			if (clan_id == 0)
-			{
-				message->set_oper_result(Asset::ERROR_CLAN_CREATE_INNER);
-				return 5;
-			}
-	
-			if (player->GetRoomCard() < clan_limit->room_card_limit())
-			{
-				message->set_oper_result(Asset::ERROR_CLAN_ROOM_CARD_NOT_ENOUGH); //房卡不足
-				return 7;
-			}
-
-			player->ConsumeRoomCard(Asset::ROOM_CARD_CHANGED_TYPE_CREATE_CLAN, clan_limit->room_card_limit()); //扣除馆长房卡
-
-			message->set_clan_id(clan_id);
-			message->set_oper_result(Asset::ERROR_SUCCESS);
-
-			Asset::Clan clan;
-			clan.set_clan_id(clan_id);
-			clan.set_name(trim_name);
-			clan.set_created_time(CommonTimerInstance.GetTime());
-			clan.set_hoster_id(player->GetID());
-			clan.set_hoster_name(player->GetName());
-			clan.set_room_card_count(clan_limit->room_card_limit());
-
-			message->mutable_clan()->CopyFrom(clan); //回传Client
-
-			auto clan_ptr = std::make_shared<Clan>(clan);
-			OnCreated(clan_id, clan_ptr); //创建成功
-
-			player->OnClanCreated(clan_id);
-			*/
+			//player->SendProtocol2GameServer(message);
 		}
 		break;
 	
@@ -610,13 +560,22 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 			clan->OnQueryRoomList(player, message);
 		}
 		break;
+		
+		case Asset::CLAN_OPER_TYPE_CLAN_LIST_QUERY:
+		{
+			//player->SendProtocol2GameServer(message);
+		}
+		break;
 	
 		default:
 		{
+			ERROR("玩家:{} 茶馆操作尚未处理:{}", player->GetID(), message->ShortDebugString());
 			return 0;
 		}
 		break;
 	}
+			
+	player->SendProtocol2GameServer(message); //逻辑服务器同步状态
 
 	return 0;
 }
@@ -633,6 +592,9 @@ void ClanManager::OnCreated(int64_t clan_id, std::shared_ptr<Clan> clan)
 void ClanManager::OnGameServerBack(const Asset::ClanOperationSync& message)
 {
 	const auto& operation = message.operation();
+	if (operation.oper_result() != 0) return; //执行失败
+
+	if (g_server_id == operation.server_id()) return; //本服不再处理
 
 	auto clan_id = operation.clan_id();
 	
