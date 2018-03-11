@@ -7,6 +7,7 @@
 #include "MXLog.h"
 #include "Activity.h"
 #include "CenterSession.h"
+#include "NameLimit.h"
 
 namespace Adoter
 {
@@ -32,6 +33,12 @@ bool World::Load()
 	if (!AssetInstance.Load()) 
 	{
 		ERROR("AssetInstance load error.");
+		return false;
+	}
+	
+	if (!NameLimitInstance.Load()) 
+	{
+		ERROR("屏蔽字库加载失败.");
 		return false;
 	}
 
