@@ -1272,7 +1272,6 @@ void Game::Calculate(int64_t hupai_player_id/*胡牌玩家*/, int64_t dianpao_pl
 	//绝头会儿番数
 	//
 	int32_t juetou_count = hu_player->GetJueTouHuiCount();
-	for (int32_t i = 0; i < juetou_count; ++i) base_score *= GetMultiple(Asset::FAN_TYPE_JUETOUHUI);
 
 	if (IsBanker(hupai_player_id)) 
 	{
@@ -1326,6 +1325,15 @@ void Game::Calculate(int64_t hupai_player_id/*胡牌玩家*/, int64_t dianpao_pl
 			detail->set_score(-score);
 
 			//DEBUG("player_id:{} fan:{} score:{}", player_id, fan, -score);
+		}
+	
+		for (int32_t i = 0; i < juetou_count; ++i) 
+		{
+			score *= GetMultiple(Asset::FAN_TYPE_JUETOUHUI);
+			
+			auto detail = record->mutable_details()->Add();
+			detail->set_fan_type(Asset::FAN_TYPE_JUETOUHUI);
+			detail->set_score(-score);
 		}
 	
 		//

@@ -2743,9 +2743,10 @@ bool Player::CheckHuPai(const std::map<int32_t, std::vector<int32_t>>& cards_inh
 
 	if (_room->IsJianPing() && IsDanDiao(pai, check_zimo)) _fan_list.emplace(Asset::FAN_TYPE_JIA_HU_NORMAL); //单调//单粘//夹胡
 	if (_room->IsJianPing() && !HasYaoJiu()) _fan_list.emplace(Asset::FAN_TYPE_JIA_HU_NORMAL); //缺19的时候死胡19
-	if (_room->IsJianPing() && !_room->HasZhang28() && Is28Pai(pai) && IsDuiDao(pai, check_zimo)) _fan_list.emplace(Asset::FAN_TYPE_JIA_HU_NORMAL); //对儿倒其一为28的情况且不能28作掌儿
+	if (_room->IsJianPing() && !_room->HasZhang28() && Is28Pai(pai) && IsDuiDao(pai, check_zimo)) 
+		_fan_list.emplace(Asset::FAN_TYPE_JIA_HU_NORMAL); //对儿倒其一为28的情况且不能28作掌儿
 
-	if (_room->IsYingKou() && !HasPai(_game->GetHuiPai())) _fan_list.emplace(Asset::FAN_TYPE_QIONGHU); //营口玩法
+	if (_room->HasHuiPai() && !HasPai(_game->GetHuiPai()) && _juetouhuis.size() == 0) _fan_list.emplace(Asset::FAN_TYPE_QIONGHU); //是否穷胡：没有会儿
 
 	if (IsMingPiao()) 
 	{
