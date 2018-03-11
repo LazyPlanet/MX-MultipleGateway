@@ -45,12 +45,16 @@ public:
 
 		boyer_moore<std::string::const_iterator> search(name.begin(), name.end());
 
-		auto it = search(_names.begin(), _names.end());
-		
-		if (it != _names.end()) 
+		for (const auto& n : _names)
 		{
-			ERROR("名字:{} 非法", name);
-			return false;
+			auto it = search(n.begin(), n.end()).first;
+
+			if (it != n.end())
+			{
+				ERROR("名字:{} 非法", name);
+
+				return false;
+			}
 		}
 
 		return true; 
