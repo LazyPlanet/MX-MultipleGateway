@@ -432,6 +432,8 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 	
 	defer {
 		player->SendProtocol(message); //返回结果
+
+		OnResult(message); //执行成功：广播执行结果
 	};
 			
 	std::shared_ptr<Clan> clan = nullptr;
@@ -538,6 +540,8 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 		
 		case Asset::CLAN_OPER_TYPE_MEMEBER_AGEE: //同意加入
 		{
+			if (player->GetID() != message->dest_player_id()) return 13; //馆长操作，不进行处理
+
 			if (message->has_oper_result() && message->oper_result() == 0) //加入成功
 			{
 				auto des_player = PlayerInstance.Get(message->dest_player_id());
@@ -615,7 +619,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 		break;
 	}
 			
-	OnResult(message); //执行成功：广播执行结果
+	//OnResult(message); //执行成功：广播执行结果
 
 	return 0;
 }

@@ -70,9 +70,9 @@ int32_t Clan::OnRecharge(std::shared_ptr<Player> player, int32_t count)
 	return 0;
 }
 
-int32_t Clan::OnAgree(std::shared_ptr<Player> player, Asset::ClanOperation* message)
+int32_t Clan::OnAgree(Asset::ClanOperation* message)
 {
-	if (!player || !message) return Asset::ERROR_INNER;
+	if (!message) return Asset::ERROR_INNER;
 	
 	auto member_id = message->dest_player_id();
 	auto oper_type = message->oper_type();
@@ -510,21 +510,32 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 				return 11;
 			}
 			
-			auto result = clan->OnAgree(player, message);
+			auto result = clan->OnAgree(message); //列表更新
 			message->set_oper_result(result); 
+
+			if (result != 0) return 14; //失败
 			
 			player->SendProtocol2GameServer(message); //通知逻辑服务器加入成功
+		
+			Asset::Player des_player;
+			if (!PlayerInstance.GetCache(message->dest_player_id(), des_player)) return 13; //没有记录
 
-			if (result == 0) //加入成功
+			if (des_player.login_time() == 0) //离线
 			{
-				auto des_player = PlayerInstance.Get(message->dest_player_id());
+				des_player.add_clan_joiners(message->clan_id());
+
+				PlayerInstance.Save(message->dest_player_id(), des_player); //直接存盘
+			}
+			else //在线 
+			{
+				auto des_player = PlayerInstance.Get(message->dest_player_id()); //不在当前中心服务器
 				if (!des_player) return 12;
 
 				message->mutable_clan()->CopyFrom(clan->Get()); //茶馆信息
 
 				des_player->OnClanJoin(message->clan_id());
-				des_player->SendProtocol(message); //通知玩家馆长同意
-				des_player->SendProtocol2GameServer(message); //通知逻辑服务器加入成功
+				des_player->SendProtocol(message); //通知玩家馆长同意加入茶馆
+				des_player->SendProtocol2GameServer(message); //通知逻辑服务器加入茶馆成功
 			}
 		}
 		break;
@@ -622,7 +633,27 @@ void ClanManager::OnGameServerBack(const Asset::ClanOperationSync& message)
 			OnCreated(clan_id, clan_ptr); //创建成功
 		}
 		break;
+		
+		case Asset::CLAN_OPER_TYPE_MEMEBER_AGEE: //同意加入
+		{
+			auto clan_ptr = Get(clan_id);
+			if (!clan_ptr) return;
 
+			auto clan_operation = operation;
+
+			auto result = clan_ptr->OnAgree(&clan_operation); //列表更新
+			clan_operation.set_oper_result(result); 
+
+			auto des_player = PlayerInstance.Get(operation.dest_player_id()); //不在当前中心服务器
+			if (!des_player) return;
+
+			clan_operation.mutable_clan()->CopyFrom(clan_ptr->Get()); //茶馆信息
+
+			des_player->OnClanJoin(operation.clan_id());
+			des_player->SendProtocol(clan_operation); //通知玩家馆长同意加入茶馆
+			des_player->SendProtocol2GameServer(clan_operation); //通知逻辑服务器加入茶馆成功
+		}
+		break;
 
 		default:
 		{

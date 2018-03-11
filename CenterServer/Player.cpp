@@ -1309,5 +1309,15 @@ int32_t PlayerManager::GetOnlinePlayerCount()
 
 	return  _players.size();    
 }
+	
+bool PlayerManager::GetCache(int64_t player_id, Asset::Player& player)
+{
+	return RedisInstance.Get("player:" + std::to_string(player_id), player);
+}
+
+bool PlayerManager::Save(int64_t player_id, Asset::Player& player)
+{
+	return RedisInstance.Save("player:" + std::to_string(player_id), player);
+}
 
 }
