@@ -644,7 +644,7 @@ bool Player::HandleProtocol(int32_t type_t, pb::Message* message)
 {
 	if (!message) return false;
 
-	DEBUG("当前玩家:{}所在服务器:{} 接收协议数据:{}", _player_id, _stuff.server_id(), message->ShortDebugString());
+	DEBUG("当前玩家:{} 所在服务器:{} 接收协议数据:{}", _player_id, _stuff.server_id(), message->ShortDebugString());
 	//
 	//如果中心服务器没有协议处理回调，则发往游戏服务器进行处理
 	//
