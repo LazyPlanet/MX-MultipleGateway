@@ -2984,7 +2984,12 @@ bool Player::CheckQiDui(const std::map<int32_t, std::vector<int32_t>>& cards_inh
 
 	if (cards_outhand.size()) return false; //吃碰显然不是
 
-	for (auto crds : cards_inhand)
+	auto cards = cards_inhand;
+	
+	for (auto& card : cards)
+		std::sort(card.second.begin(), card.second.end(), [](int x, int y){ return x < y; }); //由小到大，排序
+
+	for (auto crds : cards)
 	{
 		if (crds.second.size() % 2) return false; //必须双数才能是7对儿
 
