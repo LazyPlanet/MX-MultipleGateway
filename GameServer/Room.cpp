@@ -52,7 +52,7 @@ Asset::ERROR_CODE Room::TryEnter(std::shared_ptr<Player> player)
 		return Asset::ERROR_ROOM_BEEN_DISMISS; //房间已经解散
 	}
 
-	DEBUG("玩家:{}进入房间:{}成功", player->GetID(), GetID());
+	DEBUG("玩家:{} 进入房间:{} 成功", player->GetID(), GetID());
 
 	return Asset::ERROR_SUCCESS;
 }
