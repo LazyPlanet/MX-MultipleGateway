@@ -2463,46 +2463,6 @@ bool Player::CheckHuPai(const std::map<int32_t, std::vector<int32_t>>& cards_inh
 	//
 	//3.是否有幺九
 	//
-	/*
-	bool has_yao = false;
-
-	for (auto crds : cards) //不同牌类别的牌
-	{
-		if (crds.second.size() == 0) continue;
-
-		if (crds.first == Asset::CARD_TYPE_WANZI || crds.first == Asset::CARD_TYPE_BINGZI || crds.first == Asset::CARD_TYPE_TIAOZI)
-		{
-			if (std::find(crds.second.begin(), crds.second.end(), 1) != crds.second.end() || (std::find(crds.second.begin(), crds.second.end(), 9) != crds.second.end())) 
-			{
-				has_yao = true;
-				break;
-			}
-		}
-		
-		if (crds.first == Asset::CARD_TYPE_FENG || crds.first == Asset::CARD_TYPE_JIAN) 
-		{
-			has_yao = true;
-			break;
-		}
-	}
-
-	for (auto gang : minggang)
-	{
-		if (gang.card_value() == 1 || gang.card_value() == 9 || 
-				gang.card_type() == Asset::CARD_TYPE_FENG || gang.card_type() == Asset::CARD_TYPE_JIAN) has_yao = true;
-	}
-	
-	for (auto gang : angang)
-	{
-		if (gang.card_value() == 1 || gang.card_value() == 9 ||
-				gang.card_type() == Asset::CARD_TYPE_FENG || gang.card_type() == Asset::CARD_TYPE_JIAN) has_yao = true;
-	}
-
-	if (jiangang > 0 || fenggang > 0) has_yao = true;
-
-	if (!has_yao) return false; //没有幺九不能胡牌
-	*/
-
 			
 	if (!HasYaoJiu(cards_inhand, cards_outhand, minggang, angang, jiangang, fenggang)) return false;
 
