@@ -26,6 +26,7 @@ public:
 	int64_t GetID() { return _stuff.clan_id(); }
 	int64_t GetHoster() { return _stuff.hoster_id(); }
 
+	/*
 	void Update();
 	void Save(bool force = true);
 	void OnDisMiss();
@@ -46,6 +47,7 @@ public:
 	int32_t OnAgree(std::shared_ptr<Player> player, Asset::ClanOperation* message);
 	int32_t OnDisAgree(std::shared_ptr<Player> player, Asset::ClanOperation* message);
 	int32_t OnRecharge(std::shared_ptr<Player> player, int32_t count);
+	*/
 	void OnQueryMemberStatus(std::shared_ptr<Player> player, Asset::ClanOperation* message);
 	//void OnQueryRoomList(std::shared_ptr<Player> player, Asset::ClanOperation* message);
 };
@@ -64,15 +66,15 @@ public:
 		return _instance;
 	}
 
-	void Update(int32_t diff);
-	void Load();
+	//void Update(int32_t diff);
+	//void Load();
 
-	void Remove(int64_t Clan_id);
-	void Remove(std::shared_ptr<Clan> clan);
-	void Emplace(int64_t Clan_id, std::shared_ptr<Clan> clan);
+	//void Remove(int64_t Clan_id);
+	//void Remove(std::shared_ptr<Clan> clan);
+	//void Emplace(int64_t Clan_id, std::shared_ptr<Clan> clan);
 
-	std::shared_ptr<Clan> GetClan(int64_t clan_id);
-	std::shared_ptr<Clan> Get(int64_t clan_id);
+	//std::shared_ptr<Clan> GetClan(int64_t clan_id);
+	//std::shared_ptr<Clan> Get(int64_t clan_id);
 
 	int32_t OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation* message);
 	void OnResult(const Asset::ClanOperation* message); //创建成功

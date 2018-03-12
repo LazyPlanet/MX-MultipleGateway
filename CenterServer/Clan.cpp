@@ -630,7 +630,7 @@ void ClanManager::OnGameServerBack(const Asset::ClanOperationSync& message)
 		case Asset::CLAN_OPER_TYPE_CREATE: //创建
 		{
 			auto clan_ptr = std::make_shared<Clan>(operation.clan());
-			clan_ptr->Save(true);
+			clan_ptr->Save(true); //存盘
 
 			OnCreated(clan_id, clan_ptr); //创建成功
 		}
@@ -668,6 +668,12 @@ void ClanManager::OnGameServerBack(const Asset::ClanOperationSync& message)
 	}
 
 	DEBUG("接收逻辑服务器返回茶馆操作数据:{}", operation.ShortDebugString());
+}
+	
+bool ClanManager::IsLocal(int64_t clan_id)
+{
+	int64_t server_id = clan_id >> 20;
+	return server_id == g_server_id;
 }
 
 }

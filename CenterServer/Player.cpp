@@ -1323,5 +1323,11 @@ bool PlayerManager::Save(int64_t player_id, Asset::Player& player)
 {
 	return RedisInstance.Save("player:" + std::to_string(player_id), player);
 }
+	
+bool PlayerManager::IsLocal(int64_t player_id)
+{
+	int64_t server_id = player_id >> 20;
+	return server_id == g_server_id;
+}
 
 }

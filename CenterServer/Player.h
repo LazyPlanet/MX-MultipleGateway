@@ -260,6 +260,7 @@ public:
 	bool Save(int64_t player_id, Asset::Player& player);
 	
 	virtual void BroadCast(const pb::Message& message);
+	bool IsLocal(int64_t player_id);
 };
 
 #define PlayerInstance PlayerManager::Instance()

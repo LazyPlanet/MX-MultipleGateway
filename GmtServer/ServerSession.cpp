@@ -95,9 +95,9 @@ bool ServerSession::OnInnerProcess(const Asset::InnerMeta& meta)
 			_server_id = message.server_id(); 
 			_server_type = message.server_type();
 			
-			DEBUG("GMT服务器接收其他服务器:{}的注册:{} 地址:{}", _server_id, message.ShortDebugString(), _ip_address);
+			DEBUG("GMT服务器接收服务器ID:{} 地址:{} 的注册数据:{}", _server_id, _ip_address, message.ShortDebugString());
 
-			if (message.server_type() == Asset::SERVER_TYPE_GMT) //GMT服务器
+			if (message.server_type() == Asset::SERVER_TYPE_GMT) //平台
 			{
 				ServerSessionInstance.AddGmtServer(shared_from_this());
 			}

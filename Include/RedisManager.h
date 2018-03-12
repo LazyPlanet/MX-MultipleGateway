@@ -241,10 +241,8 @@ public:
 		//
 		//角色ID带有服务器ID
 		//
-		//每个服务器含有65536个角色，从游戏角度数量足够
-		//
 		int32_t server_id = ConfigInstance.GetInt("ServerID", 1); //服务器ID
-		player_id = (server_id << 16) + player_id; 
+		player_id = (server_id << 20) + player_id; 
 
 		return player_id;
 	}

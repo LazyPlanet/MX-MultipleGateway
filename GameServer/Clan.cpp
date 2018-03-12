@@ -11,6 +11,7 @@ namespace Adoter
 
 extern const Asset::CommonConst* g_const;
 
+/*
 void Clan::Update()
 {
 	if (_dirty) Save();
@@ -173,6 +174,7 @@ void Clan::OnQueryMemberStatus(std::shared_ptr<Player> player, Asset::ClanOperat
 
 	_dirty = true;
 }
+*/
 
 //
 //茶馆当前牌局列表查询
@@ -201,6 +203,7 @@ void Clan::OnQueryRoomList(std::shared_ptr<Player> player, Asset::ClanOperation*
 }
 */
 
+/*
 void Clan::Save(bool force)
 {
 	if (!force && !_dirty) return;
@@ -425,6 +428,7 @@ std::shared_ptr<Clan> ClanManager::Get(int64_t clan_id)
 {
 	return GetClan(clan_id);
 }
+*/
 
 int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation* message)
 {
@@ -436,6 +440,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 		OnResult(message); //执行成功：广播执行结果
 	};
 			
+	/*
 	std::shared_ptr<Clan> clan = nullptr;
 	
 	if (message->oper_type() != Asset::CLAN_OPER_TYPE_CREATE) 
@@ -448,6 +453,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 			return 2;
 		}
 	}
+	*/
 
 	switch (message->oper_type())
 	{
@@ -572,6 +578,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 		
 		case Asset::CLAN_OPER_TYPE_MEMEBER_DELETE: //删除成员
 		{
+			/*
 			if (clan->GetHoster() != player->GetID())
 			{
 				message->set_oper_result(Asset::ERROR_CLAN_NO_PERMISSION);
@@ -579,24 +586,25 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 			}
 			
 			clan->RemoveMember(message->dest_player_id());
+			*/
 		}
 		break;
 		
 		case Asset::CLAN_OPER_TYPE_MEMEBER_QUIT: //主动退出
 		{
-			clan->RemoveMember(player->GetID());
+			//clan->RemoveMember(player->GetID());
 		}
 		break;
 		
 		case Asset::CLAN_OPER_TYPE_RECHARGE: //充值
 		{
-			auto result = clan->OnRecharge(player, message->recharge_count());
-			message->set_oper_result(result); 
+			//auto result = clan->OnRecharge(player, message->recharge_count());
+			//message->set_oper_result(result); 
 		}
 
 		case Asset::CLAN_OPER_TYPE_MEMEBER_QUERY: //成员状态查询
 		{
-			clan->OnQueryMemberStatus(player, message);
+			//clan->OnQueryMemberStatus(player, message);
 		}
 		break;
 
