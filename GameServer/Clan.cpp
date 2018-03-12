@@ -607,7 +607,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 		
 		case Asset::CLAN_OPER_TYPE_CLAN_LIST_QUERY:
 		{
-			//player->SendProtocol2GameServer(message);
+			OnQueryClanList(player, message);
 		}
 		break;
 
