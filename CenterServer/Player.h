@@ -95,6 +95,7 @@ public:
 		_stuff.set_account(account); 
 		_account_type = account_type; //账号类型
 	} 
+	void SetRegisterServer(int32_t server_id) { _stuff.mutable_common_prop()->set_local_server_id(server_id); _dirty = true; }
 	//获取级别
 	virtual int32_t GetLevel() { return _stuff.common_prop().level(); }
 	//获取性别

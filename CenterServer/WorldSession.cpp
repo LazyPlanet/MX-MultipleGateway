@@ -17,6 +17,7 @@ namespace Adoter
 {
 
 namespace spd = spdlog;
+extern int32_t g_server_id;
 extern const Asset::CommonConst* g_const;
 	
 WorldSession::~WorldSession()
@@ -235,7 +236,8 @@ void WorldSession::OnProcessMessage(const Asset::Meta& meta)
 				if (player_id == 0) return;
 				
 				_player = std::make_shared<Player>(player_id);
-				_player->SetLocalServer(ConfigInstance.GetInt("ServerID", 1));
+				_player->SetLocalServer(g_server_id);
+				_player->SetRegisterServer(g_server_id);
 				
 				WorldSessionInstance.AddPlayer(player_id, shared_from_this()); //在线玩家
 				
