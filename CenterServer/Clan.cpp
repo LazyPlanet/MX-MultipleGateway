@@ -630,6 +630,8 @@ void ClanManager::OnGameServerBack(const Asset::ClanOperationSync& message)
 		case Asset::CLAN_OPER_TYPE_CREATE: //创建
 		{
 			auto clan_ptr = std::make_shared<Clan>(operation.clan());
+			clan_ptr->Save(true);
+
 			OnCreated(clan_id, clan_ptr); //创建成功
 		}
 		break;
