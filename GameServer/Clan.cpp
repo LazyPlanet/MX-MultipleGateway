@@ -410,7 +410,7 @@ void ClanManager::Emplace(int64_t clan_id, std::shared_ptr<Clan> clan)
 
 	_clans[clan_id] = clan;
 
-	DEBUG("添加茶馆:{}成功，当前茶馆数量:{}", clan_id, _clans.size());
+	DEBUG("添加茶馆:{} 成功，当前茶馆数量:{}", clan_id, _clans.size());
 }
 
 std::shared_ptr<Clan> ClanManager::GetClan(int64_t clan_id)
@@ -478,18 +478,21 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 				message->set_oper_result(Asset::ERROR_CLAN_HOSTER_UPPER);
 				return 4;
 			}
-			auto clan_id = RedisInstance.CreateClan();
-			if (clan_id == 0)
-			{
-				message->set_oper_result(Asset::ERROR_CLAN_CREATE_INNER);
-				return 5;
-			}
 	
 			if (player->GetRoomCard() < clan_limit->room_card_limit())
 			{
 				message->set_oper_result(Asset::ERROR_CLAN_ROOM_CARD_NOT_ENOUGH); //房卡不足
 				return 7;
 			}
+			
+			int64_t clan_id = RedisInstance.CreateClan();
+			if (clan_id == 0)
+			{
+				message->set_oper_result(Asset::ERROR_CLAN_CREATE_INNER);
+				return 5;
+			}
+
+			clan_id = (message->server_id() << 20) + clan_id;
 
 			player->ConsumeRoomCard(Asset::ROOM_CARD_CHANGED_TYPE_CREATE_CLAN, clan_limit->room_card_limit()); //扣除馆长房卡
 
