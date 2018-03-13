@@ -159,6 +159,8 @@ void Clan::OnQueryMemberStatus(std::shared_ptr<Player> player, Asset::ClanOperat
 {
 	if (!player || !message) return;
 
+	message->mutable_clan()->CopyFrom(_stuff); //茶馆数据
+
 	for (int32_t i = 0; i < _stuff.member_list().size(); ++i)
 	{
 		auto member_ptr = _stuff.mutable_member_list(i);
@@ -168,7 +170,7 @@ void Clan::OnQueryMemberStatus(std::shared_ptr<Player> player, Asset::ClanOperat
 	
 		Asset::Player stuff;
 
-		auto loaded = RedisInstance.Get("player:" + std::to_string(member_ptr->player_id()), stuff);
+		auto loaded = PlayerInstance.GetCache(member_ptr->player_id(), stuff);
 		if (!loaded) continue;
 
 		if (stuff.login_time()) //在线
@@ -209,6 +211,13 @@ void Clan::OnQueryRoomList(std::shared_ptr<Player> player, Asset::ClanOperation*
 		auto room_battle = message->mutable_room_list()->Add();
 		room_battle->CopyFrom(it->second);
 	}
+}
+
+void Clan::OnQueryGamingList(Asset::ClanOperation* message)
+{
+	if (!message) return;
+
+	for (auto room : _rooms) message->add_room_gaming_list(room.first);
 }
 
 void Clan::Save(bool force)
@@ -452,7 +461,10 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 	}
 	
 	defer {
+		if (message->oper_type() == Asset::CLAN_OPER_TYPE_CREATE || message->oper_type() == Asset::CLAN_OPER_TYPE_CLAN_LIST_QUERY) return 3; //不进行协议转发
+
 		player->SendProtocol(message); //返回结果
+		return 0;
 	};
 			
 	std::shared_ptr<Clan> clan = nullptr;
@@ -594,6 +606,12 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 		case Asset::CLAN_OPER_TYPE_CLAN_LIST_QUERY:
 		{
 			player->SendProtocol2GameServer(message);
+		}
+		break;
+		
+		case Asset::CLAN_OPER_TYPE_ROOM_GAMING_LIST_QUERY:
+		{
+			clan->OnQueryGamingList(message);
 		}
 		break;
 	
