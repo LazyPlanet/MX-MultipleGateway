@@ -521,10 +521,15 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 		}
 		break;
 	
-		case Asset::CLAN_OPER_TYPE_JOIN: //申请加入
+		case Asset::CLAN_OPER_TYPE_JOIN: //申请加入：跨服操作
 		{
-			//auto result = clan->OnApply(player, message); //申请成功
-			//message->set_oper_result(result); 
+			auto server_id = ClanInstance.GetRegisterServerID(message->clan_id());
+
+			Asset::ClanOperationSync proto;
+			proto.set_player_id(player->GetID());
+			proto.mutable_operation()->CopyFrom(*message);
+
+			WorldInstance.SendProtocol2CenterServer(proto, server_id);
 		}
 		break;
 	

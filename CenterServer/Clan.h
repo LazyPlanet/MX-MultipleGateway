@@ -42,7 +42,7 @@ public:
 	void OnRoomChanged(const Asset::ClanRoomStatusChanged* message);
 	void OnRoomSync(const Asset::RoomQueryResult& room_query);
 	
-	int32_t OnApply(std::shared_ptr<Player> player, Asset::ClanOperation* message);
+	int32_t OnApply(int64_t player_id, const std::string& player_name, Asset::ClanOperation* message);
 	int32_t OnChangedInformation(std::shared_ptr<Player> player, Asset::ClanOperation* message);
 	int32_t OnAgree(Asset::ClanOperation* message);
 	int32_t OnDisAgree(std::shared_ptr<Player> player, Asset::ClanOperation* message);
@@ -76,7 +76,7 @@ public:
 	std::shared_ptr<Clan> GetClan(int64_t clan_id);
 	std::shared_ptr<Clan> Get(int64_t clan_id);
 
-	int32_t OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation* message);
+	void OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation* message);
 	void OnCreated(int64_t clan_id, std::shared_ptr<Clan> clan); //创建成功
 	void OnGameServerBack(const Asset::ClanOperationSync& message);
 	bool IsLocal(int64_t clan_id);

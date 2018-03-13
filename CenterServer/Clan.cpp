@@ -29,11 +29,10 @@ bool Clan::Load()
 	return true;
 }
 
-int32_t Clan::OnApply(std::shared_ptr<Player> player, Asset::ClanOperation* message)
+int32_t Clan::OnApply(int64_t player_id, const std::string& player_name, Asset::ClanOperation* message)
 {
-	if (!player || !message) return Asset::ERROR_INNER;
+	if (!message) return Asset::ERROR_INNER;
 	
-	auto player_id = player->GetID();
 	auto oper_type = message->oper_type();
 
 	auto it = std::find_if(_stuff.mutable_message_list()->begin(), _stuff.mutable_message_list()->end(), [player_id](const Asset::SystemMessage& message){
@@ -44,7 +43,7 @@ int32_t Clan::OnApply(std::shared_ptr<Player> player, Asset::ClanOperation* mess
 	{
 		auto system_message = _stuff.mutable_message_list()->Add();
 		system_message->set_player_id(player_id);
-		system_message->set_name(player->GetName());
+		system_message->set_name(player_name);
 		system_message->set_oper_time(TimerInstance.GetTime());
 		system_message->set_oper_type(oper_type);
 	}
@@ -454,21 +453,20 @@ std::shared_ptr<Clan> ClanManager::Get(int64_t clan_id)
 	return GetClan(clan_id);
 }
 
-int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation* message)
+void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation* message)
 {
-	if (!message || !player) return 1;
+	if (!message || !player) return;
 	
-	if (message->server_id() == g_server_id)
+	if (message->server_id() == g_server_id) //理论上[server_id]是默认值，不会赋值
 	{
 		WARN("服务器:{} 收到茶馆操作数据:{}, g_server_id, message->ShortDebugString()"); //收到本服发送的协议数据，不再处理
-		return 3;
+		return;
 	}
 	
 	defer {
-		if (message->oper_type() == Asset::CLAN_OPER_TYPE_CREATE || message->oper_type() == Asset::CLAN_OPER_TYPE_CLAN_LIST_QUERY) return 3; //不进行协议转发
+		if (message->oper_type() == Asset::CLAN_OPER_TYPE_CREATE || message->oper_type() == Asset::CLAN_OPER_TYPE_CLAN_LIST_QUERY) return; //不进行协议转发
 
 		player->SendProtocol(message); //返回结果
-		return 0;
 	};
 			
 	std::shared_ptr<Clan> clan = nullptr;
@@ -480,7 +478,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 		if (!clan) //创建茶馆//列表查询无需检查
 		{
 			message->set_oper_result(Asset::ERROR_CLAN_NOT_FOUND); //没找到茶馆
-			return 2;
+			return;
 		}
 	}
 
@@ -496,12 +494,12 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 	
 		case Asset::CLAN_OPER_TYPE_JOIN: //申请加入
 		{
-			auto result = clan->OnApply(player, message); 
+			auto result = clan->OnApply(player->GetID(), player->GetName(), message); 
 			message->set_oper_result(result); 
 
 			if (result == 0) //申请成功
 			{
-				if (!IsLocal(message->clan_id())) 
+				if (!IsLocal(message->clan_id())) //本服玩家申请加入另一个服的茶馆
 				{
 					player->SendProtocol2GameServer(message); //发给另一个中心服处理
 					return; //不是本服
@@ -529,7 +527,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 			if (clan->GetHoster() != player->GetID())
 			{
 				message->set_oper_result(Asset::ERROR_CLAN_NO_PERMISSION);
-				return 10;
+				return;
 			}
 
 			Remove(message->clan_id());
@@ -541,18 +539,18 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 			if (clan->GetHoster() != player->GetID())
 			{
 				message->set_oper_result(Asset::ERROR_CLAN_NO_PERMISSION);
-				return 11;
+				return;
 			}
 			
 			auto result = clan->OnAgree(message); //列表更新
 			message->set_oper_result(result); 
 
-			if (result != 0) return 14; //失败
+			if (result != 0) return; //失败
 			
 			player->SendProtocol2GameServer(message); //通知逻辑服务器加入成功
 		
 			Asset::Player des_player;
-			if (!PlayerInstance.GetCache(message->dest_player_id(), des_player)) return 13; //没有记录
+			if (!PlayerInstance.GetCache(message->dest_player_id(), des_player)) return; //没有记录
 
 			if (des_player.login_time() == 0) //离线
 			{
@@ -563,7 +561,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 			else //在线 
 			{
 				auto des_player = PlayerInstance.Get(message->dest_player_id()); //不在当前中心服务器
-				if (!des_player) return 12;
+				if (!des_player) return;
 
 				message->mutable_clan()->CopyFrom(clan->Get()); //茶馆信息
 
@@ -579,7 +577,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 			if (clan->GetHoster() != player->GetID())
 			{
 				message->set_oper_result(Asset::ERROR_CLAN_NO_PERMISSION);
-				return 10;
+				return;
 			}
 			
 			auto result = clan->OnDisAgree(player, message);
@@ -592,7 +590,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 			if (clan->GetHoster() != player->GetID())
 			{
 				message->set_oper_result(Asset::ERROR_CLAN_NO_PERMISSION);
-				return 10;
+				return;
 			}
 			
 			clan->RemoveMember(message->dest_player_id());
@@ -638,12 +636,10 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 		default:
 		{
 			ERROR("玩家:{} 茶馆操作尚未处理:{}", player->GetID(), message->ShortDebugString());
-			return 0;
+			return;
 		}
 		break;
 	}
-
-	return 0;
 }
 	
 void ClanManager::OnCreated(int64_t clan_id, std::shared_ptr<Clan> clan)
@@ -672,6 +668,31 @@ void ClanManager::OnGameServerBack(const Asset::ClanOperationSync& message)
 			clan_ptr->Save(true); //存盘
 
 			OnCreated(clan_id, clan_ptr); //创建成功
+		}
+		break;
+		
+		case Asset::CLAN_OPER_TYPE_JOIN: //申请加入
+		{
+			auto clan = Get(clan_id);
+			if (!clan) return;
+		
+			Asset::Player stuff;
+
+			auto loaded = PlayerInstance.GetCache(message.player_id(), stuff);
+			if (!loaded) return;
+
+			auto oper = message.operation();
+			auto result = clan->OnApply(stuff.common_prop().player_id(), stuff.common_prop().name(), &oper); 
+			
+			if (result == 0) //申请成功
+			{
+				auto hoster_id = clan->GetHoster();
+				auto hoster_ptr = PlayerInstance.Get(hoster_id);
+				if (!hoster_ptr) return;
+
+				oper.mutable_clan()->CopyFrom(clan->Get());
+				hoster_ptr->SendProtocol(oper); //通知茶馆老板
+			}
 		}
 		break;
 		
