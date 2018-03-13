@@ -224,6 +224,8 @@ void Clan::Save(bool force)
 {
 	if (!force && !_dirty) return;
 
+	if (!ClanInstance.IsLocal(_clan_id)) return; //不是本服俱乐部，不进行存储
+
 	DEBUG("存储茶馆:{} 数据:{} 成功", _clan_id, _stuff.ShortDebugString());
 		
 	RedisInstance.Save("clan:" + std::to_string(_clan_id), _stuff);
@@ -404,6 +406,8 @@ void ClanManager::Load()
 
 void ClanManager::Remove(int64_t clan_id)
 {
+	WARN("删除茶馆:{}", clan_id);
+
 	std::lock_guard<std::mutex> lock(_mutex);
 
 	if (clan_id <= 0) return;
@@ -492,8 +496,24 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 	
 		case Asset::CLAN_OPER_TYPE_JOIN: //申请加入
 		{
-			auto result = clan->OnApply(player, message); //申请成功
+			auto result = clan->OnApply(player, message); 
 			message->set_oper_result(result); 
+
+			if (result == 0) //申请成功
+			{
+				if (!IsLocal(message->clan_id())) 
+				{
+					player->SendProtocol2GameServer(message); //发给另一个中心服处理
+					return; //不是本服
+				}
+
+				auto hoster_id = clan->GetHoster();
+				auto hoster_ptr = PlayerInstance.Get(hoster_id);
+				if (!hoster_ptr) return;
+
+				message->mutable_clan()->CopyFrom(clan->Get());
+				hoster_ptr->SendProtocol(message); //通知茶馆老板
+			}
 		}
 		break;
 	

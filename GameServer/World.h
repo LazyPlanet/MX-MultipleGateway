@@ -40,6 +40,8 @@ public:
 	void Update(int32_t diff); //世界中所有刷新都在此(比如刷怪，拍卖行更新...)，当前周期为50MS.
 	virtual void BroadCast2CenterServer(const pb::Message& message, int except_server_id = 0); //向中心服务器广播数据
 	virtual void BroadCast2CenterServer(const pb::Message* message, int except_server_id = 0); 
+	virtual bool SendProtocol2CenterServer(const pb::Message& message, int server_id); //发协议到指定中心服务器
+	virtual bool SendProtocol2CenterServer(const pb::Message* message, int server_id); 
 };
 
 #define WorldInstance World::Instance()

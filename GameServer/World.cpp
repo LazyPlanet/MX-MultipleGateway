@@ -114,5 +114,29 @@ void World::BroadCast2CenterServer(const pb::Message* message, int except_server
 
 	BroadCast2CenterServer(*message, except_server_id);
 }
+	
+bool World::SendProtocol2CenterServer(const pb::Message& message, int server_id)
+{
+	for (auto session : _sessions)
+	{
+		if (!session) continue;
+		
+		auto center_server_id = session->GetCenterServerID();
+		if (center_server_id == server_id) 
+		{
+			session->SendProtocol(message);
+			return true;;
+		}
+	}
+
+	return false;
+}
+
+bool World::SendProtocol2CenterServer(const pb::Message* message, int server_id) 
+{
+	if (!message) return false;
+
+	return SendProtocol2CenterServer(*message, server_id);
+}
 
 }

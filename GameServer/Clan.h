@@ -80,6 +80,7 @@ public:
 	void OnResult(const Asset::ClanOperation* message); //创建成功
 	void OnQueryClanList(std::shared_ptr<Player> player, Asset::ClanOperation* message);
 	bool GetClan(int64_t clan_id, Asset::Clan& clan);
+	int32_t GetRegisterServerID(int64_t clan_id) { int64_t server_id = clan_id >> 20; return server_id; }
 };
 
 #define ClanInstance ClanManager::Instance()
