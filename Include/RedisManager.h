@@ -101,7 +101,7 @@ public:
 	{
 		if (!Connect()) return false;
 
-		auto get = _client.get(key);
+		auto get = _client.keys(key);
 		
 		if (async) {
 			_client.commit(); 

@@ -79,6 +79,7 @@ public:
 	void OnCreated(int64_t clan_id, std::shared_ptr<Clan> clan); //创建成功
 	void OnGameServerBack(const Asset::ClanOperationSync& message);
 	bool IsLocal(int64_t clan_id);
+	bool GetClan(int64_t clan_id, Asset::Clan& clan);
 };
 
 #define ClanInstance ClanManager::Instance()

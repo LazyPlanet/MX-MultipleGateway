@@ -214,6 +214,8 @@ void Clan::OnQueryRoomList(std::shared_ptr<Player> player, Asset::ClanOperation*
 void Clan::Save(bool force)
 {
 	if (!force && !_dirty) return;
+
+	DEBUG("存储茶馆:{} 数据:{} 成功", _clan_id, _stuff.ShortDebugString());
 		
 	RedisInstance.Save("clan:" + std::to_string(_clan_id), _stuff);
 
@@ -377,7 +379,7 @@ void ClanManager::Load()
 	for (const auto& value : clan_list)
 	{
 		Asset::Clan clan;
-		auto success = clan.ParseFromString(value);
+		auto success = RedisInstance.Get(value, clan);
 		if (!success) continue;
 
 		auto clan_ptr = std::make_shared<Clan>(clan);
@@ -386,7 +388,7 @@ void ClanManager::Load()
 		Emplace(clan.clan_id(), clan_ptr);
 	}
 		
-	DEBUG("加载茶馆数据成功，加载成功数量:{}", clan_list.size());
+	DEBUG("加载茶馆数据成功，加载成功数量:{}", _clans.size());
 
 	_loaded = true;
 }
@@ -674,6 +676,11 @@ bool ClanManager::IsLocal(int64_t clan_id)
 {
 	int64_t server_id = clan_id >> 20;
 	return server_id == g_server_id;
+}
+
+bool ClanManager::GetClan(int64_t clan_id, Asset::Clan& clan)
+{
+	return RedisInstance.Get("clan:" + std::to_string(clan_id), clan);
 }
 
 }
