@@ -13,7 +13,6 @@ namespace Adoter
 {
 
 int32_t g_server_id = 0;
-int32_t g_center_server_id = 0;
 const Asset::CommonConst* g_const = nullptr;
 
 bool World::Load()
@@ -96,14 +95,24 @@ void World::Update(int32_t diff)
 	for (auto session : _sessions) session->Update();
 }
 	
-void World::BroadCast(const pb::Message& message)
+void World::BroadCast2CenterServer(const pb::Message& message, int except_server_id)
 {
 	for (auto session : _sessions)
 	{
 		if (!session) continue;
+
+		auto center_server_id = session->GetCenterServerID();
+		if (center_server_id == except_server_id) continue;
+
 		session->SendProtocol(message);
 	}
 }
-	
+
+void World::BroadCast2CenterServer(const pb::Message* message, int except_server_id) 
+{
+	if (!message) return;
+
+	BroadCast2CenterServer(*message, except_server_id);
+}
 
 }

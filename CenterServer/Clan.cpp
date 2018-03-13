@@ -486,7 +486,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 	{
 		case Asset::CLAN_OPER_TYPE_CREATE: //创建
 		{
-			player->SendProtocol2GameServer(message);
+			player->SendProtocol2GameServer(message); //到逻辑服务器进行检查
 		}
 		break;
 	

@@ -33,9 +33,9 @@ bool CenterSession::OnInnerProcess(const Asset::Meta& meta)
 			auto register_server = dynamic_cast<Asset::RegisterServer*>(message);
 			if (!register_server) return false;
 
-			g_center_server_id = register_server->global_id(); //中心服务器返回
+			_center_server_id = register_server->global_id(); //中心服务器返回
 
-			DEBUG("游戏逻辑服务器:{} 注册到中心服:{} 成功.", g_server_id, g_center_server_id);
+			DEBUG("游戏逻辑服务器:{} 注册到中心服:{} 成功.", g_server_id, _center_server_id);
 		}
 		break;
 

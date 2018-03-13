@@ -31,15 +31,15 @@ public:
 		static World _instance;
 		return _instance;
 	}
+	
+	bool Load(); //加载所有
 
 	bool IsStopped() { return _stopped; }
 	void EmplaceSession(std::shared_ptr<CenterSession> session) { _sessions.push_back(session); }
 
-	//世界中所有刷新都在此(比如刷怪，拍卖行更新...)，当前周期为50MS.
-	void Update(int32_t diff);
-	//加载所有
-	bool Load();
-	virtual void BroadCast(const pb::Message& message);
+	void Update(int32_t diff); //世界中所有刷新都在此(比如刷怪，拍卖行更新...)，当前周期为50MS.
+	virtual void BroadCast2CenterServer(const pb::Message& message, int except_server_id = 0); //向中心服务器广播数据
+	virtual void BroadCast2CenterServer(const pb::Message* message, int except_server_id = 0); 
 };
 
 #define WorldInstance World::Instance()

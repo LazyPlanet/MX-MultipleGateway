@@ -437,7 +437,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 	defer {
 		player->SendProtocol(message); //返回结果
 
-		OnResult(message); //执行成功：广播执行结果
+		//OnResult(message); //执行成功：广播执行结果
 	};
 			
 	/*
@@ -515,7 +515,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 
 			message->mutable_clan()->CopyFrom(clan); //回传Client
 
-			//OnCreated(message); //创建成功
+			OnResult(message); //执行成功：广播执行结果
 
 			player->OnClanCreated(clan_id);
 		}
@@ -642,7 +642,7 @@ void ClanManager::OnResult(const Asset::ClanOperation* message)
 	Asset::ClanOperationSync proto;
 	proto.mutable_operation()->CopyFrom(*message);
 
-	WorldInstance.BroadCast(proto);
+	WorldInstance.BroadCast2CenterServer(proto);
 }
 
 bool ClanManager::GetClan(int64_t clan_id, Asset::Clan& clan)

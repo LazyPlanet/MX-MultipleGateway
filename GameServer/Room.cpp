@@ -779,10 +779,8 @@ void Room::OnGameOver(int64_t player_id)
 	
 	Asset::ClanRoomStatusChanged proto;
 	proto.set_status(Asset::CLAN_ROOM_STATUS_TYPE_OVER);
-	//proto.mutable_room()->CopyFrom(_stuff);
 
-	//if (g_center_session) g_center_session->SendProtocol(proto);
-	WorldInstance.BroadCast(message);
+	WorldInstance.BroadCast2CenterServer(message);
 }
 
 void Room::AddGameRecord(const Asset::GameRecord& record)
@@ -1098,14 +1096,11 @@ void Room::OnClanCreated()
 {
 	if (!IsClan()) return;
 
-	//if (!g_center_session) return;
-
 	Asset::ClanRoomStatusChanged message;
 	message.set_status(Asset::CLAN_ROOM_STATUS_TYPE_START);
 	message.mutable_room()->CopyFrom(_stuff);
 
-	//g_center_session->SendProtocol(message);
-	WorldInstance.BroadCast(message);
+	WorldInstance.BroadCast2CenterServer(message);
 }
 
 bool Room::CanDisMiss()
@@ -1186,8 +1181,7 @@ void Room::UpdateClanStatus()
 
 	message.set_room_status(room_info.SerializeAsString());
 
-	//if (g_center_session) g_center_session->SendProtocol(message); //同步给CS
-	WorldInstance.BroadCast(message);
+	WorldInstance.BroadCast2CenterServer(message);
 }
 	
 /////////////////////////////////////////////////////
