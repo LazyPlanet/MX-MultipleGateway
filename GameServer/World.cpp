@@ -13,8 +13,8 @@ namespace Adoter
 {
 
 int32_t g_server_id = 0;
+int32_t g_center_server_id = 0;
 const Asset::CommonConst* g_const = nullptr;
-//std::shared_ptr<CenterSession> g_center_session = nullptr;
 
 bool World::Load()
 {

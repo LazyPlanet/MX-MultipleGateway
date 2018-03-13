@@ -19,8 +19,6 @@ namespace Adoter
  *
  * */
 
-extern const Asset::CommonConst* g_const;
-
 class World : public std::enable_shared_from_this<World>
 {
 private:

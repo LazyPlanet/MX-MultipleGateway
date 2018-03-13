@@ -30,7 +30,12 @@ bool CenterSession::OnInnerProcess(const Asset::Meta& meta)
 	{
 		case Asset::META_TYPE_S2S_REGISTER: //注册服务器成功
 		{
-			DEBUG("游戏逻辑服务器注册到中心服成功.");
+			auto register_server = dynamic_cast<Asset::RegisterServer*>(message);
+			if (!register_server) return false;
+
+			g_center_server_id = register_server->global_id(); //中心服务器返回
+
+			DEBUG("游戏逻辑服务器:{} 注册到中心服:{} 成功.", g_server_id, g_center_server_id);
 		}
 		break;
 

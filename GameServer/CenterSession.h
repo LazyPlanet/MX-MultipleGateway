@@ -22,6 +22,7 @@ namespace pb = google::protobuf;
 class Player;
 
 extern int32_t g_server_id;
+extern int32_t g_center_server_id;
 
 class CenterSession : public ClientSocket
 {

@@ -12,6 +12,7 @@ namespace Adoter
 
 namespace spd = spdlog;
 
+extern int32_t g_server_id;
 extern std::shared_ptr<GmtSession> g_gmt_client;
 
 bool WorldSession::OnInnerProcess(const Asset::Meta& meta)
@@ -35,13 +36,15 @@ bool WorldSession::OnInnerProcess(const Asset::Meta& meta)
 	{
 		case Asset::META_TYPE_S2S_REGISTER: //注册服务器
 		{
-			const auto register_server = dynamic_cast<const Asset::RegisterServer*>(message);
+			auto register_server = dynamic_cast<Asset::RegisterServer*>(message);
 			if (!register_server) return false;
 
 			SetRoleType(Asset::ROLE_TYPE_GAME_SERVER, register_server->global_id());
 			WorldSessionInstance.AddServer(register_server->global_id(), shared_from_this());
 					
-			DEBUG("注册逻辑服务器:{}成功", register_server->global_id());
+			DEBUG("逻辑服务器:{} 注册在中心服务器:{} 成功", register_server->global_id(), g_server_id);
+
+			register_server->set_global_id(g_server_id);
 
 			SendProtocol(message);
 		}
