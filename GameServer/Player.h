@@ -296,6 +296,7 @@ private:
 	int32_t _fapai_count = 0; //发牌次数
 	int32_t _oper_count_tingpai = 0; //听牌后操作次数
 	bool _has_ting = false; //听牌
+	bool _dahui = false; //是否打了会牌
 	bool _tuoguan_server = false; //服务器托管
 	//bool _tuoguan_client = false; //Client托管
 

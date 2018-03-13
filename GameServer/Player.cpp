@@ -671,18 +671,23 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 			{
 				PrintPai();
 
-				LOG(ERROR, "玩家:{}在房间:{}第:{}局中不能打牌，当前牌数量:{} 无法进行操作:{}", _player_id, _room->GetID(), _game->GetID(), GetCardCount(), debug_string);
+				LOG(ERROR, "玩家:{} 在房间:{} 第:{} 局中不能打牌，当前牌数量:{} 无法进行操作:{}", _player_id, _room->GetID(), _game->GetID(), GetCardCount(), debug_string);
 				return 3;
 			}
 
-			if (_game->IsHuiPai(pai)) return 18; //会牌不让打
+			if (_game->IsHuiPai(pai))  //会牌打了不可以胡牌
+			{
+				_dahui = true;
+
+				WARN("玩家:{} 房间:{} 第:{} 局中打了会牌:{} 按照规定不可以胡牌", _player_id, _room->GetID(), _game->GetID(), pai.ShortDebugString());
+			}
 
 			auto& pais = _cards_inhand[pai.card_type()]; //获取该类型的牌
 			
 			auto it = std::find(pais.begin(), pais.end(), pai.card_value()); //查找第一个满足条件的牌即可
 			if (it == pais.end()) 
 			{
-				LOG(ERROR, "玩家:{}在房间:{}第:{}局不能打牌，无法找到牌:{}", _player_id, _room->GetID(), _game->GetID(), debug_string);
+				LOG(ERROR, "玩家:{} 在房间:{} 第:{} 局不能打牌，无法找到牌:{}", _player_id, _room->GetID(), _game->GetID(), debug_string);
 				return 4; //没有这张牌
 			}
 
@@ -702,7 +707,7 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 				auto it = std::find(pais.begin(), pais.end(), pai.card_value());
 				if (it == pais.end()) 
 				{
-					LOG(ERROR, "玩家:{}在房间:{}第:{}局不能吃牌，尚未找到牌数据，类型:{} 值:{} 不满足条件:{}", _player_id, _room->GetID(), _game->GetID(), pai.card_type(), pai.card_value(), debug_string);
+					LOG(ERROR, "玩家:{} 在房间:{} 第:{} 局不能吃牌，尚未找到牌数据:{} 不满足条件:{}", _player_id, _room->GetID(), _game->GetID(), pai.ShortDebugString(), debug_string);
 					return 5; //没有这张牌
 				}
 
@@ -716,7 +721,7 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 			bool ret = CheckPengPai(pai);
 			if (!ret) 
 			{
-				LOG(ERROR, "玩家:{}在房间:{}第:{}局不能碰牌，不满足条件:{}", _player_id, _room->GetID(), _game->GetID(), debug_string);
+				LOG(ERROR, "玩家:{} 在房间:{} 第:{} 局不能碰牌，不满足条件:{}", _player_id, _room->GetID(), _game->GetID(), debug_string);
 				return 7;
 			}
 		}
@@ -727,7 +732,7 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 			auto it = _cards_inhand.find(pai.card_type());
 			if (it == _cards_inhand.end()) 
 			{
-				LOG(ERROR, "玩家:{}在房间:{}第:{}局不能明杠，没找到牌数据:{}", _player_id, _room->GetID(), _game->GetID(), debug_string);
+				LOG(ERROR, "玩家:{} 在房间:{} 第:{} 局不能明杠，没找到牌数据:{}", _player_id, _room->GetID(), _game->GetID(), debug_string);
 				return 8;
 			}
 
@@ -758,7 +763,7 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 
 				if (!has_peng) 
 				{
-					LOG(ERROR, "玩家:{}在房间:{}第:{}局不能明杠，不满足条件:{}", _player_id, _room->GetID(), _game->GetID(), debug_string);
+					LOG(ERROR, "玩家:{} 在房间:{} 第:{} 局不能明杠，不满足条件:{}", _player_id, _room->GetID(), _game->GetID(), debug_string);
 					return 10;
 				}
 			}
@@ -777,7 +782,7 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 			int32_t count = std::count(it->second.begin(), it->second.end(), pai.card_value());
 			if (count != 4)
 			{
-				LOG(ERROR, "玩家:{}在房间:{}第:{}局不能暗杠，不满足条件:{}", _player_id, _room->GetID(), _game->GetID(), debug_string);
+				LOG(ERROR, "玩家:{} 在房间:{} 第:{} 局不能暗杠，不满足条件:{}", _player_id, _room->GetID(), _game->GetID(), debug_string);
 				return 12;
 			}
 		}
@@ -789,7 +794,7 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 			
 			if (!CheckFengGangPai(_cards_inhand)) 
 			{
-				LOG(ERROR, "玩家:{}在房间:{}第:{}局不能旋风杠，不满足条件:{}", _player_id, _room->GetID(), _game->GetID(), debug_string);
+				LOG(ERROR, "玩家:{} 在房间:{} 第:{} 局不能旋风杠，不满足条件:{}", _player_id, _room->GetID(), _game->GetID(), debug_string);
 				return 13;
 			}
 
@@ -803,7 +808,7 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 	
 			if (!CheckJianGangPai(_cards_inhand)) 
 			{
-				LOG(ERROR, "玩家:{}在房间:{}第:{}局不能旋风杠，不满足条件:{}", _player_id, _room->GetID(), _game->GetID(), debug_string);
+				LOG(ERROR, "玩家:{} 在房间:{} 第:{} 局不能旋风杠，不满足条件:{}", _player_id, _room->GetID(), _game->GetID(), debug_string);
 				return 14;
 			}
 			
@@ -816,7 +821,7 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 		{
 			if (!CheckZhuiFengGang(_cards_inhand)) 
 			{
-				LOG(ERROR, "玩家:{}在房间:{}第:{}局不能旋风杠，不满足条件:{}", _player_id, _room->GetID(), _game->GetID(), debug_string);
+				LOG(ERROR, "玩家:{} 在房间:{} 第:{} 局不能旋风杠，不满足条件:{}", _player_id, _room->GetID(), _game->GetID(), debug_string);
 				return 15;
 			}
 
@@ -833,13 +838,13 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 			auto it = std::find(pais.begin(), pais.end(), pai.card_value()); //查找第一个满足条件的牌即可
 			if (it == pais.end()) 
 			{
-				LOG(ERROR, "玩家:{}在房间:{}第:{}局不能听牌:{}, 原因:没找到牌", _player_id, _room->GetID(), _game->GetID(), pai.ShortDebugString());
+				LOG(ERROR, "玩家:{} 在房间:{} 第:{} 局不能听牌:{} 原因:没找到牌", _player_id, _room->GetID(), _game->GetID(), pai.ShortDebugString());
 				return 16; //没有这张牌
 			}
 
 			if (!CanTingPai(pai)) 
 			{
-				LOG(ERROR, "玩家:{}在房间:{}第:{}局不能听牌:{}, 原因:不满足牌型", _player_id, _room->GetID(), _game->GetID(), pai.ShortDebugString());
+				LOG(ERROR, "玩家:{} 在房间:{} 第:{} 局不能听牌:{} 原因:不满足牌型", _player_id, _room->GetID(), _game->GetID(), pai.ShortDebugString());
 				return 17; //不能听牌
 			}
 
@@ -863,7 +868,7 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 
 		case Asset::PAI_OPER_TYPE_CANCEL:
 		{
-			WARN("玩家:{} 放弃操作:{}", _player_id, _game->GetOperCache().ShortDebugString());
+			WARN("玩家:{} 在房间:{} 第:{} 局中放弃操作:{}", _player_id, _room->GetID(), _game->GetID(), _game->GetOperCache().ShortDebugString());
 			return 0;
 		}
 		break;
@@ -2346,6 +2351,8 @@ bool Player::CheckHuPai(const std::map<int32_t, std::vector<int32_t>>& cards_inh
 		bool calculate) //是否结算
 {
 	if (!_room || !_game) return false;
+
+	if (_dahui) return false;  //打会儿牌，不能胡牌
 	
 	if (calculate) _fan_list.clear(); //番型数据
 
@@ -4569,7 +4576,7 @@ void Player::ClearCards()
 	
 	_oper_count_tingpai = 0;
 	_fapai_count = /*_oper_count = */0; 
-	_has_ting = _jinbao = false;
+	_dahui = _has_ting = _jinbao = false;
 	_tuoguan_server = false;
 	_last_oper_type = _oper_type = Asset::PAI_OPER_TYPE_BEGIN; //初始化操作
 	_player_prop.clear_game_oper_state(); //准备//离开
