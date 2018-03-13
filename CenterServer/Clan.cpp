@@ -15,16 +15,15 @@ extern const Asset::CommonConst* g_const;
 void Clan::Update()
 {
 	if (_dirty) Save();
+
+	if (!ClanInstance.IsLocal(_clan_id)) Load(); //从茶馆加载数据
 }
 	
 bool Clan::Load()
 {
-	Asset::Clan clan;
-	auto load = RedisInstance.Get("clan:" + std::to_string(_clan_id), clan);
+	ClanInstance.GetClan(_clan_id, _stuff);
 
-	if (!load) return false;
-
-	_stuff = clan;
+	DEBUG("茶馆:{} 加载数据:{}", _clan_id, _stuff.ShortDebugString());
 
 	return true;
 }
