@@ -166,7 +166,8 @@ bool ServerSession::OnInnerProcess(const Asset::InnerMeta& meta)
 
 			if (IsGmtServer()) //GMT服务器会话
 			{
-				auto center_server = ServerSessionInstance.Get(message.server_id());
+				auto server_id = ServerSessionInstance.RandomServer(); //随机选择一个中心服
+				auto center_server = ServerSessionInstance.Get(server_id);
 				if (!center_server) 
 				{
 					message.set_error_code(Asset::COMMAND_ERROR_CODE_SERVER_NOT_FOUND);
@@ -728,6 +729,35 @@ bool ServerSessionManager::StartNetwork(boost::asio::io_service& io_service, con
 	_acceptor->SetSocketFactory(std::bind(&SuperSocketManager::GetSocketForAccept, this));    
 	_acceptor->AsyncAcceptWithCallback<&OnSocketAccept>();    
 	return true;
+}
+
+int64_t ServerSessionManager::RandomServer()
+{
+	std::lock_guard<std::mutex> lock(_server_mutex);
+
+	if (_sessions.size() == 0) return 0;
+
+	std::vector<int32_t> server_list;
+
+	for (auto it = _sessions.begin(); it != _sessions.end(); ) 
+	{
+		if (it->first == 0 || !it->second)
+		{
+			it = _sessions.erase(it);
+		}
+		else
+		{
+			server_list.push_back(it->first);
+
+			++it;
+		}
+	}
+	
+	if (server_list.size() == 0) return 0;
+
+	std::random_shuffle(server_list.begin(), server_list.end()); //随机
+
+	return server_list[0];
 }
 
 #undef RETURN

@@ -108,6 +108,7 @@ public:
 		if (!sesssion) return false;
 		return sesssion->IsGmtServer();
 	}
+	int64_t RandomServer();
 protected:        
 	NetworkThread<ServerSession>* CreateThreads() const override;
 private:        

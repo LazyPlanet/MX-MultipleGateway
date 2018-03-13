@@ -622,7 +622,6 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 		}
 		break;
 	}
-			
 
 	return 0;
 }
