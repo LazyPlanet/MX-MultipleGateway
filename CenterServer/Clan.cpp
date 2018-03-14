@@ -73,21 +73,21 @@ int32_t Clan::OnAgree(Asset::ClanOperation* message)
 	if (!message) return Asset::ERROR_INNER;
 	
 	auto member_id = message->dest_player_id();
-	auto oper_type = message->oper_type();
+	auto dest_sys_message_index = message->dest_sys_message_index() - 1;
+
+	if (dest_sys_message_index < 0 || dest_sys_message_index > _stuff.message_list().size()) return Asset::ERROR_CLAN_NO_RECORD; //尚未申请记录
 
 	//
 	//申请列表状态更新
 	//
-	auto it = std::find_if(_stuff.mutable_message_list()->begin(), _stuff.mutable_message_list()->end(), [member_id](const Asset::SystemMessage& message){
-				return member_id == message.player_id();	
-			});
 
-	if (it == _stuff.mutable_message_list()->end()) return Asset::ERROR_CLAN_NO_RECORD; //尚未申请记录
-	
-	//if (oper_type == it->oper_type()) return Asset::ERROR_SUCCESS; //状态一致
+	const auto& sys_message = _stuff.message_list(dest_sys_message_index);
+	if (member_id != sys_message.player_id() || Asset::CLAN_OPER_TYPE_JOIN != sys_message.oper_type()) return Asset::ERROR_CLAN_NO_RECORD; //尚未申请记录
+
+	auto it = _stuff.mutable_message_list(dest_sys_message_index);
 
 	it->set_oper_time(TimerInstance.GetTime());
-	it->set_oper_type(oper_type);
+	it->set_oper_type(message->oper_type());
 
 	//
 	//成员列表更新
@@ -103,10 +103,8 @@ int32_t Clan::OnAgree(Asset::ClanOperation* message)
 	member_ptr->set_name(it->name());
 	member_ptr->set_status(Asset::CLAN_MEM_STATUS_TYPE_AVAILABLE);
 
-	//message->set_oper_result(Asset::ERROR_SUCCESS);
-	//player->SendProtocol(message);
-
 	_dirty = true;
+
 	return 0;
 }
 	
@@ -115,23 +113,24 @@ int32_t Clan::OnDisAgree(std::shared_ptr<Player> player, Asset::ClanOperation* m
 	if (!player || !message) return Asset::ERROR_INNER;
 	
 	auto member_id = message->dest_player_id();
-	auto oper_type = message->oper_type();
+	auto dest_sys_message_index = message->dest_sys_message_index() - 1;
+	
+	if (dest_sys_message_index < 0 || dest_sys_message_index > _stuff.message_list().size()) return Asset::ERROR_CLAN_NO_RECORD; //尚未申请记录
 
 	//
 	//申请列表状态更新
 	//
-	auto it = std::find_if(_stuff.mutable_message_list()->begin(), _stuff.mutable_message_list()->end(), [member_id](const Asset::SystemMessage& message){
-				return member_id == message.player_id();	
-			});
 
-	if (it == _stuff.mutable_message_list()->end()) return Asset::ERROR_CLAN_NO_RECORD; //尚未申请记录
-	
-	if (oper_type == it->oper_type()) return Asset::ERROR_SUCCESS; //状态一致
+	const auto& sys_message = _stuff.message_list(dest_sys_message_index);
+	if (member_id != sys_message.player_id() || Asset::CLAN_OPER_TYPE_JOIN != sys_message.oper_type()) return Asset::ERROR_CLAN_NO_RECORD; //尚未申请记录
+
+	auto it = _stuff.mutable_message_list(dest_sys_message_index);
 
 	it->set_oper_time(TimerInstance.GetTime());
-	it->set_oper_type(oper_type);
+	it->set_oper_type(message->oper_type());
 
 	_dirty = true;
+
 	return 0;
 }
 
