@@ -167,6 +167,7 @@ bool ServerSession::OnInnerProcess(const Asset::InnerMeta& meta)
 			if (IsGmtServer()) //GMT服务器会话
 			{
 				auto server_id = ServerSessionInstance.RandomServer(); //随机选择一个中心服
+
 				auto center_server = ServerSessionInstance.Get(server_id);
 				if (!center_server) 
 				{

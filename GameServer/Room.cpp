@@ -670,6 +670,8 @@ void Room::OnGameStart()
 
 		player->SetOperState(Asset::GAME_OPER_TYPE_ONLINE);
 	}
+	
+	UpdateClanStatus(); //茶馆房间状态同步
 }
 	
 void Room::AddHupai(int64_t player_id) 
@@ -690,8 +692,10 @@ void Room::AddHupai(int64_t player_id)
 void Room::OnGameOver(int64_t player_id)
 {
 	if (_game) _game.reset();
-	
+
 	if (!IsFriend()) return; //非好友房没有总结算
+	
+	UpdateClanStatus(); //茶馆房间状态同步
 	
 	AddHupai(player_id); //记录
 
@@ -932,6 +936,8 @@ void Room::OnCreated(std::shared_ptr<Player> hoster)
 	_history.set_room_id(GetID());
 	_history.set_create_time(CommonTimerInstance.GetTime()); //创建时间
 	_history.mutable_options()->CopyFrom(GetOptions());
+	
+	UpdateClanStatus(); //茶馆房间状态同步
 
 	LOG(INFO, "玩家:{} 创建房间:{} 玩法:{}成功", _hoster_id, _stuff.room_id(), _stuff.ShortDebugString());
 }
@@ -1150,6 +1156,8 @@ void Room::Update()
 
 void Room::UpdateClanStatus()
 {
+	if (!IsFriend()) return; //非好友房没有总结算
+
 	if (!IsClan()) return; //非茶馆房间不同步
 
 	Asset::ClanRoomSync message;
@@ -1180,6 +1188,8 @@ void Room::UpdateClanStatus()
 	room_info.set_curr_count(GetGamesCount());
 
 	message.set_room_status(room_info.SerializeAsString());
+
+	DEBUG("逻辑服务器:{} 向中心服务器广播茶馆房间信息:{}", g_server_id, room_info.ShortDebugString());
 
 	WorldInstance.BroadCast2CenterServer(message);
 }

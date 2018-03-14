@@ -109,6 +109,7 @@ public:
 		return sesssion->IsGmtServer();
 	}
 	int64_t RandomServer();
+	int64_t GetLocolServer(int64_t player_id){ int64_t server_id = player_id >> 20; return server_id; }
 protected:        
 	NetworkThread<ServerSession>* CreateThreads() const override;
 private:        

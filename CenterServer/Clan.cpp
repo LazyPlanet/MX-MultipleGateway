@@ -195,13 +195,13 @@ void Clan::OnQueryRoomList(std::shared_ptr<Player> player, Asset::ClanOperation*
 {
 	if (!player || !message) return;
 
-	auto room_query_start_index = message->query_start_index();
+	auto room_query_start_index = message->query_start_index() - 1;
 	if (room_query_start_index < 0 || room_query_start_index >= _stuff.room_list().size()) return;
 
-	auto room_query_end_index = message->query_end_index();
+	auto room_query_end_index = message->query_end_index() - 1;
 	if (room_query_end_index < 0 || room_query_end_index >= _stuff.room_list().size()) return;
 
-	for (int32_t i = room_query_start_index; i < room_query_end_index; ++i)
+	for (int32_t i = room_query_start_index; i <= room_query_end_index; ++i)
 	{
 		auto it = _rooms.find(_stuff.room_list(i));
 		if (it == _rooms.end()) continue;
@@ -631,7 +631,7 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 			clan->OnQueryGamingList(message);
 		}
 		break;
-	
+
 		default:
 		{
 			ERROR("玩家:{} 茶馆操作尚未处理:{}", player->GetID(), message->ShortDebugString());
@@ -655,7 +655,7 @@ void ClanManager::OnGameServerBack(const Asset::ClanOperationSync& message)
 	const auto& operation = message.operation();
 	if (operation.oper_result() != 0) return; //执行失败
 
-	if (g_server_id == operation.server_id()) return; //本服不再处理
+	//if (g_server_id == operation.server_id()) return; //本服不再处理
 
 	auto clan_id = operation.clan_id();
 	
