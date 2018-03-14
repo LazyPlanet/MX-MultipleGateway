@@ -611,6 +611,7 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 		case Asset::CLAN_OPER_TYPE_MEMEBER_QUERY: //成员状态查询
 		{
 			clan->OnQueryMemberStatus(player, message);
+			player->SendProtocol2GameServer(message); //到逻辑服务器进行同步当前茶馆
 		}
 		break;
 

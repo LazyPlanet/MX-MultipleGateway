@@ -514,8 +514,9 @@ public:
 	int32_t GetHosterCount() { return _stuff.clan_hosters().size(); } //拥有茶馆数量
 	int32_t GetMemberCount() { return _stuff.clan_joiners().size(); } //加入茶馆数量
 
-	void OnClanCreated(int64_t clan_id) { _stuff.mutable_clan_hosters()->Add(clan_id); }
-	void OnClanJoin(int64_t clan_id) { _stuff.mutable_clan_joiners()->Add(clan_id); }
+	void OnClanCreated(int64_t clan_id) { _stuff.mutable_clan_hosters()->Add(clan_id); _dirty = true; }
+	void OnClanJoin(int64_t clan_id) { _stuff.mutable_clan_joiners()->Add(clan_id); _dirty = true; }
+	void SetCurrClan(int64_t clan_id) { _stuff.set_selected_clan_id(clan_id); _dirty = true; } //当前选择茶馆界面
 };
 
 /////////////////////////////////////////////////////

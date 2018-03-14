@@ -433,9 +433,15 @@ std::shared_ptr<Clan> ClanManager::Get(int64_t clan_id)
 int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation* message)
 {
 	if (!message || !player) return 1;
+		
+	static std::set<int32_t> _valid_operation = { Asset::CLAN_OPER_TYPE_CREATE, Asset::CLAN_OPER_TYPE_MEMEBER_AGEE, Asset::CLAN_OPER_TYPE_CLAN_LIST_QUERY }; //合法
 	
 	defer {
-		player->SendProtocol(message); //返回结果
+		if (!message) return 14;
+
+		if (_valid_operation.find(message->oper_type()) != _valid_operation.end()) player->SendProtocol(message); //返回结果
+
+		return 0;
 
 		//OnResult(message); //执行成功：广播执行结果
 	};
@@ -518,6 +524,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 			OnResult(message); //执行成功：广播执行结果
 
 			player->OnClanCreated(clan_id);
+			player->SetCurrClan(clan_id);
 		}
 		break;
 	
@@ -610,6 +617,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 		case Asset::CLAN_OPER_TYPE_MEMEBER_QUERY: //成员状态查询
 		{
 			//clan->OnQueryMemberStatus(player, message);
+			player->SetCurrClan(message->clan_id());
 		}
 		break;
 
