@@ -259,7 +259,7 @@ int64_t Player::ConsumeRoomCard(Asset::ROOM_CARD_CHANGED_TYPE changed_type, int6
 	
 	SyncCommonProperty();
 	
-	LOG(INFO, "玩家:{}消耗房卡，原因:{} 数量:{}成功", _player_id, changed_type, count);
+	LOG(INFO, "玩家:{} 消耗房卡，原因:{} 数量:{} 成功", _player_id, Asset::ROOM_CARD_CHANGED_TYPE_Name(changed_type), count);
 	return count;
 }
 
@@ -271,8 +271,8 @@ int64_t Player::GainRoomCard(Asset::ROOM_CARD_CHANGED_TYPE changed_type, int64_t
 	_dirty = true;
 	
 	SyncCommonProperty();
-	
-	LOG(INFO, "玩家:{}获得房卡，原因:{} 数量:{}成功", _player_id, changed_type, count);
+
+	LOG(INFO, "玩家:{} 获得房卡，原因:{} 数量:{} 成功", _player_id, Asset::ROOM_CARD_CHANGED_TYPE_Name(changed_type), count);
 	return count;
 }
 
@@ -304,7 +304,7 @@ int64_t Player::ConsumeHuanledou(Asset::HUANLEDOU_CHANGED_TYPE changed_type, int
 	
 	SyncCommonProperty();
 	
-	LOG(INFO, "玩家:{}消耗欢乐豆，原因:{} 数量:{}成功", _player_id, changed_type, count);
+	LOG(INFO, "玩家:{} 消耗欢乐豆，原因:{} 数量:{} 成功", _player_id, Asset::HUANLEDOU_CHANGED_TYPE_Name(changed_type), count);
 	return count;
 }
 
@@ -317,7 +317,7 @@ int64_t Player::GainHuanledou(Asset::HUANLEDOU_CHANGED_TYPE changed_type, int64_
 	
 	SyncCommonProperty();
 	
-	LOG(INFO, "玩家:{}获得欢乐豆，原因:{} 数量:{}成功", _player_id, changed_type, count);
+	LOG(INFO, "玩家:{} 获得欢乐豆，原因:{} 数量:{} 成功", _player_id, Asset::HUANLEDOU_CHANGED_TYPE_Name(changed_type), count);
 	return count;
 }
 
@@ -354,7 +354,7 @@ int64_t Player::ConsumeDiamond(Asset::DIAMOND_CHANGED_TYPE changed_type, int64_t
 	
 	SyncCommonProperty();
 	
-	LOG(INFO, "玩家:{}消耗钻石:{}原因:{}", _player_id, count, changed_type);
+	LOG(INFO, "玩家:{} 消耗钻石:{} 原因:{} 成功", _player_id, count, Asset::DIAMOND_CHANGED_TYPE_Name(changed_type));
 	return count;
 }
 
@@ -367,7 +367,7 @@ int64_t Player::GainDiamond(Asset::DIAMOND_CHANGED_TYPE changed_type, int64_t co
 
 	SyncCommonProperty();
 	
-	LOG(INFO, "玩家:{}获得钻石:{}原因:{}", _player_id, count, changed_type);
+	LOG(INFO, "玩家:{} 获得钻石:{} 原因:{}", _player_id, count, Asset::DIAMOND_CHANGED_TYPE_Name(changed_type));
 	return count;
 }
 

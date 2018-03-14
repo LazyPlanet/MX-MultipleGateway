@@ -123,14 +123,14 @@ bool ServerSession::OnInnerProcess(const Asset::InnerMeta& meta)
 				auto error_code = OnCommandProcess(message); //处理离线玩家的指令执行
 				if (Asset::COMMAND_ERROR_CODE_PLAYER_ONLINE == error_code) 
 				{
-					DEBUG("玩家{}当前在线，发往中心服务器进行处理", message.player_id());
+					DEBUG("玩家:{} 当前在线，发往中心服务器进行处理", message.player_id());
 					
 					Asset::InnerMeta inner_meta;
 					inner_meta.set_type_t(message.type_t());
 					inner_meta.set_session_id(_session_id);
 					inner_meta.set_stuff(message.SerializeAsString());
 
-					ServerSessionInstance.BroadCastInnerMeta(inner_meta); //处理在线玩家的指令执行
+					ServerSessionInstance.SendInnerMeta2Player(message.player_id(), inner_meta); //处理在线玩家的指令执行
 				}
 
 				if (Asset::COMMAND_ERROR_CODE_SUCCESS == error_code)
@@ -329,6 +329,8 @@ Asset::COMMAND_ERROR_CODE ServerSession::OnCommandProcess(const Asset::Command& 
 	{
 		RETURN(Asset::COMMAND_ERROR_CODE_NO_PLAYER); //没有角色数据
 	}
+
+	WARN("针对玩家:{} 玩家数据:{} 执行GMT指令:{}", player_id, player.ShortDebugString(), command.ShortDebugString());
 
 	//
 	// 玩家在线不做回发处理，直接发到游戏逻辑服务器进行处理
@@ -759,6 +761,27 @@ int64_t ServerSessionManager::RandomServer()
 	std::random_shuffle(server_list.begin(), server_list.end()); //随机
 
 	return server_list[0];
+}
+	
+void ServerSessionManager::SendInnerMeta2Player(int64_t player_id, const Asset::InnerMeta& message)
+{
+	auto server_id = GetLocolServer(player_id); //玩家注册的中心服务器
+
+	auto session = Get(server_id);
+	if (!session) 
+	{
+		ERROR("由于玩家:{} 所在服务器:{} 未找到，指令:{} 执行失败", player_id, server_id, message.ShortDebugString());
+		return; //理论上不会如此
+	}
+		
+	session->SendInnerMeta(message);
+}
+
+void ServerSessionManager::SendInnerMeta2Player(int64_t player_id, const Asset::InnerMeta* message)
+{
+	if (!message) return;
+
+	SendInnerMeta2Player(player_id, *message);
 }
 
 #undef RETURN

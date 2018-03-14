@@ -213,7 +213,7 @@ int32_t Player::OnLogin(bool is_login)
 	ActivityInstance.OnPlayerLogin(shared_from_this()); //活动数据
 
 	if (is_login) BattleHistory(); //历史对战表
-	if (is_login) MultiplyRoomCard(); //房卡翻倍
+	//if (is_login) MultiplyRoomCard(); //房卡翻倍//营口不再翻倍
 
 	return 0;
 }
@@ -1038,10 +1038,13 @@ int32_t Player::CmdClanOperate(pb::Message* message)
 void Player::MultiplyRoomCard()
 {
 	if (_stuff.card_count_changed()) return;
+
 	_stuff.set_card_count_changed(true); //倍率
 
 	auto curr_count = GetRoomCard();
 	GainRoomCard(Asset::ROOM_CARD_CHANGED_TYPE_FANBEI, curr_count * (g_const->room_card_beishu() - 1));
+
+	WARN("玩家:{} 房卡翻倍，当前房卡数:{}", _player_id, curr_count);
 }
 
 void Player::BattleHistory(int32_t start_index, int32_t end_index)

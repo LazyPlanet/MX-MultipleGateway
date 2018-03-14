@@ -95,6 +95,9 @@ public:
 	void BroadCastProtocol(const pb::Message* message);
 
 	void BroadCastInnerMeta(const pb::Message& message);
+	
+	void SendInnerMeta2Player(int64_t player_id, const Asset::InnerMeta& message);
+	void SendInnerMeta2Player(int64_t player_id, const Asset::InnerMeta* message);
 
 	void Add(int64_t server_id, std::shared_ptr<ServerSession> session);
 	void Remove(int64_t server_id);

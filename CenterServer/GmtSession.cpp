@@ -43,7 +43,7 @@ bool GmtSession::OnInnerProcess(const Asset::InnerMeta& meta)
 	std::lock_guard<std::mutex> lock(_gmt_lock);
 	_session_id = meta.session_id();
 
-	DEBUG("中心服务器接收GMT服务器:{}协议:{}", _ip_address, meta.ShortDebugString());
+	DEBUG("中心服务器接收GMT服务器:{} 协议:{}", _ip_address, meta.ShortDebugString());
 
 	switch (meta.type_t())
 	{
