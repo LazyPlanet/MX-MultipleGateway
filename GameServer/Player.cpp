@@ -2136,7 +2136,7 @@ bool Player::CheckHuiHu(const Asset::PaiElement& pai, bool check_zimo, bool calc
 
 	if (!_room->HasHuiPai()) return false; //不带会儿牌
 
-	//if (!HasYaoJiu()) return false; //会牌不能代替幺九,因此前置检查
+	if (!HasYaoJiu() && !GameInstance.IsYaoJiu(pai)) return false; //会牌不能代替幺九，因此前置检查
 
 	int32_t count = GetHuiPaiCount();
 
@@ -2184,8 +2184,6 @@ bool Player::CheckHuiHu(const Asset::PaiElement& pai, bool check_zimo, bool calc
 	
 	if (count == 0) return false; //没有会牌，也没有绝头会儿
 	
-	if (!HasYaoJiu(cards_inhand, cards_outhand, minggang, angang, jiangang, fenggang)) return false; //幺九检查
-
 	DEBUG("玩家:{} 拥有会儿牌数量:{}", _player_id, count);
 
 	auto cards_inhand_without_huipai = cards_inhand;

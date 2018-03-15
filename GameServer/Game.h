@@ -183,6 +183,8 @@ public:
 	const std::vector<Asset::PaiElement>& GetPais() { return _pais; } 
 	
 	void OnCreateGame(std::shared_ptr<Game> game);
+
+	bool IsYaoJiu(const Asset::PaiElement& pai);
 };
 
 #define GameInstance GameManager::Instance()
