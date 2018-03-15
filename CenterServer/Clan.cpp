@@ -152,9 +152,9 @@ int32_t Clan::OnChangedInformation(std::shared_ptr<Player> player, Asset::ClanOp
 	return 0;
 }
 
-void Clan::OnQueryMemberStatus(std::shared_ptr<Player> player, Asset::ClanOperation* message)
+void Clan::OnQueryMemberStatus(Asset::ClanOperation* message)
 {
-	if (!player || !message) return;
+	if (!message) return;
 
 	message->mutable_clan()->CopyFrom(_stuff); //茶馆数据
 
@@ -165,16 +165,23 @@ void Clan::OnQueryMemberStatus(std::shared_ptr<Player> player, Asset::ClanOperat
 
 		member_ptr->set_status(Asset::CLAN_MEM_STATUS_TYPE_AVAILABLE);
 	
-		Asset::Player stuff;
+		Asset::Player player;
 
-		auto loaded = PlayerInstance.GetCache(member_ptr->player_id(), stuff);
+		auto loaded = PlayerInstance.GetCache(member_ptr->player_id(), player);
+		if (!loaded) continue;
+		
+		Asset::User user;
+			
+		loaded = RedisInstance.GetUser(player.account(), user);
 		if (!loaded) continue;
 
-		if (stuff.login_time()) //在线
+		member_ptr->set_headimgurl(user.wechat().headimgurl()); //头像信息
+
+		if (player.login_time()) //在线
 		{
-			if (stuff.room_id()) member_ptr->set_status(Asset::CLAN_MEM_STATUS_TYPE_GAMING); //游戏中
+			if (player.room_id()) member_ptr->set_status(Asset::CLAN_MEM_STATUS_TYPE_GAMING); //游戏中
 		}
-		else if (stuff.logout_time())
+		else if (player.logout_time())
 		{
 			member_ptr->set_status(Asset::CLAN_MEM_STATUS_TYPE_OFFLINE); //离线
 		}
@@ -615,7 +622,7 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 
 		case Asset::CLAN_OPER_TYPE_MEMEBER_QUERY: //成员状态查询
 		{
-			clan->OnQueryMemberStatus(player, message);
+			clan->OnQueryMemberStatus(message);
 			player->SendProtocol2GameServer(message); //到逻辑服务器进行同步当前茶馆
 		}
 		break;
