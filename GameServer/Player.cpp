@@ -3754,6 +3754,8 @@ bool Player::CheckZhuiFengGang(std::map<int32_t/*麻将牌类型*/, std::vector<
 {
 	if (!_room || !_game) return false;
 
+	if (!_room->HasZhuiFengGang()) return false; //不支持追风杠
+
 	bool has_zhuifeng = false;
 
 	if (_fenggang && _cards_inhand[Asset::CARD_TYPE_FENG].size()) 
@@ -4179,9 +4181,8 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 	if (true && _player_id == 722077 && _cards_inhand.size() == 0) //13
 	{
 		_cards_inhand = {
-			{ 1, {1, 1, 2, 2, 3, 3, 3, 3} },
-			{ 2, {1, 1} },
-			{ 3, {1, 1, 1} },
+			{ 1, {1, 1, 1, 1} },
+			{ 4, {1, 1, 2, 2, 3, 3, 4, 4, 4} },
 		};
 		
 		/*

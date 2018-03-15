@@ -80,6 +80,7 @@ public:
 	bool HasZhanLi(); //是否可以站立胡
 	bool HasJiaHu(); //是否可以夹胡
 	bool HasXuanFengGang(); //是否支持旋风杠
+	bool HasZhuiFengGang(); //是否支持追风杠
 	bool HasDuanMen(); //是否支持断门
 	bool HasQingYiSe(); //是否支持清一色
 	bool HasBaoSanJia(); //是否支持包三家

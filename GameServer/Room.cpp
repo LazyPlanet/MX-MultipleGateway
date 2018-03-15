@@ -552,6 +552,11 @@ bool Room::HasXuanFengGang()
 	return HasLaw(Asset::ROOM_EXTEND_TYPE_XUANFENGGANG);
 }
 
+bool Room::HasZhuiFengGang()
+{
+	return HasLaw(Asset::ROOM_EXTEND_TYPE_ZHUIFENGGANGA);
+}
+
 bool Room::HasDuanMen()
 {
 	return HasLaw(Asset::ROOM_EXTEND_TYPE_DUANMEN);
