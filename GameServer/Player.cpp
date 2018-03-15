@@ -3373,6 +3373,8 @@ bool Player::CheckGangPai(const Asset::PaiElement& pai, int64_t source_player_id
 	if (HasTuoGuan()) return false;
 
 	if (_room->HasJueTouHui()) return false; //绝头会儿,不让杠
+
+	if (_game->IsHuiPai(pai)) return false; //会牌不让杠
 	
 	auto cards_inhand = _cards_inhand; //玩家手里牌
 	auto cards_outhand = _cards_outhand; //玩家墙外牌
@@ -3583,6 +3585,16 @@ bool Player::CheckAllGangPai(::google::protobuf::RepeatedField<Asset::PaiOperati
 			gang->mutable_pai()->CopyFrom(pai); 
 			gang->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_GANGPAI);
 		}
+	}
+	
+	auto gangs = gang_list;
+	gang_list.Clear();
+
+	for (const auto& gang : gangs)
+	{
+		if (_game->IsHuiPai(gang.pai())) continue; //会儿牌不让杠
+
+		gang_list.Add(gang);
 	}
 
 	return gang_list.size() > 0;
