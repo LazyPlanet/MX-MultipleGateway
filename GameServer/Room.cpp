@@ -126,6 +126,8 @@ bool Room::Enter(std::shared_ptr<Player> player)
 		player->SetPosition((Asset::POSITION_TYPE)_players.size()); //设置位置
 	}
 	
+	UpdateClanStatus(); //茶馆房间状态同步
+	
 	return true;
 }
 	
@@ -285,6 +287,8 @@ void Room::OnReEnter(std::shared_ptr<Player> op_player)
 
 void Room::OnPlayerLeave(int64_t player_id)
 {
+	UpdateClanStatus(); //茶馆房间状态同步
+
 	SyncRoom(); //同步当前房间内玩家数据
 }
 
