@@ -149,10 +149,10 @@ void Game::OnStarted()
 	auto cards = FaPai(1); 
 	_fanpai = GameInstance.GetCard(cards[0]);
 
-	if (false) //调试
+	if (true) //调试
 	{
-		_fanpai.set_card_type(Asset::CARD_TYPE_WANZI);
-		_fanpai.set_card_value(9);
+		_fanpai.set_card_type(Asset::CARD_TYPE_TIAOZI);
+		_fanpai.set_card_value(6);
 	}
 	
 	auto huipai = _fanpai;
@@ -625,7 +625,7 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 
 				Calculate(player->GetID(), _oper_cache.source_player_id(), fan_list); //结算
 			}
-			else if (player->CheckZiMo(pai)) //平胡
+			else if (player->ShouldDaPai() && player->CheckZiMo(pai)) //平胡
 			{
 				auto fan_list = player->GetFanList();
 

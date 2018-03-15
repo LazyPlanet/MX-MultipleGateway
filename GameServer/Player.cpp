@@ -657,7 +657,6 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 	if (!_room || !_game) return 2; //还没加入房间或者还没开始游戏
 
 	pai_operate->set_position(GetPosition()); //设置玩家座位
-	pai_operate->mutable_pai()->set_source_player_id(_player_id); //标记玩家
 			
 	auto debug_string = pai_operate->ShortDebugString();
 	const auto& pai = pai_operate->pai(); 
@@ -674,6 +673,8 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 				LOG(ERROR, "玩家:{} 在房间:{} 第:{} 局中不能打牌，当前牌数量:{} 无法进行操作:{}", _player_id, _room->GetID(), _game->GetID(), GetCardCount(), debug_string);
 				return 3;
 			}
+	
+			pai_operate->mutable_pai()->set_source_player_id(_player_id); //标记玩家
 
 			if (_game->IsHuiPai(pai))  //会牌打了不可以胡牌
 			{
@@ -2130,7 +2131,7 @@ bool Player::CheckBaoHu(const Asset::PaiElement& pai/*宝牌数据*/)
 //
 //1~34个数字分别代表上面34张牌,然后通过映射关系反求牌数据
 //
-bool Player::CheckHuiHu(const Asset::PaiElement& pai, bool check_zimo, bool calculate)
+bool Player::CheckHuiHu(Asset::PaiElement pai, bool check_zimo, bool calculate)
 {
 	if (!_room || !_game) return false;
 
@@ -2153,6 +2154,7 @@ bool Player::CheckHuiHu(const Asset::PaiElement& pai, bool check_zimo, bool calc
 	auto fenggang = _fenggang; //旋风杠，本质是暗杠
 	
 	if (!check_zimo) cards_inhand[pai.card_type()].push_back(pai.card_value()); //是否自摸抓牌
+	else { pai.set_source_player_id(_player_id); }
 	
 	if (count)
 	{
@@ -4199,17 +4201,15 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 	if (true && _player_id == 722077 && _cards_inhand.size() == 0) //13
 	{
 		_cards_inhand = {
-			{ 1, {1, 1, 1, 1} },
-			{ 4, {1, 1, 2, 2, 3, 3, 4, 4, 4} },
+			{ 1, {3, 3, 3, 9} },
+			{ 2, {6} },
+			{ 3, {2, 3} },
 		};
 		
-		/*
 		_cards_outhand = {
-			{ 1, {6, 6, 6} },
-			{ 2, {6, 6, 6} },
-			{ 4, {2, 2, 2} },
+			{ 1, {9, 9, 9} },
+			{ 3, {1, 1, 1} },
 		};
-		*/
 	}
 	else if (true && _player_id == 11536040 && _cards_inhand.size() == 0) //14
 	{

@@ -352,7 +352,7 @@ public:
 	bool IsJinbao() { return _jinbao; }
 	void Jinbao() { _jinbao = true; }
 	
-	bool CheckHuiHu(const Asset::PaiElement& pai, bool check_zimo = false, bool calculate = false); //会儿胡牌
+	bool CheckHuiHu(Asset::PaiElement pai, bool check_zimo = false, bool calculate = false); //会儿胡牌
 	int32_t GetHuiPaiCount(); //是否有会儿牌//返回会儿牌数量
 	
 	const Asset::PaiElement& GetZhuaPai() { return _zhuapai; }
