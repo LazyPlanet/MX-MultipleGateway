@@ -2615,6 +2615,8 @@ bool Player::CheckHuPai(const std::map<int32_t, std::vector<int32_t>>& cards_inh
 	//
 	if (CheckQiDui(cards_inhand, cards_outhand)) 
 	{
+		if (_room->HasJueTouHui()) CalculateJueTouHui(cards_inhand, cards_outhand, pai); //支持绝头会儿
+
 		_fan_list.emplace(Asset::FAN_TYPE_QIDUI); //7对儿,不会有其他番数
 	
 		hupai = true;
@@ -3003,7 +3005,7 @@ bool Player::CheckQiDui(const std::map<int32_t, std::vector<int32_t>>& cards_inh
 			if (crds.second[i] != crds.second[i + 1]) return false;
 		}
 	}
-
+	
 	return true;
 }
 
