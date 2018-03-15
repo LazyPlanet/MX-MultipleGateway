@@ -194,15 +194,15 @@ void Clan::OnQueryRoomList(std::shared_ptr<Player> player, Asset::ClanOperation*
 {
 	if (!player || !message) return;
 
-	auto room_query_start_index = message->query_start_index() - 1;
-	if (room_query_start_index < 0 || room_query_start_index >= _stuff.room_list().size()) return;
+	size_t room_query_start_index = message->query_start_index() - 1;
+	if (room_query_start_index < 0 || room_query_start_index >= _gaming_room_list.size()) return;
 
-	auto room_query_end_index = message->query_end_index() - 1;
-	if (room_query_end_index < 0 || room_query_end_index >= _stuff.room_list().size()) return;
+	size_t room_query_end_index = message->query_end_index() - 1;
+	if (room_query_end_index < 0 || room_query_end_index >= _gaming_room_list.size()) return;
 
-	for (int32_t i = room_query_start_index; i <= room_query_end_index; ++i)
+	for (size_t i = room_query_start_index; i <= room_query_end_index; ++i)
 	{
-		auto it = _rooms.find(_stuff.room_list(i));
+		auto it = _rooms.find(_gaming_room_list[i]);
 		if (it == _rooms.end()) continue;
 	
 		auto room_battle = message->mutable_room_list()->Add();
@@ -318,6 +318,11 @@ void Clan::OnRoomChanged(const Asset::ClanRoomStatusChanged* message)
 		{
 			_rooms.erase(message->room().room_id());
 
+			auto it = std::find(_gaming_room_list.begin(), _gaming_room_list.end(), message->room().room_id());
+			if (it != _gaming_room_list.end()) _gaming_room_list.erase(it);
+
+			/*
+
 			for (int32_t i = 0; i < _stuff.room_list().size(); ++i)
 			{
 				auto room_id = _stuff.room_list(i);
@@ -327,6 +332,7 @@ void Clan::OnRoomChanged(const Asset::ClanRoomStatusChanged* message)
 				_stuff.mutable_room_list()->RemoveLast();
 				break;
 			}
+			*/
 		}
 		break;
 	}
@@ -341,8 +347,8 @@ void Clan::OnRoomSync(const Asset::RoomQueryResult& room_query)
 
 	_rooms[room_id] = room_query;
 
-	auto it = std::find(_stuff.room_list().begin(), _stuff.room_list().end(), room_id);
-	if (it == _stuff.room_list().end()) _stuff.mutable_room_list()->Add(room_id);
+	auto it = std::find(_gaming_room_list.begin(), _gaming_room_list.end(), room_id);
+	if (it == _gaming_room_list.end()) _gaming_room_list.push_back(room_id);
 
 	_dirty = true;
 }

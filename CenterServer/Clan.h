@@ -7,6 +7,7 @@
 
 #include "P_Header.h"
 #include "Player.h"
+#include "LockedQueue.h"
 
 namespace Adoter
 {
@@ -19,6 +20,7 @@ private:
 	bool _dirty = false;
 	int64_t _clan_id = 0;
 	std::unordered_map<int64_t, Asset::RoomQueryResult> _rooms; 
+	std::vector<int64_t> _gaming_room_list;
 public:
 	Clan(const Asset::Clan& clan) { _clan_id = clan.clan_id(); _stuff = clan; }
 

@@ -2320,5 +2320,13 @@ void GameManager::OnCreateGame(std::shared_ptr<Game> game)
 {
 	_games.push_back(game);
 }
+	
+bool GameManager::IsYaoJiu(const Asset::PaiElement& pai)
+{
+	if (pai.card_value() == 1 || pai.card_value() == 9 || 
+			pai.card_type() == Asset::CARD_TYPE_FENG || pai.card_type() == Asset::CARD_TYPE_JIAN) return true;
+
+	return false;
+}
 
 }

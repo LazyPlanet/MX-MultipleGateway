@@ -3,6 +3,9 @@
 #include <deque>
 #include <mutex>
 
+namespace Adoter
+{
+
 template <class T, typename StorageType = std::deque<T> >
 
 class LockedQueue
@@ -115,3 +118,5 @@ public:
         return _queue.empty();
     }
 };
+
+}
