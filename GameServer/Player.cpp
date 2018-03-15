@@ -2506,10 +2506,10 @@ bool Player::CheckHuPai(const std::map<int32_t, std::vector<int32_t>>& cards_inh
 		}
 	}
 
-	if (_room->HasHuiPai())
+	if (_room->HasHuiPai()) //比较特殊，只算玩家手里的牌，避免会牌造成的干扰
 	{
 		const auto& fanpai = _game->GetFanPai();
-		auto count = std::count(cards[fanpai.card_type()].begin(), cards[fanpai.card_type()].end(), fanpai.card_value());
+		auto count = std::count(_cards_inhand[fanpai.card_type()].begin(), _cards_inhand[fanpai.card_type()].end(), fanpai.card_value());
 		if (count == 3) _fan_list.emplace(Asset::FAN_TYPE_QIANG_TOU_HUI); //墙头会儿//墙头绝
 	}
 
@@ -4177,17 +4177,25 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 	if (true && _player_id == 722077 && _cards_inhand.size() == 0) //13
 	{
 		_cards_inhand = {
-			{ 1, {1, 1, 1, 1, 6, 6, 6} },
-			{ 2, {4, 4, 4} },
-			{ 3, {7, 8, 9} },
+			{ 1, {1, 1, 2, 2, 3, 3, 3, 3} },
+			{ 2, {1, 1} },
+			{ 3, {1, 1, 1} },
 		};
+		
+		/*
+		_cards_outhand = {
+			{ 1, {6, 6, 6} },
+			{ 2, {6, 6, 6} },
+			{ 4, {2, 2, 2} },
+		};
+		*/
 	}
-	else if (false && _player_id == 722076 && _cards_inhand.size() == 0) //13
+	else if (true && _player_id == 11536040 && _cards_inhand.size() == 0) //14
 	{
 		_cards_inhand = {
-			{ 1, {2, 2, 3, 3, 4, 4} },
+			{ 1, {1, 1, 3, 3, 4, 4} },
 			{ 2, {2, 2} },
-			{ 3, {1, 1, 3} },
+			{ 3, {1, 1, 6, 6} },
 			{ 5, {2, 2} },
 		};
 	}
