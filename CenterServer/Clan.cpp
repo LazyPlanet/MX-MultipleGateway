@@ -199,6 +199,8 @@ void Clan::OnQueryMemberStatus(Asset::ClanOperation* message)
 //
 void Clan::OnQueryRoomList(std::shared_ptr<Player> player, Asset::ClanOperation* message)
 {
+	std::lock_guard<std::mutex> lock(_mutex);
+
 	if (!player || !message) return;
 
 	size_t room_query_start_index = message->query_start_index() - 1;
@@ -219,9 +221,11 @@ void Clan::OnQueryRoomList(std::shared_ptr<Player> player, Asset::ClanOperation*
 
 void Clan::OnQueryGamingList(Asset::ClanOperation* message)
 {
+	std::lock_guard<std::mutex> lock(_mutex);
+
 	if (!message) return;
 
-	for (auto room : _rooms) message->add_room_gaming_list(room.first);
+	for (auto room_id : _gaming_room_list) message->add_room_gaming_list(room_id);
 }
 
 void Clan::Save(bool force)
@@ -323,35 +327,29 @@ void Clan::OnRoomChanged(const Asset::ClanRoomStatusChanged* message)
 		
 		case Asset::CLAN_ROOM_STATUS_TYPE_OVER:
 		{
-			_rooms.erase(message->room().room_id());
-
-			auto it = std::find(_gaming_room_list.begin(), _gaming_room_list.end(), message->room().room_id());
-			if (it != _gaming_room_list.end()) _gaming_room_list.erase(it);
-
-			/*
-
-			for (int32_t i = 0; i < _stuff.room_list().size(); ++i)
-			{
-				auto room_id = _stuff.room_list(i);
-				if (room_id != message->room().room_id()) continue;
-
-				_stuff.mutable_room_list()->SwapElements(i, _stuff.room_list().size() - 1);
-				_stuff.mutable_room_list()->RemoveLast();
-				break;
-			}
-			*/
+			OnRoomOver(message->room().room_id());
 		}
 		break;
 	}
 
 	_dirty = true;
 }
+	
+void Clan::OnRoomOver(int64_t room_id)
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+
+	_rooms.erase(room_id);
+
+	auto it = std::find(_gaming_room_list.begin(), _gaming_room_list.end(), room_id);
+	if (it != _gaming_room_list.end()) _gaming_room_list.erase(it);
+}
 
 void Clan::OnRoomSync(const Asset::RoomQueryResult& room_query)
 {
-	auto room_id = room_query.room_id();
-	if (room_id <= 0) return;
+	std::lock_guard<std::mutex> lock(_mutex);
 
+	auto room_id = room_query.room_id();
 	_rooms[room_id] = room_query;
 
 	auto it = std::find(_gaming_room_list.begin(), _gaming_room_list.end(), room_id);

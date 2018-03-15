@@ -16,9 +16,11 @@ namespace pb = google::protobuf;
 class Clan : public std::enable_shared_from_this<Clan>
 {
 private:
+	std::mutex _mutex;
 	Asset::Clan _stuff;
 	bool _dirty = false;
 	int64_t _clan_id = 0;
+
 	std::unordered_map<int64_t, Asset::RoomQueryResult> _rooms; 
 	std::vector<int64_t> _gaming_room_list;
 public:
@@ -43,6 +45,7 @@ public:
 
 	void OnRoomChanged(const Asset::ClanRoomStatusChanged* message);
 	void OnRoomSync(const Asset::RoomQueryResult& room_query);
+	void OnRoomOver(int64_t room_id);
 	
 	int32_t OnApply(int64_t player_id, const std::string& player_name, Asset::ClanOperation* message);
 	int32_t OnChangedInformation(std::shared_ptr<Player> player, Asset::ClanOperation* message);
