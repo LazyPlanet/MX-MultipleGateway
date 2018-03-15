@@ -3742,6 +3742,8 @@ void Player::OnGangZhuiFeng(Asset::PAI_OPER_TYPE oper_type, const Asset::PaiElem
 	}
 
 	_cards_inhand[pai.card_type()].erase(it); //删除牌
+	
+	_fapai_count = 0; //重置检查
 			
 	auto cards = _game->FaPai(1); 
 	OnFaPai(cards); 
@@ -3931,6 +3933,8 @@ bool Player::CheckFengGangPai(std::map<int32_t/*麻将牌类型*/, std::vector<i
 
 	if (!_room->HasXuanFengGang()) return false; //不支持旋风杠
 
+	if (_room->HasZhuiFengGang() && _fenggang) return false; //如果支持追风杠且已经杠风，则不进行再次提示
+
 	const auto& huipai = _game->GetHuiPai();
 	if (huipai.card_type() == Asset::CARD_TYPE_FENG) return false;
 
@@ -4038,6 +4042,8 @@ bool Player::CheckJianGangPai(std::map<int32_t/*麻将牌类型*/, std::vector<i
 	if (!_room || !_game) return false;
 
 	if (!_room->HasXuanFengGang()) return false; //不支持旋风杠
+	
+	if (_room->HasZhuiFengGang() && _jiangang) return false; //如果支持追风杠且已经杠风，则不进行再次提示
 	
 	const auto& huipai = _game->GetHuiPai();
 	if (huipai.card_type() == Asset::CARD_TYPE_JIAN) return false;
