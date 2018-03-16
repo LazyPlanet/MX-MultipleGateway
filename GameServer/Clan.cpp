@@ -49,7 +49,6 @@ int32_t Clan::OnApply(std::shared_ptr<Player> player, Asset::ClanOperation* mess
 	return 0;
 }
 
-*/
 
 int32_t Clan::OnRecharge(std::shared_ptr<Player> player, int32_t count)
 {
@@ -61,7 +60,6 @@ int32_t Clan::OnRecharge(std::shared_ptr<Player> player, int32_t count)
 	return 0;
 }
 
-/*
 int32_t Clan::OnAgree(std::shared_ptr<Player> player, Asset::ClanOperation* message)
 {
 	if (!player || !message) return Asset::ERROR_INNER;
@@ -613,10 +611,16 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 		
 		case Asset::CLAN_OPER_TYPE_RECHARGE: //充值
 		{
-			auto result = clan->OnRecharge(player, message->recharge_count());
-			message->set_oper_result(result); 
-			
-			OnResult(message); //执行成功：广播执行结果
+			if (message->recharge_count() <= 0 || player->GetRoomCard() < message->recharge_count()) 
+			{
+				message->set_oper_result(Asset::ERROR_CLAN_ROOM_CARD_NOT_ENOUGH); //房卡不足
+				player->SendProtocol(message);
+
+				return 10;
+			}
+
+			player->ConsumeRoomCard(Asset::ROOM_CARD_CHANGED_TYPE_RECHARGE_CLAN, message->recharge_count()); //扣除馆长房卡
+			OnResult(message);  //执行成功：广播执行结果
 		}
 
 		case Asset::CLAN_OPER_TYPE_MEMEBER_QUERY: //成员状态查询

@@ -481,8 +481,10 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 		return;
 	}
 	
+	static std::set<int32_t> _valid_operation = { Asset::CLAN_OPER_TYPE_CREATE, Asset::CLAN_OPER_TYPE_CLAN_LIST_QUERY, Asset::CLAN_OPER_TYPE_RECHARGE }; //合法
+	
 	defer {
-		if (message->oper_type() == Asset::CLAN_OPER_TYPE_CREATE || message->oper_type() == Asset::CLAN_OPER_TYPE_CLAN_LIST_QUERY) return; //不进行协议转发
+		if (_valid_operation.find(message->oper_type()) != _valid_operation.end()) return;  //不进行协议转发
 
 		player->SendProtocol(message); //返回结果
 	};
@@ -671,7 +673,7 @@ void ClanManager::OnCreated(int64_t clan_id, std::shared_ptr<Clan> clan)
 	
 void ClanManager::OnGameServerBack(const Asset::ClanOperationSync& message)
 {
-	const auto& operation = message.operation();
+	auto operation = message.operation();
 	if (operation.oper_result() != 0) return; //执行失败
 
 	//if (g_server_id == operation.server_id()) return; //本服不再处理
@@ -718,8 +720,14 @@ void ClanManager::OnGameServerBack(const Asset::ClanOperationSync& message)
 		{
 			auto clan_ptr = Get(clan_id);
 			if (!clan_ptr) return;
-		
+
 			clan_ptr->OnRecharge(message.operation().recharge_count());
+
+			auto player = PlayerInstance.Get(message.player_id());
+			if (!player) return;
+
+			operation.set_recharge_count(clan_ptr->GetRoomCard());
+			player->SendProtocol(operation);
 		}
 		break;
 		
