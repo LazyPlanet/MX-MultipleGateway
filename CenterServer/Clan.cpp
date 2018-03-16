@@ -326,7 +326,7 @@ void Clan::OnRoomChanged(const Asset::ClanRoomStatusChanged* message)
 
 			if (!CheckRoomCard(consume_count)) 
 			{
-				LOG(ERROR, "茶馆房间消耗房卡失败,然而已经开局,数据:{}", message->ShortDebugString());
+				LOG(ERROR, "茶馆:{} 房间消耗房卡失败,然而已经开局,数据:{}", _clan_id, message->ShortDebugString());
 				return;
 			}
 
@@ -340,6 +340,8 @@ void Clan::OnRoomChanged(const Asset::ClanRoomStatusChanged* message)
 		}
 		break;
 	}
+
+	DEBUG("茶馆:{} 房间变化:{}", _clan_id, message->ShortDebugString());
 
 	_dirty = true;
 }
