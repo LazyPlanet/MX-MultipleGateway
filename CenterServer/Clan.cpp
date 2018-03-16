@@ -145,10 +145,21 @@ int32_t Clan::OnChangedInformation(std::shared_ptr<Player> player, Asset::ClanOp
 	auto name = message->name();
 	auto announcement = message->announcement();
 
-	if (name.size()) _stuff.set_name(name);
-	if (announcement.size()) _stuff.set_name(announcement);
+	if (name.size()) 
+	{
+		if (!NameLimitInstance.IsValid(name)) return Asset::ERROR_CLAN_NAME_INVALID;
+
+		_stuff.set_name(name);
+	}
+	if (announcement.size()) 
+	{
+		if (!NameLimitInstance.IsValid(announcement)) return Asset::ERROR_CLAN_ANNOUCEMENT_INVALID;
+
+		_stuff.set_announcement(announcement);
+	}
 
 	_dirty = true;
+
 	return 0;
 }
 
