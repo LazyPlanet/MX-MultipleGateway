@@ -517,7 +517,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 			clan.set_name(trim_name);
 			clan.set_created_time(CommonTimerInstance.GetTime());
 			clan.set_hoster_id(player->GetID());
-			clan.set_hoster_name(player->GetName());
+			clan.set_hoster_name(player->GetNickName());
 			clan.set_room_card_count(clan_limit->room_card_limit());
 
 			message->mutable_clan()->CopyFrom(clan); //回传Client

@@ -350,10 +350,9 @@ void Room::OnPlayerOperate(std::shared_ptr<Player> player, pb::Message* message)
 			if (IsFriend() && !HasDisMiss() && HasStarted() && !HasBeenOver()) return; //好友房没有开局，且没有对战完，则不允许退出
 			
 			if (IsMatch() && IsGaming()) return; //非好友房结束可以直接退出
-			//
+
 			//如果房主离开房间，且此时尚未开局，则直接解散
-			//
-			if (IsHoster(player->GetID()))
+			if (IsHoster(player->GetID()) && !IsClan()) //非茶馆房间
 			{
 				if (_games.size() == 0) //尚未开局
 				{
@@ -773,7 +772,7 @@ void Room::OnGameOver(int64_t player_id)
 		player->AddRoomScore(record->score()); //总积分
 	}
 
-	LOG(INFO, "房间:{}整局结算，房间局数:{}实际局数:{}结算数据:{}", _stuff.room_id(), _stuff.options().open_rands(), _games.size(), message.ShortDebugString());
+	LOG(INFO, "房间:{} 整局结算，房间局数:{} 实际局数:{} 结算数据:{}", _stuff.room_id(), _stuff.options().open_rands(), _games.size(), message.ShortDebugString());
 
 	for (auto player : _players)
 	{
@@ -792,8 +791,7 @@ void Room::OnGameOver(int64_t player_id)
 	
 	Asset::ClanRoomStatusChanged proto;
 	proto.set_status(Asset::CLAN_ROOM_STATUS_TYPE_OVER);
-
-	WorldInstance.BroadCast2CenterServer(message);
+	WorldInstance.BroadCast2CenterServer(proto); //通知茶馆房间结束
 }
 
 void Room::AddGameRecord(const Asset::GameRecord& record)
@@ -872,7 +870,7 @@ void Room::OnDisMiss(int64_t player_id, pb::Message* message)
 
 void Room::DoDisMiss()
 {
-	DEBUG("房间:{}解散成功", _stuff.room_id());
+	DEBUG("房间:{} 解散成功", _stuff.room_id());
 
 	_is_dismiss = true;
 					
@@ -1168,7 +1166,7 @@ void Room::UpdateClanStatus()
 	if (!IsFriend()) return; //非好友房没有总结算
 
 	if (!IsClan()) return; //非茶馆房间不同步
-
+	
 	Asset::ClanRoomSync message;
 
 	Asset::RoomInformation room_information;
