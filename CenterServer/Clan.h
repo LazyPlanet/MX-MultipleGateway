@@ -51,7 +51,7 @@ public:
 	int32_t OnChangedInformation(std::shared_ptr<Player> player, Asset::ClanOperation* message);
 	int32_t OnAgree(Asset::ClanOperation* message);
 	int32_t OnDisAgree(std::shared_ptr<Player> player, Asset::ClanOperation* message);
-	int32_t OnRecharge(std::shared_ptr<Player> player, int32_t count);
+	int32_t OnRecharge(int32_t count);
 	void OnQueryMemberStatus(Asset::ClanOperation* message);
 	void OnQueryRoomList(std::shared_ptr<Player> player, Asset::ClanOperation* message);
 	void OnQueryGamingList(Asset::ClanOperation* message);

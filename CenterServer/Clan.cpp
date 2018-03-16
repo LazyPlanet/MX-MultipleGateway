@@ -58,13 +58,11 @@ int32_t Clan::OnApply(int64_t player_id, const std::string& player_name, Asset::
 	return 0;
 }
 
-int32_t Clan::OnRecharge(std::shared_ptr<Player> player, int32_t count)
+int32_t Clan::OnRecharge(int32_t count)
 {
-	if (!player || count <= 0) return Asset::ERROR_INNER;
-			
-	if (player->GetRoomCard() < count) return Asset::ERROR_CLAN_ROOM_CARD_NOT_ENOUGH; //房卡不足
+	AddRoomCard(count);
 
-	player->ConsumeRoomCard(Asset::ROOM_CARD_CHANGED_TYPE_RECHARGE_CLAN, count); //扣除馆长房卡
+	DEBUG("成功给茶馆:{} 充值房卡:{}", _clan_id, count);
 	return 0;
 }
 
@@ -625,8 +623,7 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 		
 		case Asset::CLAN_OPER_TYPE_RECHARGE: //充值
 		{
-			auto result = clan->OnRecharge(player, message->recharge_count());
-			message->set_oper_result(result); 
+			player->SendProtocol2GameServer(message); //到逻辑服务器进行检查
 		}
 
 		case Asset::CLAN_OPER_TYPE_MEMEBER_QUERY: //成员状态查询
@@ -714,6 +711,15 @@ void ClanManager::OnGameServerBack(const Asset::ClanOperationSync& message)
 				oper.mutable_clan()->CopyFrom(clan->Get());
 				hoster_ptr->SendProtocol(oper); //通知茶馆老板
 			}
+		}
+		break;
+		
+		case Asset::CLAN_OPER_TYPE_RECHARGE: //充值
+		{
+			auto clan_ptr = Get(clan_id);
+			if (!clan_ptr) return;
+		
+			clan_ptr->OnRecharge(message.operation().recharge_count());
 		}
 		break;
 		

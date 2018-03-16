@@ -49,6 +49,8 @@ int32_t Clan::OnApply(std::shared_ptr<Player> player, Asset::ClanOperation* mess
 	return 0;
 }
 
+*/
+
 int32_t Clan::OnRecharge(std::shared_ptr<Player> player, int32_t count)
 {
 	if (!player || count <= 0) return Asset::ERROR_INNER;
@@ -59,6 +61,7 @@ int32_t Clan::OnRecharge(std::shared_ptr<Player> player, int32_t count)
 	return 0;
 }
 
+/*
 int32_t Clan::OnAgree(std::shared_ptr<Player> player, Asset::ClanOperation* message)
 {
 	if (!player || !message) return Asset::ERROR_INNER;
@@ -610,8 +613,10 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 		
 		case Asset::CLAN_OPER_TYPE_RECHARGE: //充值
 		{
-			//auto result = clan->OnRecharge(player, message->recharge_count());
-			//message->set_oper_result(result); 
+			auto result = clan->OnRecharge(player, message->recharge_count());
+			message->set_oper_result(result); 
+			
+			OnResult(message); //执行成功：广播执行结果
 		}
 
 		case Asset::CLAN_OPER_TYPE_MEMEBER_QUERY: //成员状态查询
