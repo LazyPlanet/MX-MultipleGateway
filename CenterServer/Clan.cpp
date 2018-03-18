@@ -166,6 +166,8 @@ void Clan::OnQueryMemberStatus(Asset::ClanOperation* message)
 {
 	if (!message) return;
 
+	_stuff.set_online_mem_count(0); //在线成员数量缓存
+
 	message->mutable_clan()->CopyFrom(_stuff); //茶馆数据
 
 	for (int32_t i = 0; i < _stuff.member_list().size(); ++i)
@@ -193,6 +195,9 @@ void Clan::OnQueryMemberStatus(Asset::ClanOperation* message)
 		{
 			member_ptr->set_status(Asset::CLAN_MEM_STATUS_TYPE_OFFLINE); //离线
 		}
+
+		if (member_ptr->status() == Asset::CLAN_MEM_STATUS_TYPE_AVAILABLE || member_ptr->status() == Asset::CLAN_MEM_STATUS_TYPE_GAMING) 
+			_stuff.set_online_mem_count(_stuff.online_mem_count() + 1); //在线成员数量缓存
 	}
 
 	message->mutable_clan()->CopyFrom(_stuff);

@@ -679,10 +679,11 @@ void ClanManager::OnQueryClanList(std::shared_ptr<Player> player, Asset::ClanOpe
 
 	const auto& _stuff = player->Get();
 	
-	auto clan_query_start_index = message->query_start_index();
-	auto clan_query_end_index = message->query_end_index();
+	//auto clan_query_start_index = message->query_start_index();
+	//auto clan_query_end_index = message->query_end_index();
 
 	std::vector<int64_t> clan_list;
+	/*
 
 	switch (message->brief_type())
 	{
@@ -719,6 +720,10 @@ void ClanManager::OnQueryClanList(std::shared_ptr<Player> player, Asset::ClanOpe
 		}
 		break;
 	}
+	*/
+				
+	for (auto clan_id : _stuff.clan_hosters()) clan_list.push_back(clan_id);
+	for (auto clan_id : _stuff.clan_joiners()) clan_list.push_back(clan_id);
 
 
 	for (const auto& clan_id : clan_list)
@@ -736,6 +741,7 @@ void ClanManager::OnQueryClanList(std::shared_ptr<Player> player, Asset::ClanOpe
 		brief->set_hoster_id(clan.hoster_id());
 		brief->set_hoster_name(clan.hoster_name());
 		brief->set_mem_count(clan.member_list().size());
+		brief->set_online_mem_count(clan.online_mem_count());
 	}
 
 	DEBUG("玩家:{} 查询茶馆列表:{}", player->GetID(), message->ShortDebugString());
