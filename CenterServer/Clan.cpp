@@ -270,7 +270,7 @@ int32_t Clan::RemoveMember(int64_t player_id, Asset::ClanOperation* message)
 	bool loaded = PlayerInstance.GetCache(player_id, player);
 	if (!loaded) return Asset::ERROR_CLAN_NO_MEM;
 
-	if (player.login_time() == 0) //离线
+	if (player.login_time() == 0) //离线:直接从茶馆删除
 	{
 		for (int32_t i = 0; i < player.clan_hosters().size(); ++i) //茶馆老板
 		{
@@ -652,6 +652,7 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 		case Asset::CLAN_OPER_TYPE_MEMEBER_QUIT: //主动退出
 		{
 			auto result = clan->RemoveMember(player->GetID(), message);
+			message->set_dest_player_id(player->GetID());
 			message->set_oper_result(result); 
 		}
 		break;
@@ -768,19 +769,26 @@ void ClanManager::OnGameServerBack(const Asset::ClanOperationSync& message)
 			auto clan_ptr = Get(clan_id);
 			if (!clan_ptr) return;
 
-			auto clan_operation = operation;
-
-			auto result = clan_ptr->OnAgree(&clan_operation); //列表更新
-			clan_operation.set_oper_result(result); 
+			auto result = clan_ptr->OnAgree(&operation); //列表更新
+			operation.set_oper_result(result); 
 
 			auto des_player = PlayerInstance.Get(operation.dest_player_id()); //不在当前中心服务器
 			if (!des_player) return;
 
-			clan_operation.mutable_clan()->CopyFrom(clan_ptr->Get()); //茶馆信息
+			operation.mutable_clan()->CopyFrom(clan_ptr->Get()); //茶馆信息
 
 			des_player->OnClanJoin(operation.clan_id());
-			des_player->SendProtocol(clan_operation); //通知玩家馆长同意加入茶馆
-			des_player->SendProtocol2GameServer(clan_operation); //通知逻辑服务器加入茶馆成功
+			des_player->SendProtocol(operation); //通知玩家馆长同意加入茶馆
+			des_player->SendProtocol2GameServer(operation); //通知逻辑服务器加入茶馆成功
+		}
+		break;
+		
+		case Asset::CLAN_OPER_TYPE_MEMEBER_QUIT: //主动退出
+		{
+			auto clan_ptr = Get(clan_id);
+			if (!clan_ptr) return;
+
+			clan_ptr->RemoveMember(operation.dest_player_id()); //复用删除玩家变量^_^
 		}
 		break;
 

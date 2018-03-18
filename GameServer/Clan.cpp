@@ -606,6 +606,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 		case Asset::CLAN_OPER_TYPE_MEMEBER_QUIT: //主动退出
 		{
 			player->OnQuitClan(message->clan_id());
+			OnResult(message);  //执行成功：广播执行结果
 		}
 		break;
 		
