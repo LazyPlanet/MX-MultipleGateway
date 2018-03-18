@@ -1332,5 +1332,55 @@ bool PlayerManager::IsLocal(int64_t player_id)
 	int64_t server_id = player_id >> 20;
 	return server_id == g_server_id;
 }
+	
+bool PlayerManager::SendProtocol2GameServer(int64_t player_id, const pb::Message& message)
+{
+	//本地角色
+	//
+	if (IsLocal(player_id)) 
+	{
+		auto player = Get(player_id);
+		if (!player) return false;
+	
+		player->SendProtocol2GameServer(message);
+		return true; //本服角色在线直接发送数据
+	}
+
+	//跨服角色
+	//
+	Asset::Player stuff;
+
+	auto loaded = PlayerInstance.GetCache(player_id, stuff);
+	if (!loaded) return false;
+
+	if (stuff.login_time() == 0) return false; //离线玩家不进行协议发送
+
+	auto _gs_session = WorldSessionInstance.GetServerSession(stuff.server_id());
+	if (!_gs_session) return false; //逻辑服务器
+		
+	const pb::FieldDescriptor* field = message.GetDescriptor()->FindFieldByName("type_t");
+	if (!field) return false;
+	
+	int type_t = field->default_value_enum()->number();
+	if (!Asset::META_TYPE_IsValid(type_t)) return false;	//如果不合法，不检查会宕线
+
+	Asset::Meta meta;
+	meta.set_type_t((Asset::META_TYPE)type_t);
+	meta.set_stuff(message.SerializeAsString());
+	meta.set_player_id(player_id); 
+
+	DEBUG("玩家:{} 发送到游戏逻辑服务器:{}，协议类型:{} 内容:{}", player_id, stuff.server_id(), type_t, message.ShortDebugString());
+
+	_gs_session->SendMeta(meta); 
+
+	return true;
+}
+
+bool PlayerManager::SendProtocol2GameServer(int64_t player_id, const pb::Message* message)
+{
+	if (!message) return false;
+
+	return SendProtocol2GameServer(player_id, *message);
+}
 
 }

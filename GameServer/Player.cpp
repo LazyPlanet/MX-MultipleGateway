@@ -4905,6 +4905,27 @@ void Player::OnBind(std::string account)
 
 	_dirty = true;
 }
+	
+void Player::OnQuitClan(int64_t clan_id)
+{
+	for (int32_t i = 0; i < _stuff.clan_hosters().size(); ++i) //茶馆老板
+	{
+		if (clan_id != _stuff.clan_hosters(i)) continue;
+
+		_stuff.mutable_clan_hosters()->SwapElements(i, _stuff.clan_hosters().size() - 1);
+		_stuff.mutable_clan_hosters()->RemoveLast();
+	}
+	
+	for (int32_t i = 0; i < _stuff.clan_joiners().size(); ++i) //茶馆成员
+	{
+		if (clan_id != _stuff.clan_joiners(i)) continue;
+
+		_stuff.mutable_clan_joiners()->SwapElements(i, _stuff.clan_joiners().size() - 1);
+		_stuff.mutable_clan_joiners()->RemoveLast();
+	}
+
+	_dirty = true;
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //

@@ -244,6 +244,9 @@ public:
 		static PlayerManager _instance;
 		return _instance;
 	}
+	
+	virtual bool SendProtocol2GameServer(int64_t player_id, const pb::Message& message);
+	virtual bool SendProtocol2GameServer(int64_t player_id, const pb::Message* message);
 
 	void Update(int32_t diff);
 	bool BeenMaxPlayer(); //最大玩家上限

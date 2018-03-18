@@ -517,6 +517,7 @@ public:
 	void OnClanCreated(int64_t clan_id) { _stuff.mutable_clan_hosters()->Add(clan_id); _dirty = true; }
 	void OnClanJoin(int64_t clan_id) { _stuff.mutable_clan_joiners()->Add(clan_id); _dirty = true; }
 	void SetCurrClan(int64_t clan_id) { _stuff.set_selected_clan_id(clan_id); _dirty = true; } //当前选择茶馆界面
+	void OnQuitClan(int64_t clan_id);
 };
 
 /////////////////////////////////////////////////////

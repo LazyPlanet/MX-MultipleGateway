@@ -176,12 +176,10 @@ void Clan::OnQueryMemberStatus(Asset::ClanOperation* message)
 		member_ptr->set_status(Asset::CLAN_MEM_STATUS_TYPE_AVAILABLE);
 	
 		Asset::Player player;
-
 		auto loaded = PlayerInstance.GetCache(member_ptr->player_id(), player);
 		if (!loaded) continue;
 		
 		Asset::User user;
-			
 		loaded = RedisInstance.GetUser(player.account(), user);
 		if (!loaded) continue;
 
@@ -258,7 +256,7 @@ void Clan::OnDisMiss()
 	_dirty = true;
 }
 
-void Clan::RemoveMember(int64_t player_id)
+int32_t Clan::RemoveMember(int64_t player_id, Asset::ClanOperation* message)
 {
 	for (int32_t i = 0; i < _stuff.member_list().size(); ++i)
 	{
@@ -266,10 +264,40 @@ void Clan::RemoveMember(int64_t player_id)
 
 		_stuff.mutable_member_list()->SwapElements(i, _stuff.member_list().size() - 1);
 		_stuff.mutable_member_list()->RemoveLast(); //删除玩家
-		break;
 	}
 
+	Asset::Player player;
+	bool loaded = PlayerInstance.GetCache(player_id, player);
+	if (!loaded) return Asset::ERROR_CLAN_NO_MEM;
+
+	if (player.login_time() == 0) //离线
+	{
+		for (int32_t i = 0; i < player.clan_hosters().size(); ++i) //茶馆老板
+		{
+			if (_clan_id != player.clan_hosters(i)) continue;
+
+			player.mutable_clan_hosters()->SwapElements(i, player.clan_hosters().size() - 1);
+			player.mutable_clan_hosters()->RemoveLast();
+		}
+		
+		for (int32_t i = 0; i < player.clan_joiners().size(); ++i) //茶馆成员
+		{
+			if (_clan_id != player.clan_joiners(i)) continue;
+
+			player.mutable_clan_joiners()->SwapElements(i, player.clan_joiners().size() - 1);
+			player.mutable_clan_joiners()->RemoveLast();
+		}
+		
+		PlayerInstance.Save(player_id, player); //直接存盘
+	}
+	else //在线 
+	{
+		PlayerInstance.SendProtocol2GameServer(player_id, message); //发给另一个中心服处理
+	}
+		
 	_dirty = true;
+
+	return 0;
 }
 
 void Clan::BroadCast(const pb::Message* message)
@@ -616,13 +644,15 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 				return;
 			}
 			
-			clan->RemoveMember(message->dest_player_id());
+			auto result = clan->RemoveMember(message->dest_player_id(), message);
+			message->set_oper_result(result); 
 		}
 		break;
 		
 		case Asset::CLAN_OPER_TYPE_MEMEBER_QUIT: //主动退出
 		{
-			clan->RemoveMember(player->GetID());
+			auto result = clan->RemoveMember(player->GetID(), message);
+			message->set_oper_result(result); 
 		}
 		break;
 		
@@ -700,7 +730,6 @@ void ClanManager::OnGameServerBack(const Asset::ClanOperationSync& message)
 			if (!clan) return;
 		
 			Asset::Player stuff;
-
 			auto loaded = PlayerInstance.GetCache(message.player_id(), stuff);
 			if (!loaded) return;
 

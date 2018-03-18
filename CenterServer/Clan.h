@@ -34,7 +34,7 @@ public:
 	void Update();
 	void Save(bool force = true);
 	void OnDisMiss();
-	void RemoveMember(int64_t player_id);
+	int32_t RemoveMember(int64_t player_id, Asset::ClanOperation* message);
 	void BroadCast(const pb::Message* message);
 	void BroadCast(const pb::Message& message);
 
