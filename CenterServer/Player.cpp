@@ -599,8 +599,10 @@ int32_t Player::DefaultMethod(pb::Message* message)
 	return 0;
 }
 
-Asset::ERROR_CODE Player::CommonCheck(int32_t type_t)
+int32_t Player::CommonCheck(int32_t type_t, pb::Message* message)
 {
+	if (!message) return 0;
+
 	switch (type_t)
 	{
 		case Asset::META_TYPE_SHARE_CREATE_ROOM: //创建房间
@@ -610,6 +612,9 @@ Asset::ERROR_CODE Player::CommonCheck(int32_t type_t)
 				LOG(ERROR, "玩家:{} 创建房间失败:{} 账号信息:{}", _player_id, _account_type, _stuff.account());
 				return Asset::ERROR_ROOM_FRIEND_NOT_FORBID; //游客禁止进入好友房
 			}
+
+			auto result = CheckCreateRoom(message);
+			if (result) return result;
 		
 			int64_t server_id = WorldSessionInstance.RandomServer(); //随机一个逻辑服务器
 
@@ -639,6 +644,33 @@ Asset::ERROR_CODE Player::CommonCheck(int32_t type_t)
 
 	return Asset::ERROR_SUCCESS;
 }
+	
+int32_t Player::CheckCreateRoom(pb::Message* message)
+{
+	if (!message) return Asset::ERROR_INNER;
+
+	auto create_room = dynamic_cast<Asset::CreateRoom*>(message);
+	if (!create_room) return Asset::ERROR_INNER;
+	
+	if (ActivityInstance.IsOpen(g_const->room_card_limit_free_activity_id())) return 0; //限免开启
+
+	auto clan_id = create_room->room().clan_id();
+	if (clan_id == 0) return 0; //茶馆
+
+	auto clan = ClanInstance.Get(clan_id);
+	if (!clan) return Asset::ERROR_CLAN_NOT_FOUND; //尚未存在茶馆 
+
+	auto open_rands = create_room->room().options().open_rands(); //局数
+
+	const Asset::Item_RoomCard* room_card = dynamic_cast<const Asset::Item_RoomCard*>(AssetInstance.Get(g_const->room_card_id()));
+	if (!room_card || room_card->rounds() <= 0) return Asset::ERROR_INNER;
+		
+	int32_t consume_count = open_rands / room_card->rounds(); //待消耗房卡数量
+
+	if (clan->GetRoomCard() < consume_count) return Asset::ERROR_CLAN_ROOM_CARD_NOT_ENOUGH;  //房卡不足
+
+	return 0;
+}
 
 bool Player::HandleProtocol(int32_t type_t, pb::Message* message)
 {
@@ -650,7 +682,7 @@ bool Player::HandleProtocol(int32_t type_t, pb::Message* message)
 	//
 	//如果玩家已经在游戏逻辑服务器，则直接发往游戏逻辑服务器，防止数据覆盖
 	//
-	auto result = CommonCheck(type_t); //通用限制检查
+	auto result = CommonCheck(type_t, message); //通用限制检查
 	if (result)
 	{
 		AlertMessage(result, Asset::ERROR_TYPE_NORMAL, Asset::ERROR_SHOW_TYPE_MESSAGE_BOX); //通用错误码
@@ -679,7 +711,7 @@ bool Player::HandleProtocol(int32_t type_t, pb::Message* message)
 	return true;
 }
 
-void Player::AlertMessage(Asset::ERROR_CODE error_code, Asset::ERROR_TYPE error_type/*= Asset::ERROR_TYPE_NORMAL*/, 
+void Player::AlertMessage(int32_t error_code, Asset::ERROR_TYPE error_type/*= Asset::ERROR_TYPE_NORMAL*/, 
 		Asset::ERROR_SHOW_TYPE error_show_type/* = Asset::ERROR_SHOW_TYPE_NORMAL*/)
 {
 	Asset::AlertMessage message;

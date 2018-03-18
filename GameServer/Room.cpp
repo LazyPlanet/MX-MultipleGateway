@@ -5,6 +5,7 @@
 #include <cpp_redis/cpp_redis>
 
 #include "Room.h"
+#include "Clan.h"
 #include "Game.h"
 #include "MXLog.h"
 #include "CommonUtil.h"
@@ -994,8 +995,7 @@ bool Room::CanStarGame()
 		if (IsClan()) //茶馆:开局消耗,到中心服务器消耗
 		{
 			Asset::Clan clan;
-			auto has_record = RedisInstance.Get("clan:" + std::to_string(_stuff.clan_id()), clan);
-
+			auto has_record = ClanInstance.GetClan(_stuff.clan_id(), clan);
 			if (!has_record || clan.room_card_count() < consume_count) return false;
 
 			if (_games.size() == 0) OnClanCreated(); //茶馆房

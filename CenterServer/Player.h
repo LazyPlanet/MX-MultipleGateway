@@ -112,7 +112,8 @@ public:
 	virtual void SendGmtProtocol(const pb::Message* message, int64_t session_id);
 	virtual void SendGmtProtocol(const pb::Message& message, int64_t session_id);
 
-	Asset::ERROR_CODE CommonCheck(int32_t type_t);
+	int32_t CommonCheck(int32_t type_t, pb::Message* message);
+	int32_t CheckCreateRoom(pb::Message* message);
 	//玩家登出
 	virtual int32_t Logout(pb::Message* message);
 	virtual int32_t OnLogout();
@@ -166,7 +167,7 @@ public:
 	const Asset::Inventory_Element& GetInventory(Asset::INVENTORY_TYPE type) { return _stuff.inventory().inventory(type); }	
 	Asset::Inventory_Element* GetMutableInventory(Asset::INVENTORY_TYPE type) { return _stuff.mutable_inventory()->mutable_inventory(type);	}	
 	//通用错误码提示
-	void AlertMessage(Asset::ERROR_CODE error_code, Asset::ERROR_TYPE error_type = Asset::ERROR_TYPE_NORMAL, 
+	void AlertMessage(int32_t error_code, Asset::ERROR_TYPE error_type = Asset::ERROR_TYPE_NORMAL, 
 			Asset::ERROR_SHOW_TYPE error_show_type = Asset::ERROR_SHOW_TYPE_NORMAL);
 
 	//

@@ -614,7 +614,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 		{
 			if (message->recharge_count() <= 0 || player->GetRoomCard() < message->recharge_count()) 
 			{
-				message->set_oper_result(Asset::ERROR_CLAN_ROOM_CARD_NOT_ENOUGH); //房卡不足
+				message->set_oper_result(Asset::ERROR_ROOM_CARD_NOT_ENOUGH); //房卡不足
 				player->SendProtocol(message);
 
 				return 10;
