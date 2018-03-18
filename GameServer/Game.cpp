@@ -1990,9 +1990,11 @@ void Game::CalculateGangScore(Asset::GameCalculate& game_calculate)
 		int32_t ming_score = ming_count * ming_score_each;
 
 		int32_t an_score = an_count * GetMultiple(Asset::FAN_TYPE_AN_GANG);
-		int32_t xf_score = fg_count * GetMultiple(Asset::FAN_TYPE_XUAN_FENG_GANG) + jg_count * GetMultiple(Asset::FAN_TYPE_XUAN_JIAN_GANG);
+		//int32_t xf_score = fg_count * GetMultiple(Asset::FAN_TYPE_XUAN_FENG_GANG) + jg_count * GetMultiple(Asset::FAN_TYPE_XUAN_JIAN_GANG);
+		int32_t fg_score = fg_count * GetMultiple(Asset::FAN_TYPE_XUAN_FENG_GANG);
+		int32_t jg_score = jg_count * GetMultiple(Asset::FAN_TYPE_XUAN_JIAN_GANG);
 
-		int32_t score = ming_score + an_score + xf_score; //玩家杠牌赢得其他单个玩家积分
+		int32_t score = ming_score + an_score + fg_score + jg_score; //玩家杠牌赢得其他单个玩家积分
 
 		auto record = game_calculate.mutable_record()->mutable_list(i);
 		record->set_score(record->score() + score * (MAX_PLAYER_COUNT - 1)); //增加杠牌玩家总杠积分
@@ -2014,11 +2016,18 @@ void Game::CalculateGangScore(Asset::GameCalculate& game_calculate)
 			detail->set_score(an_score * (MAX_PLAYER_COUNT - 1));
 		}
 		
-		if (xf_score > 1)
+		if (fg_count)
 		{
 			auto detail = record->mutable_details()->Add();
 			detail->set_fan_type(Asset::FAN_TYPE_XUAN_FENG_GANG);
-			detail->set_score(xf_score * (MAX_PLAYER_COUNT - 1));
+			detail->set_score(fg_score * (MAX_PLAYER_COUNT - 1));
+		}
+		
+		if (jg_count)
+		{
+			auto detail = record->mutable_details()->Add();
+			detail->set_fan_type(Asset::FAN_TYPE_XUAN_JIAN_GANG);
+			detail->set_score(jg_score * (MAX_PLAYER_COUNT - 1));
 		}
 		//
 		//2.其他玩家所输积分
@@ -2084,11 +2093,18 @@ void Game::CalculateGangScore(Asset::GameCalculate& game_calculate)
 				detail->set_score(-an_score);
 			}
 
-			if (xf_score > 1)
+			if (fg_count)
 			{
 				auto detail = record->mutable_details()->Add();
 				detail->set_fan_type(Asset::FAN_TYPE_XUAN_FENG_GANG);
-				detail->set_score(-xf_score);
+				detail->set_score(-fg_score);
+			}
+			
+			if (jg_count)
+			{
+				auto detail = record->mutable_details()->Add();
+				detail->set_fan_type(Asset::FAN_TYPE_XUAN_JIAN_GANG);
+				detail->set_score(-jg_score);
 			}
 		} 
 	} 
