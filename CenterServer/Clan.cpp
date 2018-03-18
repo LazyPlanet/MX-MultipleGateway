@@ -123,6 +123,7 @@ int32_t Clan::OnDisAgree(std::shared_ptr<Player> player, Asset::ClanOperation* m
 	if (member_id != sys_message.player_id() || Asset::CLAN_OPER_TYPE_JOIN != sys_message.oper_type()) return Asset::ERROR_CLAN_NO_RECORD; //尚未申请记录
 
 	auto it = _stuff.mutable_message_list(dest_sys_message_index);
+	if (!it) return Asset::ERROR_CLAN_NO_RECORD; //尚未申请记录
 
 	it->set_oper_time(TimerInstance.GetTime());
 	it->set_oper_type(message->oper_type());

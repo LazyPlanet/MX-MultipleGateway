@@ -85,7 +85,7 @@ bool WorldSession::OnInnerProcess(const Asset::Meta& meta)
 		}
 		break;
 
-		case Asset::CLAN_ROOM_STATUS_TYPE_OVER:
+		case Asset::META_TYPE_S2S_CLAN_ROOM_START_OR_OVER:
 		{
 			const auto clan_room = dynamic_cast<const Asset::ClanRoomStatusChanged*>(message);
 			if (!clan_room) return false;
