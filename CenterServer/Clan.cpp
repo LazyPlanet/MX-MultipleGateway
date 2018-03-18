@@ -640,7 +640,7 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 		{
 			if (clan->GetHoster() != player->GetID())
 			{
-				message->set_oper_result(Asset::ERROR_CLAN_NO_PERMISSION);
+				message->set_oper_result(Asset::ERROR_CLAN_NO_PERMISSION); //权限检查
 				return;
 			}
 			
