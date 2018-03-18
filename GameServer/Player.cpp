@@ -2598,7 +2598,7 @@ bool Player::CheckHuPai(const std::map<int32_t, std::vector<int32_t>>& cards_inh
 				}
 			}
 
-			if (cards[Asset::CARD_TYPE_FENG].size() || cards[Asset::CARD_TYPE_JIAN].size()) qingyise = false;
+			if (_fenggang > 0 || _jiangang > 0 || cards[Asset::CARD_TYPE_FENG].size() || cards[Asset::CARD_TYPE_JIAN].size()) qingyise = false;
 		
 			if (has_count == 0) qingyise = true; //都是非数字牌
 		}
@@ -4228,11 +4228,11 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 			{ 5, {1, 2, 2, 3} },
 		};
 	}
-	else if (true && _player_id == 722584 && _cards_inhand.size() == 0) //13
+	else if (true && _player_id == 11534348 && _cards_inhand.size() == 0) //13
 	{
 		_cards_inhand = {
-			{ 1, {1, 1, 1, 1} },
-			{ 4, {1, 1, 2, 2, 3, 3, 4, 4, 4} },
+			{ 1, {1, 1, 1, 1, 2, 2, 2, 2} },
+			{ 5, {1, 2, 3, 3, 3} },
 		};
 	}
 	else
