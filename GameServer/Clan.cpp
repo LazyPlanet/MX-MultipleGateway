@@ -725,7 +725,6 @@ void ClanManager::OnQueryClanList(std::shared_ptr<Player> player, Asset::ClanOpe
 		if (clan_id <= 0) continue;
 
 		Asset::Clan clan;
-	
 		bool has_clan = GetClan(clan_id, clan);
 		if (!has_clan) continue;
 
