@@ -837,6 +837,12 @@ void Room::OnRemove()
 		player->OnRoomRemoved();
 		player.reset();
 	}
+	
+	Asset::ClanRoomStatusChanged proto;
+	proto.mutable_room()->set_room_id(_stuff.room_id());
+	proto.mutable_room()->set_clan_id(_stuff.clan_id());
+	proto.set_status(Asset::CLAN_ROOM_STATUS_TYPE_OVER);
+	WorldInstance.BroadCast2CenterServer(proto); //通知茶馆房间结束
 }
 
 void Room::OnDisMiss(int64_t player_id, pb::Message* message)
