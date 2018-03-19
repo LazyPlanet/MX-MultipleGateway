@@ -590,19 +590,6 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 		break;
 		
 		case Asset::CLAN_OPER_TYPE_MEMEBER_DELETE: //删除成员
-		{
-			/*
-			if (clan->GetHoster() != player->GetID())
-			{
-				message->set_oper_result(Asset::ERROR_CLAN_NO_PERMISSION);
-				return 10;
-			}
-			
-			clan->RemoveMember(message->dest_player_id());
-			*/
-		}
-		break;
-		
 		case Asset::CLAN_OPER_TYPE_MEMEBER_QUIT: //主动退出
 		{
 			player->OnQuitClan(message->clan_id());
