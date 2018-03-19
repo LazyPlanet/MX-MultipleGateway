@@ -370,7 +370,7 @@ void Clan::OnRoomChanged(const Asset::ClanRoomStatusChanged* message)
 		
 		case Asset::CLAN_ROOM_STATUS_TYPE_OVER:
 		{
-			OnRoomOver(message->room().room_id());
+			OnRoomOver(message);
 		}
 		break;
 	}
@@ -380,14 +380,25 @@ void Clan::OnRoomChanged(const Asset::ClanRoomStatusChanged* message)
 	_dirty = true;
 }
 	
-void Clan::OnRoomOver(int64_t room_id)
+void Clan::OnRoomOver(const Asset::ClanRoomStatusChanged* message)
 {
+	if (!message) return;
+
+	const auto& room = message->room();
+	auto room_id = room.room_id();
+
 	std::lock_guard<std::mutex> lock(_mutex);
 
 	_rooms.erase(room_id);
 
 	auto it = std::find(_gaming_room_list.begin(), _gaming_room_list.end(), room_id);
 	if (it != _gaming_room_list.end()) _gaming_room_list.erase(it);
+
+	auto history = _stuff.mutable_battle_history()->Add();
+	history->set_room_id(room_id);
+	history->set_battle_time(message->created_time());
+	
+	_dirty = true;
 }
 
 void Clan::OnRoomSync(const Asset::RoomQueryResult& room_query)

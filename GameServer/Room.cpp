@@ -698,6 +698,17 @@ void Room::AddHupai(int64_t player_id)
 	player->SetStreakWins(1);
 }
 
+void Room::OnClanOver()
+{
+	if (!IsClan()) return;
+	
+	Asset::ClanRoomStatusChanged proto;
+	proto.set_created_time(_created_time);
+	proto.mutable_room()->CopyFrom(_stuff);
+	proto.set_status(Asset::CLAN_ROOM_STATUS_TYPE_OVER);
+	WorldInstance.BroadCast2CenterServer(proto); //通知茶馆房间结束
+}
+
 void Room::OnGameOver(int64_t player_id)
 {
 	if (_game) _game.reset();
@@ -790,11 +801,14 @@ void Room::OnGameOver(int64_t player_id)
 	_loubao_players.clear();
 	_jinbao_players.clear();
 	
+	/*
 	Asset::ClanRoomStatusChanged proto;
-	proto.mutable_room()->set_room_id(_stuff.room_id());
-	proto.mutable_room()->set_clan_id(_stuff.clan_id());
+	proto.set_created_time(_created_time);
+	proto.mutable_room()->CopyFrom(_stuff);
 	proto.set_status(Asset::CLAN_ROOM_STATUS_TYPE_OVER);
 	WorldInstance.BroadCast2CenterServer(proto); //通知茶馆房间结束
+	*/
+	OnClanOver();
 }
 
 void Room::AddGameRecord(const Asset::GameRecord& record)
@@ -838,11 +852,15 @@ void Room::OnRemove()
 		player.reset();
 	}
 	
+	/*
 	Asset::ClanRoomStatusChanged proto;
-	proto.mutable_room()->set_room_id(_stuff.room_id());
-	proto.mutable_room()->set_clan_id(_stuff.clan_id());
+	proto.mutable_room()->CopyFrom(_stuff);
+	proto.set_created_time(_created_time);
 	proto.set_status(Asset::CLAN_ROOM_STATUS_TYPE_OVER);
 	WorldInstance.BroadCast2CenterServer(proto); //通知茶馆房间结束
+	*/
+
+	OnClanOver();
 }
 
 void Room::OnDisMiss(int64_t player_id, pb::Message* message)

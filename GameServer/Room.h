@@ -151,6 +151,7 @@ public:
 	void OnPlayerStateChanged();
 	//游戏结束
 	void OnGameOver(int64_t player_id = 0/*胡牌玩家*/);
+	void OnClanOver(); //茶馆房间结束
 	
 	//庄家信息
 	void SetBanker(int64_t player_id) { _banker = player_id; AddBanker(player_id); } //设置庄家

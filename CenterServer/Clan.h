@@ -45,7 +45,7 @@ public:
 
 	void OnRoomChanged(const Asset::ClanRoomStatusChanged* message);
 	void OnRoomSync(const Asset::RoomQueryResult& room_query);
-	void OnRoomOver(int64_t room_id);
+	void OnRoomOver(const Asset::ClanRoomStatusChanged* message);
 	
 	int32_t OnApply(int64_t player_id, const std::string& player_name, Asset::ClanOperation* message);
 	int32_t OnChangedInformation(std::shared_ptr<Player> player, Asset::ClanOperation* message);
