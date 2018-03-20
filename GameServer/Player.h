@@ -455,8 +455,8 @@ public:
 
 	int32_t GetMingGangCount() { return _minggang.size(); } //明杠数量
 	int32_t GetAnGangCount() { return _angang.size(); } //暗杠数量
-	int32_t GetZhuiJianCount() { return _zhui_fenggang.size(); } //追风杠，本质是明杠
-	int32_t GetZhuiFengCount() { return _zhui_jiangang.size(); } //追风杠，本质是暗杠
+	int32_t GetZhuiJianCount() { return _zhui_jiangang.size(); } //追风杠，本质是明杠
+	int32_t GetZhuiFengCount() { return _zhui_fenggang.size(); } //追风杠，本质是暗杠
 	int32_t GetXuanFengCount() { return _jiangang + _fenggang; } //旋风杠数量
 	
 	const std::vector<Asset::PaiElement>& GetMingGang() { return _minggang; } //明杠

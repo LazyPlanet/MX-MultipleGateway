@@ -46,7 +46,7 @@ public:
 	void OnRoomChanged(const Asset::ClanRoomStatusChanged* message);
 	void OnRoomSync(const Asset::RoomQueryResult& room_query);
 	void OnRoomOver(const Asset::ClanRoomStatusChanged* message);
-	
+
 	int32_t OnApply(int64_t player_id, const std::string& player_name, Asset::ClanOperation* message);
 	int32_t OnChangedInformation(std::shared_ptr<Player> player, Asset::ClanOperation* message);
 	int32_t OnAgree(Asset::ClanOperation* message);
@@ -70,6 +70,8 @@ public:
 		static ClanManager _instance;
 		return _instance;
 	}
+	
+	int32_t IsNameValid(std::string name, std::string trim_name);
 
 	void Update(int32_t diff);
 	void Load();

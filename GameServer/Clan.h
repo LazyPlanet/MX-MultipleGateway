@@ -76,7 +76,7 @@ public:
 	//std::shared_ptr<Clan> GetClan(int64_t clan_id);
 	//std::shared_ptr<Clan> Get(int64_t clan_id);
 
-	int32_t OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation* message);
+	void OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation* message);
 	void OnResult(const Asset::ClanOperation* message); //创建成功
 	void OnQueryClanList(std::shared_ptr<Player> player, Asset::ClanOperation* message);
 	bool GetClan(int64_t clan_id, Asset::Clan& clan);

@@ -431,18 +431,16 @@ std::shared_ptr<Clan> ClanManager::Get(int64_t clan_id)
 }
 */
 
-int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation* message)
+void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation* message)
 {
-	if (!message || !player) return 1;
+	if (!message || !player) return;
 		
 	static std::set<int32_t> _valid_operation = { Asset::CLAN_OPER_TYPE_CREATE, Asset::CLAN_OPER_TYPE_MEMEBER_AGEE, Asset::CLAN_OPER_TYPE_CLAN_LIST_QUERY }; //合法
 	
 	defer {
-		if (!message) return 14;
+		if (!message) return;
 
 		if (_valid_operation.find(message->oper_type()) != _valid_operation.end()) player->SendProtocol(message); //返回结果
-
-		return 0;
 
 		//OnResult(message); //执行成功：广播执行结果
 	};
@@ -467,42 +465,53 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 		case Asset::CLAN_OPER_TYPE_CREATE: //创建
 		{
 			auto clan_limit = dynamic_cast<Asset::ClanLimit*>(AssetInstance.Get(g_const->clan_id()));
-			if (!clan_limit) return 6;
+			if (!clan_limit) return;
 
 			const auto& trim_name = message->name();
+			
+			/*
+			boost::trim(trim_name);
+
+			if (trim_name.size() != message->name().size())
+			{
+				message->set_oper_result(Asset::ERROR_CLAN_NAME_INVALID);
+				return;
+			}
 
 			if (trim_name.empty()) 
 			{
 				message->set_oper_result(Asset::ERROR_CLAN_NAME_EMPTY);
-				return 2;
+				return;
 			}
 			if ((int32_t)trim_name.size() > clan_limit->name_limit())
 			{
 				message->set_oper_result(Asset::ERROR_CLAN_NAME_UPPER);
-				return 3;
+				return;
 			}
 			if (!NameLimitInstance.IsValid(trim_name))
 			{
 				message->set_oper_result(Asset::ERROR_CLAN_NAME_INVALID);
-				return 6;
+				return;
 			}
+			*/
+
 			if (player->GetHosterCount() > clan_limit->create_upper_limit())
 			{
 				message->set_oper_result(Asset::ERROR_CLAN_HOSTER_UPPER);
-				return 4;
+				return;
 			}
 	
 			if (player->GetRoomCard() < clan_limit->room_card_limit())
 			{
 				message->set_oper_result(Asset::ERROR_CLAN_ROOM_CARD_NOT_ENOUGH); //房卡不足
-				return 7;
+				return;
 			}
 			
 			int64_t clan_id = RedisInstance.CreateClan();
 			if (clan_id == 0)
 			{
 				message->set_oper_result(Asset::ERROR_CLAN_CREATE_INNER);
-				return 5;
+				return;
 			}
 
 			clan_id = (message->server_id() << 20) + clan_id;
@@ -562,12 +571,12 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 		
 		case Asset::CLAN_OPER_TYPE_MEMEBER_AGEE: //同意加入
 		{
-			if (player->GetID() != message->dest_player_id()) return 13; //馆长操作，不进行处理
+			if (player->GetID() != message->dest_player_id()) return; //馆长操作，不进行处理
 
 			if (message->has_oper_result() && message->oper_result() == 0) //加入成功
 			{
 				auto des_player = PlayerInstance.Get(message->dest_player_id());
-				if (!des_player) return 12;
+				if (!des_player) return;
 
 				des_player->OnClanJoin(message->clan_id());
 			}
@@ -604,7 +613,7 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 				message->set_oper_result(Asset::ERROR_ROOM_CARD_NOT_ENOUGH); //房卡不足
 				player->SendProtocol(message);
 
-				return 10;
+				return;
 			}
 
 			player->ConsumeRoomCard(Asset::ROOM_CARD_CHANGED_TYPE_RECHARGE_CLAN, message->recharge_count()); //扣除馆长房卡
@@ -635,14 +644,12 @@ int32_t ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperat
 		default:
 		{
 			ERROR("玩家:{} 茶馆操作尚未处理:{}", player->GetID(), message->ShortDebugString());
-			return 0;
+			return;
 		}
 		break;
 	}
 			
 	//OnResult(message); //执行成功：广播执行结果
-
-	return 0;
 }
 	
 void ClanManager::OnResult(const Asset::ClanOperation* message)

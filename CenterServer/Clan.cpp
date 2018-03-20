@@ -137,21 +137,26 @@ int32_t Clan::OnChangedInformation(std::shared_ptr<Player> player, Asset::ClanOp
 {
 	if (!player || !message) return Asset::ERROR_INNER;
 
-	auto hoster_id = _stuff.hoster_id();
-
-	if (hoster_id != player->GetID()) return Asset::ERROR_CLAN_NO_PERMISSION;
+	if (_stuff.hoster_id() != player->GetID()) return Asset::ERROR_CLAN_NO_PERMISSION;
+			
+	auto result = ClanInstance.IsNameValid(message->name(), message->name());
+	if (result) return result; //名字检查失败
 
 	auto name = message->name();
 	auto announcement = message->announcement();
+	
+	CommonUtil::Trim(name);
+	CommonUtil::Trim(announcement);
 
-	if (name.size()) 
-	{
-		if (!NameLimitInstance.IsValid(name)) return Asset::ERROR_CLAN_NAME_INVALID;
+	if (name.size()) _stuff.set_name(name);
 
-		_stuff.set_name(name);
-	}
 	if (announcement.size()) 
 	{
+		auto clan_limit = dynamic_cast<Asset::ClanLimit*>(AssetInstance.Get(g_const->clan_id()));
+		if (!clan_limit) return Asset::ERROR_CLAN_ANNOUCEMENT_INVALID;
+	
+		if ((int32_t)announcement.size() > clan_limit->annoucement_limit()) return Asset::ERROR_CLAN_ANNOUCEMENT_INVALID; //字数限制
+
 		if (!NameLimitInstance.IsValid(announcement)) return Asset::ERROR_CLAN_ANNOUCEMENT_INVALID;
 
 		_stuff.set_announcement(announcement);
@@ -530,8 +535,11 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 	
 	static std::set<int32_t> _valid_operation = { Asset::CLAN_OPER_TYPE_CREATE, Asset::CLAN_OPER_TYPE_CLAN_LIST_QUERY, Asset::CLAN_OPER_TYPE_RECHARGE }; //合法
 	
-	defer {
-		if (_valid_operation.find(message->oper_type()) != _valid_operation.end()) return;  //不进行协议转发
+	defer 
+	{
+		if (!message) return;
+
+		if (message->oper_result() == 0 && _valid_operation.find(message->oper_type()) != _valid_operation.end()) return;  //不进行协议转发
 
 		player->SendProtocol(message); //返回结果
 	};
@@ -555,6 +563,43 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 	{
 		case Asset::CLAN_OPER_TYPE_CREATE: //创建
 		{
+			/*
+			auto clan_limit = dynamic_cast<Asset::ClanLimit*>(AssetInstance.Get(g_const->clan_id()));
+			if (!clan_limit) return;
+
+			auto trim_name = message->name();
+			CommonUtil::Trim(trim_name);
+
+			if (trim_name.size() != message->name().size()) //有空格
+			{
+				message->set_oper_result(Asset::ERROR_CLAN_NAME_INVALID);
+				return;
+			}
+
+			if (trim_name.empty()) 
+			{
+				message->set_oper_result(Asset::ERROR_CLAN_NAME_EMPTY);
+				return;
+			}
+			if ((int32_t)trim_name.size() > clan_limit->name_limit())
+			{
+				message->set_oper_result(Asset::ERROR_CLAN_NAME_UPPER);
+				return;
+			}
+			if (!NameLimitInstance.IsValid(trim_name))
+			{
+				message->set_oper_result(Asset::ERROR_CLAN_NAME_INVALID);
+				return;
+			}
+			*/
+
+			auto result = ClanInstance.IsNameValid(message->name(), message->name());
+			if (result)
+			{
+				message->set_oper_result(result);
+				return;
+			}
+
 			player->SendProtocol2GameServer(message); //到逻辑服务器进行检查
 		}
 		break;
@@ -710,6 +755,24 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 		}
 		break;
 	}
+}
+	
+int32_t ClanManager::IsNameValid(std::string name, std::string trim_name)
+{
+	auto clan_limit = dynamic_cast<Asset::ClanLimit*>(AssetInstance.Get(g_const->clan_id()));
+	if (!clan_limit) return Asset::ERROR_CLAN_NAME_INVALID;
+
+	CommonUtil::Trim(trim_name);
+
+	if (trim_name.size() != name.size()) return Asset::ERROR_CLAN_NAME_INVALID;
+
+	if (trim_name.empty()) return Asset::ERROR_CLAN_NAME_EMPTY;
+
+	if ((int32_t)trim_name.size() > clan_limit->name_limit()) return Asset::ERROR_CLAN_NAME_UPPER;
+
+	if (!NameLimitInstance.IsValid(trim_name)) return Asset::ERROR_CLAN_NAME_INVALID;
+
+	return 0;
 }
 	
 void ClanManager::OnCreated(int64_t clan_id, std::shared_ptr<Clan> clan)
