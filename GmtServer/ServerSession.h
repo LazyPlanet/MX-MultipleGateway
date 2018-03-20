@@ -63,7 +63,7 @@ public:
 	Asset::COMMAND_ERROR_CODE OnActivityControl(const Asset::ActivityControl& command);
 
 	void SetSession(int64_t session_id) { _session_id = session_id; }
-	bool IsGmtServer() { return Asset::SERVER_TYPE_GMT == _server_type; }
+	bool IsWebServer() { return Asset::SERVER_TYPE_GMT == _server_type; } //WEB平台
 private:
 	boost::asio::ip::tcp::endpoint _remote_endpoint;
 	std::string _ip_address;
@@ -107,9 +107,9 @@ public:
 
 	void AddGmtServer(std::shared_ptr<ServerSession> session);
 	std::shared_ptr<ServerSession> GetGmtServer(int64_t session_id);
-	bool IsGmtServer(std::shared_ptr<ServerSession> sesssion) {
+	bool IsWebServer(std::shared_ptr<ServerSession> sesssion) {
 		if (!sesssion) return false;
-		return sesssion->IsGmtServer();
+		return sesssion->IsWebServer();
 	}
 	int64_t RandomServer();
 	int64_t GetLocolServer(int64_t player_id){ int64_t server_id = player_id >> 20; return server_id; }
