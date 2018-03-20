@@ -621,8 +621,9 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 				auto hoster_ptr = PlayerInstance.Get(hoster_id);
 				if (!hoster_ptr) return;
 
-				message->mutable_clan()->CopyFrom(clan->Get());
-				hoster_ptr->SendProtocol(message); //通知茶馆老板
+				auto proto = *message;
+				proto.mutable_clan()->CopyFrom(clan->Get());
+				hoster_ptr->SendProtocol(proto); //通知茶馆老板
 			}
 		}
 		break;
