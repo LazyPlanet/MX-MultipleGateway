@@ -2135,7 +2135,7 @@ bool Player::CheckHuiHu(Asset::PaiElement pai, bool check_zimo, bool calculate)
 {
 	if (!_room || !_game) return false;
 
-	if (!_room->HasHuiPai()) return false; //不带会儿牌
+	//if (!_room->HasHuiPai()) return false; //不带会儿牌//也可能是绝头会儿
 
 	if (!HasYaoJiu() && !GameInstance.IsYaoJiu(pai)) return false; //会牌不能代替幺九，因此前置检查
 
@@ -4222,19 +4222,23 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 			{ 5, {2, 2} },
 		};
 	}
-	else if (true && _player_id == 11534338 && _cards_inhand.size() == 0) //13
+	else if (false && _player_id == 11534338 && _cards_inhand.size() == 0) //13
 	{
 		_cards_inhand = {
-			{ 1, {2, 3, 3} },
+			{ 1, {6, 6, 6} },
 			{ 3, {1, 2, 2, 3, 3, 4} },
 			{ 5, {1, 2, 2, 3} },
 		};
 	}
-	else if (true && _player_id == 11534348 && _cards_inhand.size() == 0) //13
+	else if (true && _player_id == 11534338 && _cards_inhand.size() == 0) //13
 	{
 		_cards_inhand = {
-			{ 1, {1, 1, 1, 1, 2, 2, 2, 2} },
-			{ 5, {1, 2, 3, 3, 3} },
+			{ 2, {6} },
+		};
+
+		_cards_outhand = {
+			{ 2, {1, 1, 1, 6, 6, 6, 7, 7, 7} },
+			{ 3, {6, 7, 8} },
 		};
 	}
 	else
