@@ -3322,6 +3322,8 @@ bool Player::CheckPengPai(const Asset::PaiElement& pai)
 
 	if (_has_ting || HasTuoGuan()) return false; //已经听牌，不再提示
 	
+	if (_game->IsHuiPai(pai)) return false; //会牌不让碰
+	
 	if (ShouldDaPai()) return false;
 	
 	if (!CheckMingPiao(Asset::PAI_OPER_TYPE_PENGPAI)) return false; //明飘检查
