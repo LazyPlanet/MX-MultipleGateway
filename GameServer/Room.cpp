@@ -706,6 +706,8 @@ void Room::OnClanOver()
 	proto.set_created_time(_created_time);
 	proto.mutable_room()->CopyFrom(_stuff);
 	proto.set_status(Asset::CLAN_ROOM_STATUS_TYPE_OVER);
+	proto.mutable_player_list()->CopyFrom(_history.player_brief_list());
+
 	WorldInstance.BroadCast2CenterServer(proto); //通知茶馆房间结束
 }
 
@@ -781,6 +783,12 @@ void Room::OnGameOver(int64_t player_id)
 				if (player_id == _history.list(i).list(j).player_id())
 					record->set_score(record->score() + _history.list(i).list(j).score());
 
+		auto player_brief = _history.mutable_player_brief_list()->Add();
+		player_brief->set_player_id(player_id);
+		player_brief->set_nickname(player->GetNickName());
+		player_brief->set_headimgurl(player->GetHeadImag());
+		player_brief->set_score(record->score());
+
 		player->AddRoomScore(record->score()); //总积分
 	}
 
@@ -792,6 +800,8 @@ void Room::OnGameOver(int64_t player_id)
 
 		player->SendProtocol(message);
 	}
+	
+	OnClanOver(); //茶馆房间数据同步
 	
 	_history.Clear();
 	_bankers.clear();
@@ -808,7 +818,6 @@ void Room::OnGameOver(int64_t player_id)
 	proto.set_status(Asset::CLAN_ROOM_STATUS_TYPE_OVER);
 	WorldInstance.BroadCast2CenterServer(proto); //通知茶馆房间结束
 	*/
-	OnClanOver();
 }
 
 void Room::AddGameRecord(const Asset::GameRecord& record)

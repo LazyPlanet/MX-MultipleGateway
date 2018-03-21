@@ -402,6 +402,7 @@ void Clan::OnRoomOver(const Asset::ClanRoomStatusChanged* message)
 	auto history = _stuff.mutable_battle_history()->Add();
 	history->set_room_id(room_id);
 	history->set_battle_time(message->created_time());
+	history->mutable_player_list()->CopyFrom(message->player_list());
 	
 	_dirty = true;
 }
