@@ -78,10 +78,8 @@ int32_t Clan::OnAgree(Asset::ClanOperation* message)
 
 	if (dest_sys_message_index < 0 || dest_sys_message_index > _stuff.message_list().size()) return Asset::ERROR_CLAN_NO_RECORD; //尚未申请记录
 
-	//
 	//申请列表状态更新
 	//
-
 	const auto& sys_message = _stuff.message_list(dest_sys_message_index);
 	if (member_id != sys_message.player_id() || Asset::CLAN_OPER_TYPE_JOIN != sys_message.oper_type()) return Asset::ERROR_CLAN_NO_RECORD; //尚未申请记录
 
@@ -90,23 +88,35 @@ int32_t Clan::OnAgree(Asset::ClanOperation* message)
 	it->set_oper_time(TimerInstance.GetTime());
 	it->set_oper_type(message->oper_type());
 
-	//
 	//成员列表更新
 	//
-	auto it_ = std::find_if(_stuff.mutable_member_list()->begin(), _stuff.mutable_member_list()->end(), [member_id](const Asset::Clan_Member& member){
-				return member_id == member.player_id();
-			});
-
-	if (it_ != _stuff.mutable_member_list()->end()) return Asset::ERROR_CLAN_HAS_JOINED; //已经是成员
-
-	auto member_ptr = _stuff.mutable_member_list()->Add();
-	member_ptr->set_player_id(it->player_id());
-	member_ptr->set_name(it->name());
-	member_ptr->set_status(Asset::CLAN_MEM_STATUS_TYPE_AVAILABLE);
-
-	_dirty = true;
+	AddMember(member_id);
 
 	return 0;
+}
+	
+void Clan::AddMember(int64_t player_id)
+{
+	auto it = std::find_if(_stuff.member_list().begin(), _stuff.member_list().end(), [player_id](const Asset::Clan_Member& member){
+				return player_id == member.player_id();
+			});
+	if (it != _stuff.member_list().end()) return; //已是成员
+
+	Asset::Player player;
+	auto loaded = PlayerInstance.GetCache(player_id, player);
+	if (!loaded) return;
+	
+	Asset::User user;
+	loaded = RedisInstance.GetUser(player.account(), user);
+	if (!loaded) return;
+
+	auto member_ptr = _stuff.mutable_member_list()->Add();
+	member_ptr->set_player_id(player_id);
+	member_ptr->set_name(user.wechat().nickname());
+	member_ptr->set_headimgurl(user.wechat().headimgurl());
+	member_ptr->set_status(Asset::CLAN_MEM_STATUS_TYPE_AVAILABLE);
+	
+	_dirty = true;
 }
 	
 int32_t Clan::OnDisAgree(std::shared_ptr<Player> player, Asset::ClanOperation* message)
@@ -789,6 +799,8 @@ int32_t ClanManager::IsNameValid(std::string name, std::string trim_name)
 void ClanManager::OnCreated(int64_t clan_id, std::shared_ptr<Clan> clan)
 {
 	if (clan_id <= 0 || !clan) return;
+
+	clan->AddMember(clan->GetHoster()); //成员
 		
 	Emplace(clan_id, clan);
 

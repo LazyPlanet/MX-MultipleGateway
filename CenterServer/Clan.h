@@ -55,6 +55,7 @@ public:
 	void OnQueryMemberStatus(Asset::ClanOperation* message);
 	void OnQueryRoomList(std::shared_ptr<Player> player, Asset::ClanOperation* message);
 	void OnQueryGamingList(Asset::ClanOperation* message);
+	void AddMember(int64_t player_id);
 };
 
 class ClanManager : public std::enable_shared_from_this<ClanManager>
