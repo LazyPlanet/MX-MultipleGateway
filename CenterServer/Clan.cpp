@@ -115,6 +115,8 @@ void Clan::AddMember(int64_t player_id)
 	member_ptr->set_name(user.wechat().nickname());
 	member_ptr->set_headimgurl(user.wechat().headimgurl());
 	member_ptr->set_status(Asset::CLAN_MEM_STATUS_TYPE_AVAILABLE);
+
+	DEBUG("在茶馆:{} 中增加成员:{} 信息:{} 成功", _clan_id, player_id, member_ptr->ShortDebugString());
 	
 	_dirty = true;
 }
@@ -416,6 +418,11 @@ void Clan::OnRoomOver(const Asset::ClanRoomStatusChanged* message)
 
 	auto it = std::find(_gaming_room_list.begin(), _gaming_room_list.end(), room_id);
 	if (it != _gaming_room_list.end()) _gaming_room_list.erase(it);
+
+	auto it_ = std::find_if(_stuff.battle_history().begin(), _stuff.battle_history().end(), [room_id](const Asset::Clan_RoomHistory& history){
+				return room_id == history.room_id();
+			});
+	if (it_ != _stuff.battle_history().end()) return; //已经存在记录
 
 	auto history = _stuff.mutable_battle_history()->Add();
 	history->set_room_id(room_id);
