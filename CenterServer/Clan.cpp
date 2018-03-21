@@ -139,19 +139,24 @@ int32_t Clan::OnChangedInformation(std::shared_ptr<Player> player, Asset::ClanOp
 
 	if (_stuff.hoster_id() != player->GetID()) return Asset::ERROR_CLAN_NO_PERMISSION;
 			
-	auto result = ClanInstance.IsNameValid(message->name(), message->name());
-	if (result) return result; //名字检查失败
 
 	auto name = message->name();
-	auto announcement = message->announcement();
 	
-	CommonUtil::Trim(name);
-	CommonUtil::Trim(announcement);
+	if (name.size()) 
+	{
+		auto result = ClanInstance.IsNameValid(message->name(), message->name());
+		if (result) return result; //名字检查失败
 
-	if (name.size()) _stuff.set_name(name);
+		CommonUtil::Trim(name);
+		_stuff.set_name(name);
+	}
+
+	auto announcement = message->announcement();
 
 	if (announcement.size()) 
 	{
+		CommonUtil::Trim(announcement);
+
 		auto clan_limit = dynamic_cast<Asset::ClanLimit*>(AssetInstance.Get(g_const->clan_id()));
 		if (!clan_limit) return Asset::ERROR_CLAN_ANNOUCEMENT_INVALID;
 	
