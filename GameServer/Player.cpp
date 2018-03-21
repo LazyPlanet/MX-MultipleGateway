@@ -1891,6 +1891,10 @@ std::vector<Asset::PAI_OPER_TYPE> Player::CheckPai(const Asset::PaiElement& pai,
 	std::lock_guard<std::mutex> lock(_card_lock);
 
 	std::vector<Asset::PAI_OPER_TYPE> rtn_check;
+	
+	if (!_room || !_game) return rtn_check;
+
+	if (_game->IsHuiPai(pai)) return rtn_check; //其他玩家打的会牌不让进行任何操作
 
 	if (CheckHuPai(pai, false, false)) 
 	{
