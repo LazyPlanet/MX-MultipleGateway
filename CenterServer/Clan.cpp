@@ -21,6 +21,8 @@ void Clan::Update()
 	
 bool Clan::Load()
 {
+	if (!_dirty) return true;
+
 	ClanInstance.GetClan(_clan_id, _stuff);
 
 	DEBUG("茶馆:{} 加载数据:{}", _clan_id, _stuff.ShortDebugString());
@@ -62,7 +64,8 @@ int32_t Clan::OnRecharge(int32_t count)
 {
 	AddRoomCard(count);
 
-	DEBUG("成功给茶馆:{} 充值房卡:{}", _clan_id, count);
+	DEBUG("在服务器:{} 成功给茶馆:{} 充值房卡:{}", g_server_id, _clan_id, count);
+
 	return 0;
 }
 
@@ -348,7 +351,7 @@ void Clan::ConsumeRoomCard(int32_t count)
 
 void Clan::AddRoomCard(int32_t count)
 {
-	if (count >= 0) return;
+	if (count <= 0) return;
 
 	_stuff.set_room_card_count(_stuff.room_card_count() + count);
 	_dirty = true;
@@ -427,9 +430,9 @@ void Clan::OnRoomSync(const Asset::RoomQueryResult& room_query)
 
 void ClanManager::Update(int32_t diff)
 {
-	if (_heart_count % 60 != 0) return;  //3秒
+	++_heart_count; //心跳
 
-	++_heart_count;
+	if (_heart_count % 60 != 0) return;  //3秒
 
 	std::lock_guard<std::mutex> lock(_mutex);
 	
@@ -729,6 +732,7 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 		{
 			player->SendProtocol2GameServer(message); //到逻辑服务器进行检查
 		}
+		break;
 
 		case Asset::CLAN_OPER_TYPE_MEMEBER_QUERY: //成员状态查询
 		{
@@ -842,7 +846,7 @@ void ClanManager::OnGameServerBack(const Asset::ClanOperationSync& message)
 
 			clan_ptr->OnRecharge(message.operation().recharge_count());
 
-			auto player = PlayerInstance.Get(message.player_id());
+			auto player = PlayerInstance.Get(clan_ptr->GetHoster());
 			if (!player) return;
 
 			operation.set_recharge_count(clan_ptr->GetRoomCard());
