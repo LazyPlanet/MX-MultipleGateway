@@ -2516,7 +2516,7 @@ bool Player::CheckHuPai(const std::map<int32_t, std::vector<int32_t>>& cards_inh
 	{
 		const auto& fanpai = _game->GetFanPai();
 		auto count = std::count(_cards_inhand[fanpai.card_type()].begin(), _cards_inhand[fanpai.card_type()].end(), fanpai.card_value());
-		if (count == 3) _fan_list.emplace(Asset::FAN_TYPE_QIANG_TOU_HUI); //墙头会儿//墙头绝
+		if (count == 3 || HasPengPai(fanpai)) _fan_list.emplace(Asset::FAN_TYPE_QIANG_TOU_HUI); //墙头会儿//墙头绝
 	}
 
 	return _fan_list.size() > 0;
@@ -2886,7 +2886,6 @@ bool Player::HasChiPaiOutHand()
 }
 
 bool Player::HasPengJianPai()
-
 {
 	const auto& cards_outhand = _cards_outhand;
 
@@ -2894,6 +2893,27 @@ bool Player::HasPengJianPai()
 	{
 		if (cards.second.size() == 0) continue;
 		if (cards.first == Asset::CARD_TYPE_JIAN) return true; //箭牌没法吃，只能是碰牌
+	}
+
+	return false;
+}
+	
+bool Player::HasPengPai(const Asset::PaiElement& pai)
+{
+	for (const auto& cards : _cards_outhand)
+	{
+		if (cards.second.size() == 0) continue;
+		if (pai.card_type() != cards.first) continue;
+
+		if (cards.second.size() % 3 != 0) return false;
+
+		for (size_t i = 0; i < cards.second.size(); i = i + 3)
+		{
+			auto card_value = cards.second.at(i);
+			if (card_value != pai.card_value()) continue;
+
+			if ((card_value == cards.second.at(i + 1)) && (card_value == cards.second.at(i + 2))) return true; 
+		}
 	}
 
 	return false;

@@ -447,6 +447,8 @@ public:
 	const std::vector<Asset::PaiElement>& CalculateJueTouHui(const std::map<int32_t, std::vector<int32_t>>& cards_inhand, const std::map<int32_t, std::vector<int32_t>>& cards_outhand, const Asset::PaiElement& pai); //获取绝头会儿的数量
 	int32_t GetJueTouHuiCount() { return _juetouhuis.size(); }
 
+	bool HasPengPai(const Asset::PaiElement& pai);
+
 	bool Is28Zhang(); //是否28作掌
 	bool Is28Pai(const Asset::PaiElement& pai); //是否28牌
 	bool IsDuiDao(const Asset::PaiElement& pai, bool check_zimo); //是否对倒
