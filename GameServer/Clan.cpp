@@ -559,13 +559,9 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 	
 		case Asset::CLAN_OPER_TYPE_DISMISS: //解散
 		{
-			//if (clan->GetHoster() != player->GetID())
-			//{
-			//	message->set_oper_result(Asset::ERROR_CLAN_NO_PERMISSION);
-			//	return 10;
-			//}
-
-			//Remove(message->clan_id());
+			player->GainRoomCard(Asset::ROOM_CARD_CHANGED_TYPE_DISMISS_CLAN, message->recharge_count());
+			
+			OnResult(message); //执行成功：广播执行结果
 		}
 		break;
 		
@@ -673,48 +669,7 @@ void ClanManager::OnQueryClanList(std::shared_ptr<Player> player, Asset::ClanOpe
 
 	const auto& _stuff = player->Get();
 	
-	//auto clan_query_start_index = message->query_start_index();
-	//auto clan_query_end_index = message->query_end_index();
-
 	std::vector<int64_t> clan_list;
-	/*
-
-	switch (message->brief_type())
-	{
-		case Asset::BRIEF_TYPE_HOSTER:
-		{
-			if (clan_query_start_index < 0 || clan_query_start_index >= _stuff.clan_hosters().size()) return;
-			if (clan_query_end_index < 0 || clan_query_end_index >= _stuff.clan_hosters().size()) return;
-	
-			for (int32_t i = clan_query_start_index; i < clan_query_end_index; ++i)
-			{
-				auto clan_id = _stuff.clan_hosters(i);
-				clan_list.push_back(clan_id);
-			}
-		}
-		break;
-		
-		case Asset::BRIEF_TYPE_JOINER:
-		{
-			if (clan_query_start_index < 0 || clan_query_start_index >= _stuff.clan_joiners().size()) return;
-			if (clan_query_end_index < 0 || clan_query_end_index >= _stuff.clan_joiners().size()) return;
-	
-			for (int32_t i = clan_query_start_index; i < clan_query_end_index; ++i)
-			{
-				auto clan_id = _stuff.clan_joiners(i);
-				clan_list.push_back(clan_id);
-			}
-		}
-		break;
-
-		default:
-		{
-			ERROR("玩家:{} 查询茶馆列表参数错误:{}", player->GetID(), message->ShortDebugString());
-			return;
-		}
-		break;
-	}
-	*/
 				
 	for (auto clan_id : _stuff.clan_hosters()) clan_list.push_back(clan_id);
 	for (auto clan_id : _stuff.clan_joiners()) clan_list.push_back(clan_id);
@@ -727,6 +682,12 @@ void ClanManager::OnQueryClanList(std::shared_ptr<Player> player, Asset::ClanOpe
 		Asset::Clan clan;
 		bool has_clan = GetClan(clan_id, clan);
 		if (!has_clan) continue;
+
+		if (clan.dismiss()) 
+		{
+			player->OnQuitClan(clan.clan_id());
+			continue; //已解散
+		}
 
 		auto brief = message->mutable_clan_list()->Add();
 		brief->set_clan_id(clan.clan_id());

@@ -34,6 +34,7 @@ public:
 	void Update();
 	void Save(bool force = true);
 	void OnDisMiss();
+	bool HasDismiss() { return _stuff.dismiss(); }
 	int32_t RemoveMember(int64_t player_id, Asset::ClanOperation* message = nullptr);
 	void BroadCast(const pb::Message* message);
 	void BroadCast(const pb::Message& message);

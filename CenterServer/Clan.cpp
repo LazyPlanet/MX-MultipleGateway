@@ -488,6 +488,8 @@ void ClanManager::Load()
 		auto success = RedisInstance.Get(value, clan);
 		if (!success) continue;
 
+		if (clan.dismiss()) continue; //解散
+
 		auto clan_ptr = std::make_shared<Clan>(clan);
 		if (!clan_ptr) return;
 
@@ -531,6 +533,8 @@ void ClanManager::Emplace(int64_t clan_id, std::shared_ptr<Clan> clan)
 {
 	if (clan_id <= 0 || !clan) return;
 
+	std::lock_guard<std::mutex> lock(_mutex);
+
 	_clans[clan_id] = clan;
 
 	DEBUG("添加茶馆:{} 成功，当前茶馆数量:{}", clan_id, _clans.size());
@@ -538,8 +542,12 @@ void ClanManager::Emplace(int64_t clan_id, std::shared_ptr<Clan> clan)
 
 std::shared_ptr<Clan> ClanManager::GetClan(int64_t clan_id)
 {
+	std::lock_guard<std::mutex> lock(_mutex);
+
 	auto it = _clans.find(clan_id);
 	if (it == _clans.end()) return nullptr;
+
+	if (it->second->HasDismiss()) return nullptr; //已解散
 
 	return it->second;
 }
@@ -670,6 +678,9 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 			}
 
 			Remove(message->clan_id());
+
+			message->set_recharge_count(clan->GetRoomCard());
+			player->SendProtocol2GameServer(message); //通知逻辑服务器解散
 		}
 		break;
 		
@@ -870,6 +881,12 @@ void ClanManager::OnGameServerBack(const Asset::ClanOperationSync& message)
 
 			operation.set_recharge_count(clan_ptr->GetRoomCard());
 			player->SendProtocol(operation);
+		}
+		break;
+		
+		case Asset::CLAN_OPER_TYPE_DISMISS: //解散
+		{
+			Remove(clan_id);
 		}
 		break;
 		
