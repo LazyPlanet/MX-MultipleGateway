@@ -799,7 +799,7 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 				return 13;
 			}
 
-			OnGangFengPai();
+			//OnGangFengPai();
 		}
 		break;
 		
@@ -813,7 +813,7 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 				return 14;
 			}
 			
-			OnGangJianPai();
+			//OnGangJianPai();
 		}
 		break;
 
@@ -826,7 +826,7 @@ int32_t Player::CmdPaiOperate(pb::Message* message)
 				return 15;
 			}
 
-			OnGangZhuiFeng(pai_operate->oper_type(), pai_operate->pai());
+			//OnGangZhuiFeng(pai_operate->oper_type(), pai_operate->pai());
 		}
 		break;
 		

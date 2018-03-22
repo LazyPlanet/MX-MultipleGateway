@@ -149,7 +149,7 @@ void Game::OnStarted()
 	auto cards = FaPai(1); 
 	_fanpai = GameInstance.GetCard(cards[0]);
 
-	if (true) //调试
+	if (false) //调试
 	{
 		_fanpai.set_card_type(Asset::CARD_TYPE_JIAN);
 		_fanpai.set_card_value(3);
@@ -1201,6 +1201,25 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 			{
 				_curr_player_index = next_player_index;
 			}
+		}
+		break;
+		
+		case Asset::PAI_OPER_TYPE_XUANFENG_FENG: //旋风杠-风杠
+		{
+			player->OnGangFengPai();
+		}
+		break;
+		
+		case Asset::PAI_OPER_TYPE_XUANFENG_JIAN: //旋风杠-箭杠
+		{
+			player->OnGangJianPai();
+		}
+		break;
+		
+		case Asset::PAI_OPER_TYPE_ZHUIFENG_FENG:
+		case Asset::PAI_OPER_TYPE_ZHUIFENG_JIAN:
+		{
+			player->OnGangZhuiFeng(pai_operate->oper_type(), pai_operate->pai());
 		}
 		break;
 
