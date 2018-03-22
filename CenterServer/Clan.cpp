@@ -266,6 +266,8 @@ void Clan::OnQueryGamingList(Asset::ClanOperation* message)
 	if (!message) return;
 
 	for (auto room_id : _gaming_room_list) message->add_room_gaming_list(room_id);
+
+	DEBUG("茶馆:{} 房间列表查询:{}", _clan_id, message->ShortDebugString());
 }
 
 void Clan::Save(bool force)
@@ -430,6 +432,8 @@ void Clan::OnRoomOver(const Asset::ClanRoomStatusChanged* message)
 	history->set_room_id(room_id);
 	history->set_battle_time(message->created_time());
 	history->mutable_player_list()->CopyFrom(message->player_list());
+
+	DEBUG("茶馆:{} 房间:{} 结束，删除", _clan_id, room_id);
 	
 	_dirty = true;
 }

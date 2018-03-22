@@ -452,7 +452,7 @@ int32_t Player::CreateRoom(pb::Message* message)
 	Asset::CreateRoom* create_room = dynamic_cast<Asset::CreateRoom*>(message);
 	if (!create_room) return 1;
 	
-	if (_room) 
+	if (_room && create_room->room().clan_id() == 0) 
 	{
 		auto room = RoomInstance.Get(_room->GetID());
 
@@ -469,15 +469,12 @@ int32_t Player::CreateRoom(pb::Message* message)
 	//
 	//否则，检查房卡是否满足要求
 	//
-	auto activity_id = g_const->room_card_limit_free_activity_id();
-	if (ActivityInstance.IsOpen(activity_id))
+	if (ActivityInstance.IsOpen(g_const->room_card_limit_free_activity_id()))
 	{
-		WARN("当前活动:{}开启，玩家ID:{}", activity_id, _player_id);
+		WARN("限免活动开启中，玩家ID:{} 正常开房...", _player_id);
 	}
-	else
+	else if (create_room->room().clan_id() == 0) //非茶馆房间
 	{
-		if (!HasClan(create_room->room().clan_id())) return 10;
-
 		auto open_rands = create_room->room().options().open_rands(); //局数
 		auto pay_type = create_room->room().options().pay_type(); //付费方式
 
@@ -515,11 +512,14 @@ int32_t Player::CreateRoom(pb::Message* message)
 
 			default:
 			{
+				ERROR("玩家:{} 创建房间错误:{}", _player_id, message->ShortDebugString());
 				return 7;
 			}
 			break;
 		}
 	}
+	
+	if (!HasClan(create_room->room().clan_id())) return 10; //茶馆检查
 
 	int64_t room_id = RoomInstance.AllocRoom();
 	if (!room_id) return 9;

@@ -616,9 +616,10 @@ int32_t Player::CommonCheck(int32_t type_t, pb::Message* message)
 			auto result = CheckCreateRoom(message);
 			if (result) return result;
 		
-			int64_t server_id = WorldSessionInstance.RandomServer(); //随机一个逻辑服务器
+			int64_t server_id = 0;
+			if (!IsInRoom()) server_id = WorldSessionInstance.RandomServer(); //随机一个逻辑服务器//防止茶馆老板房间内还创建房间
 
-			if (server_id != GetLocalServer())
+			if (server_id != 0 && server_id != GetLocalServer())
 			{
 				Asset::KickOutPlayer kickout_player; //通知当前游戏逻辑服务器下线
 				kickout_player.set_player_id(_player_id);
