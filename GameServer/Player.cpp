@@ -2491,7 +2491,7 @@ bool Player::CheckHuPai(const std::map<int32_t, std::vector<int32_t>>& cards_inh
 	if (duanmen) _fan_list.emplace(Asset::FAN_TYPE_DUAN_MEN);//断门
 	if (qingyise) _fan_list.emplace(Asset::FAN_TYPE_QING_YI_SE); //清一色
 	if (hunyise) _fan_list.emplace(Asset::FAN_TYPE_HUN_QING_YI_SE); //混清一色
-	if (piao) _fan_list.emplace(Asset::FAN_TYPE_PIAO_HU); //飘胡
+	if (piao && _fan_list.find(Asset::FAN_TYPE_QIDUI) == _fan_list.end()) _fan_list.emplace(Asset::FAN_TYPE_PIAO_HU); //飘胡//七对不是飘胡
 	if (_game->IsLiuJu()) _fan_list.emplace(Asset::FAN_TYPE_HAI_DI_LAO); //海底捞月
 
 	if (_room->IsJianPing() && IsDanDiao(pai, check_zimo)) _fan_list.emplace(Asset::FAN_TYPE_JIA_HU_NORMAL); //单调//单粘//夹胡
@@ -2621,9 +2621,9 @@ bool Player::CheckHuPai(const std::map<int32_t, std::vector<int32_t>>& cards_inh
 	//
 	if (CheckQiDui(cards_inhand, cards_outhand)) 
 	{
-		if (_room->HasJueTouHui()) CalculateJueTouHui(cards_inhand, cards_outhand, pai); //支持绝头会儿
+		if (_room->HasJueTouHui()) CalculateJueTouHui(_cards_inhand, _cards_outhand, pai); //支持绝头会儿//比较特殊必须按照手牌处理
 
-		_fan_list.emplace(Asset::FAN_TYPE_QIDUI); //7对儿,不会有其他番数
+		_fan_list.emplace(Asset::FAN_TYPE_QIDUI); //七对儿,不会有其他番数
 	
 		hupai = true;
 
@@ -4246,14 +4246,14 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 			{ 5, {2, 2} },
 		};
 	}
-	else if (true && _player_id == 11534348 && _cards_inhand.size() == 0) //13
+	else if (true && _player_id == 11534338 && _cards_inhand.size() == 0) //13
 	{
 		_cards_inhand = {
 			{ 1, {1, 1, 1, 1, 2, 2, 2, 2} },
 			{ 5, {1, 2, 3, 3, 3} },
 		};
 	}
-	else if (true && _player_id == 11534338 && _cards_inhand.size() == 0) //13
+	else if (false && _player_id == 11534338 && _cards_inhand.size() == 0) //13
 	{
 		_cards_inhand = {
 			{ 2, {6} },

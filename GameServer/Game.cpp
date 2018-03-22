@@ -149,10 +149,10 @@ void Game::OnStarted()
 	auto cards = FaPai(1); 
 	_fanpai = GameInstance.GetCard(cards[0]);
 
-	if (false) //调试
+	if (true) //调试
 	{
-		_fanpai.set_card_type(Asset::CARD_TYPE_TIAOZI);
-		_fanpai.set_card_value(6);
+		_fanpai.set_card_type(Asset::CARD_TYPE_JIAN);
+		_fanpai.set_card_value(3);
 	}
 	
 	auto huipai = _fanpai;
@@ -1156,7 +1156,7 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 			}
 			*/
 				
-			player->OnFaPaiCheck(alert);
+			player_next->OnFaPaiCheck(alert);
 			//
 			//开局状态，当前玩家拥有中发白白，上家打了白板
 			//
