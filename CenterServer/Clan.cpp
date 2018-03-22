@@ -27,6 +27,8 @@ bool Clan::Load()
 
 	DEBUG("茶馆:{} 加载数据:{}", _clan_id, _stuff.ShortDebugString());
 
+	_dirty = false;
+
 	return true;
 }
 
@@ -451,7 +453,7 @@ void ClanManager::Update(int32_t diff)
 
 	if (_heart_count % 60 != 0) return;  //3秒
 
-	std::lock_guard<std::mutex> lock(_mutex);
+	//std::lock_guard<std::mutex> lock(_mutex);
 	
 	for (auto it = _clans.begin(); it != _clans.end();)
 	{
