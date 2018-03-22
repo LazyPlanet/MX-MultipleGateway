@@ -193,6 +193,8 @@ void Clan::OnQueryMemberStatus(Asset::ClanOperation* message)
 {
 	if (!message) return;
 
+	auto online_mem_count = _stuff.online_mem_count(); //当前在线人数
+
 	_stuff.set_online_mem_count(0); //在线成员数量缓存
 
 	message->mutable_clan()->CopyFrom(_stuff); //茶馆数据
@@ -229,7 +231,7 @@ void Clan::OnQueryMemberStatus(Asset::ClanOperation* message)
 
 	message->mutable_clan()->CopyFrom(_stuff);
 
-	_dirty = true;
+	if (online_mem_count != _stuff.online_mem_count()) _dirty = true; //状态更新，减少存盘频率
 }
 
 //
