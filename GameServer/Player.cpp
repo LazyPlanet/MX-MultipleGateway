@@ -4970,6 +4970,8 @@ void Player::OnQuitClan(int64_t clan_id)
 		_stuff.mutable_clan_joiners()->SwapElements(i, _stuff.clan_joiners().size() - 1);
 		_stuff.mutable_clan_joiners()->RemoveLast();
 	}
+	
+	if (_stuff.selected_clan_id() == clan_id) _stuff.set_selected_clan_id(0);
 
 	DEBUG("玩家:{} 退出茶馆:{} 成功", _player_id, clan_id);
 
