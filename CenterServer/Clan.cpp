@@ -303,6 +303,12 @@ void Clan::Save(bool force)
 
 void Clan::OnDisMiss()
 {
+	Asset::ClanOperation message;
+	message.set_clan_id(_clan_id);
+	message.set_oper_type(Asset::CLAN_OPER_TYPE_DISMISS);
+
+	BroadCast(message); //解散成功
+
 	_stuff.set_dismiss(true); //解散
 
 	_dirty = true;
@@ -732,6 +738,12 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 			if (clan->GetHoster() != player->GetID())
 			{
 				message->set_oper_result(Asset::ERROR_CLAN_NO_PERMISSION);
+				return;
+			}
+
+			if (clan->HasGaming()) //牌局进行中，不能解散
+			{
+				message->set_oper_result(Asset::ERROR_CLAN_DISMISS_GAMING);
 				return;
 			}
 

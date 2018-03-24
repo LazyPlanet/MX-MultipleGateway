@@ -120,7 +120,7 @@ int32_t Player::OnLogin()
 {
 	if (Load()) 
 	{
-		LOG(ERROR, "玩家:{}加载数据失败", _player_id);
+		LOG(ERROR, "玩家:{} 加载数据失败", _player_id);
 		return 1;
 	}
 
