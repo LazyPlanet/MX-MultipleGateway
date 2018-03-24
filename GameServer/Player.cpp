@@ -4963,6 +4963,8 @@ void Player::OnQuitClan(int64_t clan_id)
 		_stuff.mutable_clan_joiners()->RemoveLast();
 	}
 
+	DEBUG("玩家:{} 退出茶馆:{} 成功", _player_id, clan_id);
+
 	_dirty = true;
 }
 

@@ -96,13 +96,20 @@ int32_t Clan::OnAgree(Asset::ClanOperation* message)
 
 	return 0;
 }
-	
-void Clan::AddMember(int64_t player_id)
+
+bool Clan::HasMember(int64_t player_id)
 {
 	auto it = std::find_if(_stuff.member_list().begin(), _stuff.member_list().end(), [player_id](const Asset::Clan_Member& member){
 				return player_id == member.player_id();
 			});
-	if (it != _stuff.member_list().end()) return; //已是成员
+	if (it != _stuff.member_list().end()) return true;
+
+	return false;
+}
+	
+void Clan::AddMember(int64_t player_id)
+{
+	if (HasMember(player_id)) return; //已是成员
 
 	Asset::Player player;
 	auto loaded = PlayerInstance.GetCache(player_id, player);
@@ -192,9 +199,15 @@ int32_t Clan::OnChangedInformation(std::shared_ptr<Player> player, Asset::ClanOp
 	return 0;
 }
 
-void Clan::OnQueryMemberStatus(Asset::ClanOperation* message)
+void Clan::OnQueryMemberStatus(std::shared_ptr<Player> player, Asset::ClanOperation* message)
 {
-	if (!message) return;
+	if (!player || !message) return;
+
+	if (!HasMember(player->GetID())) 
+	{
+		message->set_oper_result(Asset::ERROR_CLAN_NO_MEM);
+		return; //不是成员
+	}
 
 	auto online_mem_count = _stuff.online_mem_count(); //当前在线人数
 
@@ -337,6 +350,8 @@ int32_t Clan::RemoveMember(int64_t player_id, Asset::ClanOperation* message)
 	{
 		PlayerInstance.SendProtocol2GameServer(player_id, message); //发给另一个中心服处理
 	}
+
+	DEBUG("茶馆:{} 删除成员:{} 协议:{} 成功", _clan_id, player_id, message->ShortDebugString());
 		
 	_dirty = true;
 
@@ -807,7 +822,7 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 
 		case Asset::CLAN_OPER_TYPE_MEMEBER_QUERY: //成员状态查询
 		{
-			clan->OnQueryMemberStatus(message);
+			clan->OnQueryMemberStatus(player, message);
 			player->SendProtocol2GameServer(message); //到逻辑服务器进行同步当前茶馆
 		}
 		break;

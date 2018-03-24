@@ -53,10 +53,12 @@ public:
 	int32_t OnAgree(Asset::ClanOperation* message);
 	int32_t OnDisAgree(std::shared_ptr<Player> player, Asset::ClanOperation* message);
 	int32_t OnRecharge(int32_t count);
-	void OnQueryMemberStatus(Asset::ClanOperation* message);
+	void OnQueryMemberStatus(std::shared_ptr<Player> player, Asset::ClanOperation* message);
 	void OnQueryRoomList(std::shared_ptr<Player> player, Asset::ClanOperation* message);
 	void OnQueryGamingList(Asset::ClanOperation* message);
+
 	void AddMember(int64_t player_id); //增加成员列表
+	bool HasMember(int64_t player_id); //是否含有成员
 };
 
 class ClanManager : public std::enable_shared_from_this<ClanManager>
