@@ -585,7 +585,7 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				*/
 
 				//if (alert.pais().size()) 
-				if (player_next->OnFaPaiCheck(alert))
+				if (player_next->OnFaPaiCheck(alert, pai_operate->oper_type()))
 				{
 					player_next->SendProtocol(alert); //提示Client
 					SetPaiOperation(player_next->GetID(), player_next->GetID(), alert);
@@ -784,7 +784,7 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				*/
 				
 				//if (alert.pais().size()) 
-				if (player->OnFaPaiCheck(alert))
+				if (player->OnFaPaiCheck(alert, pai_operate->oper_type()))
 				{
 					player->SendProtocol(alert); //提示Client
 					SetPaiOperation(player->GetID(), player->GetID(), alert);
@@ -869,7 +869,7 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				*/
 
 				//if (alert.pais().size()) 
-				if (player->OnFaPaiCheck(alert))
+				if (player->OnFaPaiCheck(alert, pai_operate->oper_type()))
 				{
 					player->SendProtocol(alert); //提示Client
 					SetPaiOperation(player->GetID(), player->GetID(), alert);
@@ -948,7 +948,7 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				*/
 					
 				//if (alert.pais().size()) 
-				if (player->OnFaPaiCheck(alert))
+				if (player->OnFaPaiCheck(alert, pai_operate->oper_type()))
 				{
 					player->SendProtocol(alert); //提示Client
 					SetPaiOperation(player->GetID(), player->GetID(), alert);
@@ -1036,7 +1036,7 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				*/
 				
 				//if (alert.pais().size()) 
-				if (player->OnFaPaiCheck(alert))
+				if (player->OnFaPaiCheck(alert, pai_operate->oper_type()))
 				{
 					player->SendProtocol(alert); //提示Client
 					SetPaiOperation(player->GetID(), player->GetID(), alert);
@@ -1156,7 +1156,7 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 			}
 			*/
 				
-			player_next->OnFaPaiCheck(alert);
+			player_next->OnFaPaiCheck(alert, pai_operate->oper_type());
 			//
 			//开局状态，当前玩家拥有中发白白，上家打了白板
 			//
@@ -1207,12 +1207,21 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 		case Asset::PAI_OPER_TYPE_XUANFENG_FENG: //旋风杠-风杠
 		{
 			player->OnGangFengPai();
+
+			auto cards = TailPai(1); //从后楼给玩家取一张牌
+			player->OnFaPai(cards);
+
+			Asset::PaiOperationAlert alert;
+			if (player->OnFaPaiCheck(alert, pai_operate->oper_type())) player->SendProtocol(alert);
 		}
 		break;
 		
 		case Asset::PAI_OPER_TYPE_XUANFENG_JIAN: //旋风杠-箭杠
 		{
 			player->OnGangJianPai();
+	
+			Asset::PaiOperationAlert alert;
+			if (player->OnFaPaiCheck(alert, pai_operate->oper_type())) player->SendProtocol(alert);
 		}
 		break;
 		
@@ -1220,6 +1229,12 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 		case Asset::PAI_OPER_TYPE_ZHUIFENG_JIAN:
 		{
 			player->OnGangZhuiFeng(pai_operate->oper_type(), pai_operate->pai());
+
+			auto cards = TailPai(1); 
+			player->OnFaPai(cards); 
+			
+			Asset::PaiOperationAlert alert; //提示协议
+			if (player->OnFaPaiCheck(alert, pai_operate->oper_type())) player->SendProtocol(alert);
 		}
 		break;
 

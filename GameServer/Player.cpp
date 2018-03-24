@@ -3139,9 +3139,10 @@ bool Player::IsDuiDao(const Asset::PaiElement& pai, bool check_zimo)
 //
 bool Player::IsGangOperation()
 {
-	if (_last_oper_type == Asset::PAI_OPER_TYPE_GANGPAI || _last_oper_type == Asset::PAI_OPER_TYPE_ANGANGPAI 
-			|| _last_oper_type == Asset::PAI_OPER_TYPE_XUANFENG_FENG) 
-		return true;
+	static std::set<int32_t> _valid_oper = { Asset::PAI_OPER_TYPE_GANGPAI, Asset::PAI_OPER_TYPE_ANGANGPAI, Asset::PAI_OPER_TYPE_XUANFENG_FENG, Asset::PAI_OPER_TYPE_ZHUIFENG_FENG, Asset::PAI_OPER_TYPE_ZHUIFENG_JIAN };
+
+	if (_valid_oper.find(_last_oper_type) != _valid_oper.end()) return true;
+
 	return false;
 }
 	
@@ -3785,11 +3786,13 @@ void Player::OnGangZhuiFeng(Asset::PAI_OPER_TYPE oper_type, const Asset::PaiElem
 	
 	_fapai_count = 0; //重置检查
 			
+	/*
 	auto cards = _game->FaPai(1); 
 	OnFaPai(cards); 
 	
 	Asset::PaiOperationAlert alert; //提示协议
 	if (OnFaPaiCheck(alert)) SendProtocol(alert);
+	*/
 }
 
 bool Player::CheckZhuiFengGang(std::map<int32_t/*麻将牌类型*/, std::vector<int32_t>/*牌值*/>& cards)
@@ -4014,12 +4017,13 @@ void Player::OnGangFengPai()
 
 	_fapai_count = 0; //重置检查
 	
+	/*
 	auto cards = _game->TailPai(1); //从后楼给玩家取一张牌
 	OnFaPai(cards);
 
 	Asset::PaiOperationAlert alert;
 	if (OnFaPaiCheck(alert)) SendProtocol(alert);
-
+	*/
 	//
 	//旋风杠检查
 	//
@@ -4118,8 +4122,8 @@ void Player::OnGangJianPai()
 
 	++_jiangang;
 	
-	Asset::PaiOperationAlert alert;
-	if (OnFaPaiCheck(alert)) SendProtocol(alert);
+	//Asset::PaiOperationAlert alert;
+	//if (OnFaPaiCheck(alert)) SendProtocol(alert);
 
 	//
 	//旋风杠检查
@@ -4237,7 +4241,7 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 			{ 3, {1, 1, 1} },
 		};
 	}
-	else if (true && _player_id == 11534337 && _cards_inhand.size() == 0) //14
+	else if (true && _player_id == 11534340 && _cards_inhand.size() == 0) //14
 	{
 		_cards_inhand = {
 			{ 1, {1, 1, 3, 3, 4, 4} },
@@ -4363,13 +4367,19 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 	return 0;
 }
 	
-bool Player::OnFaPaiCheck(Asset::PaiOperationAlert& alert)
+bool Player::OnFaPaiCheck(Asset::PaiOperationAlert& alert, Asset::PAI_OPER_TYPE oper_reason)
 {
 	if (!_room || !_game) return false;
+
+	if (Asset::PAI_OPER_TYPE_BEGIN == oper_reason) oper_reason = _oper_type;
+
 	//
 	//是否可以胡牌
 	//
-	if ((ShouldDaPai() && CheckZiMo()) || CheckBaoHu(_zhuapai))
+	//不能进行如，碰完之后可以胡牌的情况，因为尚未抓牌
+	static std::set<int32_t> _invalid_opers = { Asset::PAI_OPER_TYPE_CHIPAI, Asset::PAI_OPER_TYPE_PENGPAI, Asset::PAI_OPER_TYPE_XUANFENG_JIAN };
+
+	if (_invalid_opers.find(oper_reason) == _invalid_opers.end() && ((ShouldDaPai() && CheckZiMo()) || CheckBaoHu(_zhuapai)))
 	{
 		auto pai_perator = alert.mutable_pais()->Add();
 		pai_perator->mutable_pai()->CopyFrom(_zhuapai); //如果天胡则是初始值

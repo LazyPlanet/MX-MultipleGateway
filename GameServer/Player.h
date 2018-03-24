@@ -302,8 +302,8 @@ private:
 
 	std::vector<Asset::PAI_OPER_TYPE> _xf_gang; //旋风杠所有操作
 	std::vector<std::tuple<bool, bool, bool>> _hu_result;
-	Asset::PAI_OPER_TYPE _oper_type; //玩家当前操作类型，主要用于处理杠上开的番次
-	Asset::PAI_OPER_TYPE _last_oper_type; //玩家上次操作类型，主要用于处理杠上开的番次
+	Asset::PAI_OPER_TYPE _oper_type; //玩家当前操作类型
+	Asset::PAI_OPER_TYPE _last_oper_type; //玩家上次操作类型
 
 public:
 	//
@@ -336,7 +336,7 @@ public:
 
 	virtual int32_t OnFaPai(std::vector<int32_t>& cards); //发牌
 	virtual int32_t OnFaPai(const Asset::PaiElement& pai); //纯粹发牌，没有逻辑
-	virtual bool OnFaPaiCheck(Asset::PaiOperationAlert& alert); //发牌后检查
+	virtual bool OnFaPaiCheck(Asset::PaiOperationAlert& alert, Asset::PAI_OPER_TYPE oper_reason = Asset::PAI_OPER_TYPE_BEGIN); //发牌后检查
 
 	std::vector<Asset::PAI_OPER_TYPE> CheckPai(const Asset::PaiElement& pai, int64_t source_player_id);
 	void AddZhang(const Asset::PaiElement& zhang);

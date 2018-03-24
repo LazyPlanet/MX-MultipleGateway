@@ -967,6 +967,8 @@ int32_t Player::CmdGetBattleHistory(pb::Message* message)
 			AlertMessage(Asset::ERROR_ROOM_NO_RECORD);
 			return 2; //没有记录
 		}
+
+		history.mutable_list()->Clear(); //详细的番数列表不用
 		
 		auto record = battle_history->mutable_history_list()->Add();
 		record->CopyFrom(history);
