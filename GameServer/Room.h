@@ -165,8 +165,8 @@ public:
 	bool HasDisMiss() { return _is_dismiss; } //是否解散状态
 	void ClearDisMiss(); //清除解散状态
 	void OnRemove();
-	//同步茶馆开房房间数据
-	void UpdateClanStatus();
+
+	void UpdateClanStatus(); //同步茶馆开房房间数据
 };
 
 /////////////////////////////////////////////////////

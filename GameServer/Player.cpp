@@ -967,8 +967,6 @@ int32_t Player::EnterRoom(pb::Message* message)
 	Asset::EnterRoom* enter_room = dynamic_cast<Asset::EnterRoom*>(message);
 	if (!enter_room) return Asset::ERROR_INNER; 
 
-	if (!HasClan(enter_room->room().clan_id())) return Asset::ERROR_CLAN_ROOM_ENTER_NO_CLAN; //非茶馆成员，不能加入
-
 	//
 	//房间重入检查
 	//
@@ -1073,7 +1071,15 @@ int32_t Player::EnterRoom(pb::Message* message)
 			}
 			else
 			{
-				if (locate_room->GetOptions().pay_type() == Asset::ROOM_PAY_TYPE_AA && !ActivityInstance.IsOpen(g_const->room_card_limit_free_activity_id())) //AA付卡
+				if (!HasClan(locate_room->GetClan())) 
+				{
+					enter_room->set_error_code(Asset::ERROR_CLAN_ROOM_ENTER_NO_CLAN); 
+					SendProtocol(enter_room);
+					return Asset::ERROR_CLAN_ROOM_ENTER_NO_CLAN; //非茶馆成员，不能加入
+				}
+
+				if (locate_room->GetOptions().pay_type() == Asset::ROOM_PAY_TYPE_AA && 
+						!ActivityInstance.IsOpen(g_const->room_card_limit_free_activity_id())) //AA付卡
 				{
 					const Asset::Item_RoomCard* room_card = dynamic_cast<const Asset::Item_RoomCard*>(AssetInstance.Get(g_const->room_card_id()));
 					if (!room_card || room_card->rounds() <= 0) return Asset::ERROR_INNER;
