@@ -80,6 +80,7 @@ int32_t Player::Load()
 	if (!loaded) return 2;
 
 	_loaded = true;
+	_dirty = false;
 
 	DEBUG("玩家:{} 加载数据成功，内容:{}", _player_id, _stuff.ShortDebugString());
 

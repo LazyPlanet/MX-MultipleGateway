@@ -109,6 +109,10 @@ int32_t Player::Save(bool force)
 	
 	_dirty = false;
 
+	Asset::CommonPropSync proto;
+	proto.set_player_id(_player_id);
+	SendProtocol(proto); //数据同步
+
 	return 0;
 }
 	
@@ -464,6 +468,8 @@ int32_t Player::CreateRoom(pb::Message* message)
 		}
 	}
 
+	if (!IsHoster(create_room->room().clan_id())) return 11; //非茶馆老板，不能创建茶馆房
+	
 	//
 	//检查是否活动限免房卡
 	//
@@ -4970,6 +4976,17 @@ void Player::OnQuitClan(int64_t clan_id)
 	_dirty = true;
 }
 
+bool Player::IsHoster(int64_t clan_id)
+{
+	if (clan_id <= 0) return true;
+
+	for (int32_t i = 0; i < _stuff.clan_hosters().size(); ++i) //茶馆老板
+	{
+		if (clan_id == _stuff.clan_hosters(i)) return true;
+	}
+
+	return false;
+}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // 玩家管理

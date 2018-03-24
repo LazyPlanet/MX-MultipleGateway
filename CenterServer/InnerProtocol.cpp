@@ -121,6 +121,17 @@ bool WorldSession::OnInnerProcess(const Asset::Meta& meta)
 		}
 		break;
 		
+		case Asset::META_TYPE_S2S_COMMON_PROP_SYNC:
+		{
+			auto player = PlayerInstance.Get(meta.player_id());
+			if (!player) return false;
+
+			DEBUG("玩家:{} 接收逻辑服务器数据变化协议，重新加载数据", player->GetID());
+
+			player->Load(); //加载数据
+		}
+		break;
+		
 		default:
 		{
 			auto player = PlayerInstance.Get(meta.player_id());
