@@ -961,6 +961,8 @@ int32_t Player::EnterRoom(pb::Message* message)
 	Asset::EnterRoom* enter_room = dynamic_cast<Asset::EnterRoom*>(message);
 	if (!enter_room) return Asset::ERROR_INNER; 
 
+	if (!HasClan(enter_room->room().clan_id())) return Asset::ERROR_CLAN_ROOM_ENTER_NO_CLAN; //非茶馆成员，不能加入
+
 	//
 	//房间重入检查
 	//

@@ -205,7 +205,7 @@ void Clan::OnQueryMemberStatus(std::shared_ptr<Player> player, Asset::ClanOperat
 
 	if (!HasMember(player->GetID())) 
 	{
-		message->set_oper_result(Asset::ERROR_CLAN_NO_MEM);
+		message->set_oper_result(Asset::ERROR_CLAN_QUERY_NO_CLAN);
 		return; //不是成员
 	}
 
