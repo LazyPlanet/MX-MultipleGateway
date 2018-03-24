@@ -158,7 +158,7 @@ public:
 	void ClearMatching() { _stuff.clear_matching_room_type(); }
 
 	//玩家登录
-	virtual int32_t OnLogin();
+	void OnLogin();
 	//玩家登出
 	virtual int32_t Logout(pb::Message* message);
 	virtual int32_t OnLogout(Asset::KICK_OUT_REASON reason = Asset::KICK_OUT_REASON_LOGOUT);
@@ -525,6 +525,7 @@ public:
 	} 
 	void OnQuitClan(int64_t clan_id);
 	bool IsDaili() { return _stuff.agent_account().size() > 0;} //是否是代理账号
+	void OnClanCheck();
 };
 
 /////////////////////////////////////////////////////

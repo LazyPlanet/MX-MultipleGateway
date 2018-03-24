@@ -70,7 +70,6 @@ Player::Player(int64_t player_id, std::shared_ptr<WorldSession> session) : Playe
 int32_t Player::Load()
 {
 	//加载数据库
-	//auto redis = make_unique<Redis>();
 	auto success = RedisInstance.GetPlayer(_player_id, _stuff);
 	if (!success) return 1;
 		
@@ -94,6 +93,8 @@ int32_t Player::Load()
 			if (!enum_value) break;
 		}
 	} while(false);
+
+	OnClanCheck();
 	
 	return 0;
 }
@@ -116,20 +117,8 @@ int32_t Player::Save(bool force)
 	return 0;
 }
 	
-int32_t Player::OnLogin()
+void Player::OnLogin()
 {
-	if (Load()) 
-	{
-		LOG(ERROR, "玩家:{} 加载数据失败", _player_id);
-		return 1;
-	}
-
-	//DEBUG("玩家:{}数据:{}", _player_id, _stuff.ShortDebugString())
-	
-	PlayerInstance.Emplace(_player_id, shared_from_this()); //玩家管理
-	SetLocalServer(ConfigInstance.GetInt("ServerID", 1));
-
-	return 0;
 }
 
 int32_t Player::Logout(pb::Message* message)
@@ -418,10 +407,12 @@ int32_t Player::OnEnterGame()
 
 	SetDirty(); //存盘
 
-	//LOG_BI("player", _stuff);
+	LOG_BI("player", _stuff);
 
 	//WorldSessionInstance.Emplace(_player_id, _session); //网络会话数据
 	PlayerInstance.Emplace(_player_id, shared_from_this()); //玩家管理
+
+	OnLogin(); //进入逻辑服务器后，登陆成功
 
 	return 0;
 }
@@ -4982,6 +4973,45 @@ void Player::OnQuitClan(int64_t clan_id)
 	DEBUG("玩家:{} 退出茶馆:{} 成功", _player_id, clan_id);
 
 	_dirty = true;
+}
+
+void Player::OnClanCheck()
+{
+	std::vector<int64_t> clan_list;
+
+	for (int32_t i = 0; i < _stuff.clan_hosters().size(); ++i) //茶馆老板
+	{
+		auto clan_id = _stuff.clan_hosters(i);
+
+		Asset::Clan clan;
+		bool has_clan = ClanInstance.GetClan(clan_id, clan);
+
+		if (!has_clan || clan.dismiss()) continue;
+
+		clan_list.push_back(clan_id);
+	}
+
+	_stuff.mutable_clan_hosters()->Clear(); //删除茶馆
+	for (auto clan_id : clan_list) _stuff.mutable_clan_hosters()->Add(clan_id);
+	
+	clan_list.clear();
+
+	for (int32_t i = 0; i < _stuff.clan_joiners().size(); ++i) //茶馆成员
+	{
+		auto clan_id = _stuff.clan_hosters(i);
+		
+		Asset::Clan clan;
+		bool has_clan = ClanInstance.GetClan(clan_id, clan);
+
+		if (!has_clan || clan.dismiss()) continue;
+
+		clan_list.push_back(clan_id);
+	}
+	
+	_stuff.mutable_clan_joiners()->Clear(); //删除茶馆
+	for (auto clan_id : clan_list) _stuff.mutable_clan_joiners()->Add(clan_id);
+
+	if (_stuff.clan_hosters().size() == 0 && _stuff.clan_joiners().size() == 0) _stuff.set_selected_clan_id(0); //如果尚未存在，则直接删除
 }
 
 bool Player::IsHoster(int64_t clan_id)

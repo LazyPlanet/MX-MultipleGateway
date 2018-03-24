@@ -166,7 +166,7 @@ int32_t Player::OnEnterGame(bool is_login)
 		}
 	}
 
-	if (is_login) SendPlayer(); //发送数据给玩家
+	//if (is_login) SendPlayer(); //发送数据给玩家
 
 	Asset::EnterGame enter_game;
 	enter_game.set_player_id(_player_id);
@@ -177,7 +177,7 @@ int32_t Player::OnEnterGame(bool is_login)
 
 	Save(true); //存盘
 
-	LOG_BI("player", _stuff);
+	//LOG_BI("player", _stuff);
 	
 	PlayerInstance.Emplace(_player_id, shared_from_this()); //玩家管理
 
