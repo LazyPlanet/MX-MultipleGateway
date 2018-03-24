@@ -523,6 +523,7 @@ public:
 		_stuff.set_selected_clan_id(clan_id); _dirty = true; 
 	} 
 	void OnQuitClan(int64_t clan_id);
+	bool IsDaili() { return _stuff.agent_account().size() > 0;} //是否是代理账号
 };
 
 /////////////////////////////////////////////////////

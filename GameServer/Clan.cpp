@@ -495,6 +495,12 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 			}
 			*/
 
+			if (!player->IsDaili())
+			{
+				message->set_oper_result(Asset::ERROR_CLAN_NO_PERMISSION); //非代理不能创建茶馆
+				return;
+			}
+
 			if (player->GetHosterCount() > clan_limit->create_upper_limit())
 			{
 				message->set_oper_result(Asset::ERROR_CLAN_HOSTER_UPPER);
