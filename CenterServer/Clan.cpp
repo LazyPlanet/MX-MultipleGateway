@@ -808,6 +808,12 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 		
 		case Asset::CLAN_OPER_TYPE_MEMEBER_QUIT: //主动退出
 		{
+			if (clan->GetHoster() == player->GetID()) //老板不能退出
+			{
+				message->set_oper_result(Asset::ERROR_CLAN_NO_PERMISSION); //权限检查
+				return;
+			}
+
 			auto result = clan->RemoveMember(player->GetID(), message);
 			message->set_dest_player_id(player->GetID());
 			message->set_oper_result(result); 
