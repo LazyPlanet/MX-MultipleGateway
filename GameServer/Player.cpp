@@ -4998,7 +4998,7 @@ void Player::OnClanCheck()
 
 	for (int32_t i = 0; i < _stuff.clan_joiners().size(); ++i) //茶馆成员
 	{
-		auto clan_id = _stuff.clan_hosters(i);
+		auto clan_id = _stuff.clan_joiners(i);
 		
 		Asset::Clan clan;
 		bool has_clan = ClanInstance.GetClan(clan_id, clan);
