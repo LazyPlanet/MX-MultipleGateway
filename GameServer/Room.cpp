@@ -709,6 +709,7 @@ void Room::OnClanOver()
 	proto.mutable_room()->CopyFrom(_stuff);
 	proto.set_status(Asset::CLAN_ROOM_STATUS_TYPE_OVER);
 	proto.mutable_player_list()->CopyFrom(_history.player_brief_list());
+	proto.set_games_count(GetGamesCount()); //开局数量
 
 	WorldInstance.BroadCast2CenterServer(proto); //通知茶馆房间结束
 }

@@ -110,13 +110,16 @@ void Clan::AddMember(int64_t player_id)
 	
 	Asset::User user;
 	loaded = RedisInstance.GetUser(player.account(), user);
-	if (!loaded) return;
+	if (!loaded) return; //没有账号数据
+
+	std::string nickname = player.common_prop().name();
+	if (user.wechat().has_nickname()) nickname = user.wechat().nickname();
 
 	auto member_ptr = _stuff.mutable_member_list()->Add();
 	member_ptr->set_player_id(player_id);
-	member_ptr->set_name(user.wechat().nickname());
-	member_ptr->set_headimgurl(user.wechat().headimgurl());
-	member_ptr->set_status(Asset::CLAN_MEM_STATUS_TYPE_AVAILABLE);
+	member_ptr->set_name(nickname); //昵称
+	member_ptr->set_headimgurl(user.wechat().headimgurl()); //头像
+	member_ptr->set_status(Asset::CLAN_MEM_STATUS_TYPE_AVAILABLE); //状态
 
 	DEBUG("在茶馆:{} 中增加成员:{} 信息:{} 成功", _clan_id, player_id, member_ptr->ShortDebugString());
 	
@@ -294,6 +297,8 @@ void Clan::OnDisMiss()
 
 int32_t Clan::RemoveMember(int64_t player_id, Asset::ClanOperation* message)
 {
+	int32_t curr_mem_count = _stuff.member_list().size();
+
 	for (int32_t i = 0; i < _stuff.member_list().size(); ++i)
 	{
 		if (player_id != _stuff.member_list(i).player_id()) continue;
@@ -301,6 +306,8 @@ int32_t Clan::RemoveMember(int64_t player_id, Asset::ClanOperation* message)
 		_stuff.mutable_member_list()->SwapElements(i, _stuff.member_list().size() - 1);
 		_stuff.mutable_member_list()->RemoveLast(); //删除玩家
 	}
+	
+	if (curr_mem_count == _stuff.member_list().size()) return Asset::ERROR_CLAN_NO_MEM;
 
 	Asset::Player player;
 	bool loaded = PlayerInstance.GetCache(player_id, player);
@@ -430,10 +437,38 @@ void Clan::OnRoomOver(const Asset::ClanRoomStatusChanged* message)
 			});
 	if (it_ != _stuff.battle_history().end()) return; //已经存在记录
 
-	auto history = _stuff.mutable_battle_history()->Add();
-	history->set_room_id(room_id);
-	history->set_battle_time(message->created_time());
-	history->mutable_player_list()->CopyFrom(message->player_list());
+	if (message->games_count())
+	{
+		auto history = _stuff.mutable_battle_history()->Add(); //历史战绩
+		history->set_room_id(room_id);
+		history->set_battle_time(message->created_time());
+		history->mutable_player_list()->CopyFrom(message->player_list());
+	}
+	
+	//
+	//删除过期的历史战绩
+	//
+	auto clan_limit = dynamic_cast<Asset::ClanLimit*>(AssetInstance.Get(g_const->clan_id()));
+	if (!clan_limit) return;
+	
+	auto curr_time = TimerInstance.GetTime();
+	std::vector<Asset::Clan_RoomHistory> room_histry;
+
+	for (const auto& history : _stuff.battle_history())
+	{
+		auto battle_time = history.battle_time();
+		if (battle_time + clan_limit->room_history_last_day() * 24 * 3600 < curr_time) continue; //过期
+
+		room_histry.push_back(history);
+	}
+
+	_stuff.mutable_battle_history()->Clear();
+
+	for (const auto& history : room_histry)
+	{
+		auto history_ptr = _stuff.mutable_battle_history()->Add();
+		history_ptr->CopyFrom(history);
+	}
 
 	DEBUG("茶馆:{} 房间:{} 结束，删除", _clan_id, room_id);
 	
