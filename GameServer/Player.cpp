@@ -212,8 +212,8 @@ int32_t Player::OnLogout(Asset::KICK_OUT_REASON reason)
 		if (room) room->Remove(_player_id);
 	}
 	
-	_stuff.set_login_time(0);
-	_stuff.set_logout_time(CommonTimerInstance.GetTime());
+	//_stuff.set_login_time(0); //不在逻辑服务器进行在线或离线状态更新
+	//_stuff.set_logout_time(CommonTimerInstance.GetTime());
 
 	Save(true);	//存档数据库
 
