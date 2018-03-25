@@ -17,6 +17,7 @@ class Clan : public std::enable_shared_from_this<Clan>
 {
 private:
 	std::mutex _mutex;
+	std::mutex _member_mutex;
 	Asset::Clan _stuff;
 	bool _dirty = false;
 	int64_t _clan_id = 0;

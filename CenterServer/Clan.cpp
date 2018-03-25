@@ -133,6 +133,8 @@ int32_t Clan::OnAgree(Asset::ClanOperation* message)
 
 bool Clan::HasMember(int64_t player_id)
 {
+	std::lock_guard<std::mutex> lock(_member_mutex);
+
 	auto it = std::find_if(_stuff.member_list().begin(), _stuff.member_list().end(), [player_id](const Asset::Clan_Member& member){
 				return player_id == member.player_id();
 			});
@@ -237,11 +239,13 @@ void Clan::OnQueryMemberStatus(std::shared_ptr<Player> player, Asset::ClanOperat
 {
 	if (!player || !message) return;
 
-	if (!HasMember(player->GetID())) 
+	if (!HasMember(player->GetID())) //加锁
 	{
 		message->set_oper_result(Asset::ERROR_CLAN_QUERY_NO_CLAN);
 		return; //不是成员
 	}
+	
+	std::lock_guard<std::mutex> lock(_member_mutex);
 
 	auto online_mem_count = _stuff.online_mem_count(); //当前在线人数
 
@@ -364,6 +368,8 @@ void Clan::OnSetUpdateTime()
 int32_t Clan::RemoveMember(int64_t player_id, Asset::ClanOperation* message)
 {
 	if (!message) return Asset::ERROR_CLAN_NO_MEM;
+	
+	std::lock_guard<std::mutex> lock(_member_mutex);
 
 	std::string player_name;
 
@@ -436,6 +442,8 @@ void Clan::BroadCast(const pb::Message* message)
 
 void Clan::BroadCast(const pb::Message& message)
 {
+	std::lock_guard<std::mutex> lock(_member_mutex);
+
 	for (const auto& member : _stuff.member_list())
 	{
 		auto member_ptr = PlayerInstance.Get(member.player_id());
@@ -887,6 +895,13 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 			
 			auto result = clan->RemoveMember(message->dest_player_id(), message);
 			message->set_oper_result(result); 
+
+			if (result) return; //删除失败
+			
+			auto des_player = PlayerInstance.Get(message->dest_player_id());
+			if (!des_player) return;
+				
+			des_player->SendProtocol(message); //通知玩家馆长删除
 		}
 		break;
 		
