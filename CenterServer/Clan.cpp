@@ -32,6 +32,31 @@ bool Clan::Load()
 	return true;
 }
 
+void Clan::OnLoaded()
+{
+	auto clan_limit = dynamic_cast<Asset::ClanLimit*>(AssetInstance.Get(g_const->clan_id()));
+	if (!clan_limit) return;
+
+	auto curr_time = TimerInstance.GetTime();
+
+	std::vector<Asset::SystemMessage> sys_messages;
+
+	for (const auto& sys_message : _stuff.message_list())
+	{
+		if (curr_time > sys_message.oper_time() + clan_limit->sys_message_limit() * 24 * 3600) continue;
+
+		sys_messages.push_back(sys_message);
+	}
+
+	_stuff.mutable_message_list()->Clear();
+
+	for (const auto& sys_message : sys_messages) 
+	{
+		auto sys_message_ptr = _stuff.mutable_message_list()->Add();
+		sys_message_ptr->CopyFrom(sys_message);
+	}
+}
+
 int32_t Clan::OnApply(int64_t player_id, const std::string& player_name, Asset::ClanOperation* message)
 {
 	if (!message) return Asset::ERROR_INNER;
@@ -594,6 +619,8 @@ void ClanManager::Load()
 
 		auto clan_ptr = std::make_shared<Clan>(clan);
 		if (!clan_ptr) return;
+
+		clan_ptr->OnLoaded();
 
 		Emplace(clan.clan_id(), clan_ptr);
 	}

@@ -28,6 +28,7 @@ public:
 
 	const Asset::Clan& Get() { return _stuff; }
 	bool Load();
+	void OnLoaded();
 	int64_t GetID() { return _stuff.clan_id(); }
 	int64_t GetHoster() { return _stuff.hoster_id(); }
 
