@@ -36,6 +36,7 @@ int32_t Clan::OnApply(int64_t player_id, const std::string& player_name, Asset::
 {
 	if (!message) return Asset::ERROR_INNER;
 	
+	/*
 	auto oper_type = message->oper_type();
 
 	auto it = std::find_if(_stuff.mutable_message_list()->begin(), _stuff.mutable_message_list()->end(), [player_id](const Asset::SystemMessage& message){
@@ -57,8 +58,16 @@ int32_t Clan::OnApply(int64_t player_id, const std::string& player_name, Asset::
 	}
 
 	message->set_oper_result(Asset::ERROR_SUCCESS);
+	*/
+
+	auto system_message = _stuff.mutable_message_list()->Add();
+	system_message->set_player_id(player_id);
+	system_message->set_name(player_name);
+	system_message->set_oper_time(TimerInstance.GetTime());
+	system_message->set_oper_type(message->oper_type());
 
 	_dirty = true;
+
 	return 0;
 }
 
@@ -241,6 +250,12 @@ void Clan::OnQueryMemberStatus(std::shared_ptr<Player> player, Asset::ClanOperat
 			member_ptr->set_status(Asset::CLAN_MEM_STATUS_TYPE_OFFLINE); //离线
 		}
 
+		//当玩家加入了两个俱乐部的时候在一个俱乐部玩的情况下另一个俱乐部应该显示他离线 
+		//
+		//不应该是游戏中离线
+		if (player.selected_clan_id() != _clan_id)
+			member_ptr->set_status(Asset::CLAN_MEM_STATUS_TYPE_OFFLINE); 
+
 		if (member_ptr->status() == Asset::CLAN_MEM_STATUS_TYPE_AVAILABLE || member_ptr->status() == Asset::CLAN_MEM_STATUS_TYPE_GAMING) 
 			_stuff.set_online_mem_count(_stuff.online_mem_count() + 1); //在线成员数量缓存
 	}
@@ -310,6 +325,13 @@ void Clan::OnDisMiss()
 	BroadCast(message); //解散成功
 
 	_stuff.set_dismiss(true); //解散
+
+	_dirty = true;
+}
+
+void Clan::OnSetUpdateTime()
+{
+	_stuff.set_sys_messsage_update_time(TimerInstance.GetTime());
 
 	_dirty = true;
 }
@@ -662,6 +684,8 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 	
 	if (message->oper_type() != Asset::CLAN_OPER_TYPE_CREATE && message->oper_type() != Asset::CLAN_OPER_TYPE_CLAN_LIST_QUERY) 
 	{
+		if (message->clan_id() <= 0) return;
+
 		clan = ClanInstance.Get(message->clan_id());
 
 		if (!clan) //创建茶馆//列表查询无需检查
@@ -860,6 +884,12 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 		
 		case Asset::CLAN_OPER_TYPE_RECHARGE: //充值
 		{
+			if (clan->GetHoster() != player->GetID()) //非老板不能充值
+			{
+				message->set_oper_result(Asset::ERROR_CLAN_NO_PERMISSION); //权限检查
+				return;
+			}
+
 			player->SendProtocol2GameServer(message); //到逻辑服务器进行检查
 		}
 		break;
@@ -886,6 +916,17 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 		case Asset::CLAN_OPER_TYPE_ROOM_GAMING_LIST_QUERY:
 		{
 			clan->OnQueryGamingList(message);
+		}
+		break;
+		
+		case Asset::CLAN_OPER_TYPE_UPDATE_SYSTEM_MESSAGE:
+		{
+			if (clan->GetHoster() != player->GetID()) //非老板不能设置
+			{
+				message->set_oper_result(Asset::ERROR_CLAN_NO_PERMISSION); //权限检查
+				return;
+			}
+			clan->OnSetUpdateTime();
 		}
 		break;
 

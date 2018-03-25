@@ -58,6 +58,7 @@ public:
 	void OnQueryMemberStatus(std::shared_ptr<Player> player, Asset::ClanOperation* message);
 	void OnQueryRoomList(std::shared_ptr<Player> player, Asset::ClanOperation* message);
 	void OnQueryGamingList(Asset::ClanOperation* message);
+	void OnSetUpdateTime();
 
 	void AddMember(int64_t player_id); //增加成员列表
 	bool HasMember(int64_t player_id); //是否含有成员
