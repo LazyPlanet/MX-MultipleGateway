@@ -703,6 +703,7 @@ void Room::OnClanOver()
 	if (!IsClan()) return;
 	
 	RedisInstance.SaveRoomHistory(_stuff.room_id(), _history); //茶馆房间，存储战绩信息
+	if (_history.list().size() == 0) return;
 	
 	Asset::ClanRoomStatusChanged proto;
 	proto.set_created_time(_created_time);
