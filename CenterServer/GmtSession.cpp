@@ -6,6 +6,14 @@
 #include "Timer.h"
 #include "Activity.h"
 
+//
+//GMT Client 程序
+//
+//连接GMT服务器，SendProtocol为直接对GMT服务器进行的协议返回
+//
+//如果要向逻辑服务器进行数据转发，需要直接执行玩家SendGmtProtocol发送指令
+//
+
 namespace Adoter
 {
 #define RETURN(x) { \
