@@ -459,7 +459,10 @@ int32_t Player::CreateRoom(pb::Message* message)
 		}
 	}
 
-	if (!IsHoster(create_room->room().clan_id())) return 11; //非茶馆老板，不能创建茶馆房
+	auto clan_limit = dynamic_cast<Asset::ClanLimit*>(AssetInstance.Get(g_const->clan_id()));
+	if (!clan_limit) return 12;
+
+	if (clan_limit->hoster_create_room() && !IsHoster(create_room->room().clan_id())) return 11; //非茶馆老板，不能创建茶馆房
 	
 	//
 	//检查是否活动限免房卡
