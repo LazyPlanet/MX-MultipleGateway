@@ -850,6 +850,11 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 			auto result = clan->RemoveMember(player->GetID(), message);
 			message->set_dest_player_id(player->GetID());
 			message->set_oper_result(result); 
+
+			auto hoster_ptr = PlayerInstance.Get(clan->GetHoster());
+			if (!hoster_ptr) return;
+
+			hoster_ptr->SendProtocol(message);
 		}
 		break;
 		
