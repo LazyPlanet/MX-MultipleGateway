@@ -520,7 +520,7 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 				return;
 			}
 
-			clan_id = (message->server_id() << 20) + clan_id;
+			clan_id = (message->server_id() << 16) + clan_id;
 
 			player->ConsumeRoomCard(Asset::ROOM_CARD_CHANGED_TYPE_CREATE_CLAN, clan_limit->room_card_limit()); //扣除馆长房卡
 

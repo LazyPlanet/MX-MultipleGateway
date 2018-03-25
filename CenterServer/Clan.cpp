@@ -1014,7 +1014,7 @@ void ClanManager::OnGameServerBack(const Asset::ClanOperationSync& message)
 	
 bool ClanManager::IsLocal(int64_t clan_id)
 {
-	int64_t server_id = clan_id >> 20;
+	int64_t server_id = clan_id >> 16;
 	return server_id == g_server_id;
 }
 
