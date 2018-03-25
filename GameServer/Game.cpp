@@ -200,6 +200,11 @@ void Game::OnStarted()
 			
 	Asset::PaiOperationAlert alert; //提示协议
 	if (banker->OnFaPaiCheck(alert)) banker->SendProtocol(alert);
+	
+	Asset::PaiOperation pai_operate;
+	pai_operate.set_oper_type(Asset::PAI_OPER_TYPE_HUIPAI);
+	pai_operate.mutable_pai()->CopyFrom(_fanpai);
+	AddPlayerOperation(pai_operate); //牌局回放
 
 	DEBUG("房间:{} 牌局:{} 翻牌:{} 生成会牌:{}", _room_id, _game_id, _fanpai.ShortDebugString(), _huipai.ShortDebugString());
 }

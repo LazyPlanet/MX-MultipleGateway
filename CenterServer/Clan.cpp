@@ -802,6 +802,11 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 			
 			auto result = clan->OnDisAgree(player, message);
 			message->set_oper_result(result); 
+	
+			auto des_player = PlayerInstance.Get(message->dest_player_id());
+			if (!des_player) return;
+				
+			des_player->SendProtocol(message); //通知玩家馆长拒绝加入茶馆
 		}
 		break;
 		
