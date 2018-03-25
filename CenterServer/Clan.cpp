@@ -767,7 +767,7 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 
 			if (result != 0) return; //失败
 			
-			player->SendProtocol2GameServer(message); //通知逻辑服务器加入成功
+			//player->SendProtocol2GameServer(message); //通知逻辑服务器加入成功
 		
 			Asset::Player des_player;
 			if (!PlayerInstance.GetCache(message->dest_player_id(), des_player)) return; //没有记录

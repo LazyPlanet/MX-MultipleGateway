@@ -575,7 +575,7 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 		{
 			if (player->GetID() != message->dest_player_id()) return; //馆长操作，不进行处理
 
-			if (message->has_oper_result() && message->oper_result() == 0) //加入成功
+			if (message->oper_result() == 0) //加入成功
 			{
 				auto des_player = PlayerInstance.Get(message->dest_player_id());
 				if (!des_player) return;
