@@ -25,7 +25,7 @@ bool Clan::Load()
 
 	ClanInstance.GetClan(_clan_id, _stuff);
 
-	DEBUG("茶馆:{} 加载数据:{}", _clan_id, _stuff.ShortDebugString());
+	DEBUG("服务器:{} 茶馆:{} 加载数据:{}", g_server_id, _clan_id, _stuff.ShortDebugString());
 
 	_dirty = false;
 
@@ -57,7 +57,7 @@ void Clan::OnLoaded()
 	}
 }
 
-int32_t Clan::OnApply(int64_t player_id, const std::string& player_name, Asset::ClanOperation* message)
+int32_t Clan::OnApply(int64_t player_id, Asset::ClanOperation* message)
 {
 	if (!message) return Asset::ERROR_INNER;
 	
@@ -84,10 +84,21 @@ int32_t Clan::OnApply(int64_t player_id, const std::string& player_name, Asset::
 
 	message->set_oper_result(Asset::ERROR_SUCCESS);
 	*/
+	
+	Asset::Player player;
+	auto loaded = PlayerInstance.GetCache(player_id, player);
+	if (!loaded) return Asset::ERROR_CLAN_NO_MEM;
+	
+	Asset::User user;
+	loaded = RedisInstance.GetUser(player.account(), user);
+	if (!loaded) return Asset::ERROR_CLAN_NO_MEM; //没有账号数据
+
+	std::string nickname = player.common_prop().name();
+	if (user.wechat().nickname().size()) nickname = user.wechat().nickname();
 
 	auto system_message = _stuff.mutable_message_list()->Add();
 	system_message->set_player_id(player_id);
-	system_message->set_name(player_name);
+	system_message->set_name(nickname);
 	system_message->set_oper_time(TimerInstance.GetTime());
 	system_message->set_oper_type(message->oper_type());
 
@@ -156,7 +167,7 @@ void Clan::AddMember(int64_t player_id)
 	if (!loaded) return; //没有账号数据
 
 	std::string nickname = player.common_prop().name();
-	if (user.wechat().has_nickname()) nickname = user.wechat().nickname();
+	if (user.wechat().nickname().size()) nickname = user.wechat().nickname();
 
 	auto member_ptr = _stuff.mutable_member_list()->Add();
 	member_ptr->set_player_id(player_id);
@@ -383,6 +394,8 @@ int32_t Clan::RemoveMember(int64_t player_id, Asset::ClanOperation* message)
 
 		_stuff.mutable_member_list()->SwapElements(i, _stuff.member_list().size() - 1);
 		_stuff.mutable_member_list()->RemoveLast(); //删除玩家
+
+		break; //删除一个即可
 	}
 	
 	if (curr_mem_count == _stuff.member_list().size()) return Asset::ERROR_CLAN_NO_MEM;
@@ -779,7 +792,7 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 	
 		case Asset::CLAN_OPER_TYPE_JOIN: //申请加入
 		{
-			auto result = clan->OnApply(player->GetID(), player->GetName(), message); 
+			auto result = clan->OnApply(player->GetID(), message); 
 			message->set_oper_result(result); 
 
 			if (result == 0) //申请成功
@@ -1035,12 +1048,8 @@ void ClanManager::OnGameServerBack(const Asset::ClanOperationSync& message)
 			auto clan = Get(clan_id);
 			if (!clan) return;
 		
-			Asset::Player stuff;
-			auto loaded = PlayerInstance.GetCache(message.player_id(), stuff);
-			if (!loaded) return;
-
 			auto oper = message.operation();
-			auto result = clan->OnApply(stuff.common_prop().player_id(), stuff.common_prop().name(), &oper); 
+			auto result = clan->OnApply(message.player_id(), &oper); 
 			
 			if (result == 0) //申请成功
 			{
@@ -1099,12 +1108,16 @@ void ClanManager::OnGameServerBack(const Asset::ClanOperationSync& message)
 			auto clan_ptr = Get(clan_id);
 			if (!clan_ptr) return;
 
-			clan_ptr->RemoveMember(operation.dest_player_id()); //复用删除玩家变量^_^
+			clan_ptr->RemoveMember(operation.dest_player_id(), &operation); //复用删除玩家变量^_^
 		}
 		break;
 
 		default:
 		{
+			if (ClanInstance.IsLocal(clan_id)) return; //本地数据不再加载
+
+			WARN("茶馆:{} 尚未处理回调接口:{}", clan_id, operation.ShortDebugString());
+
 			auto clan_ptr = Get(clan_id);
 			if (!clan_ptr) return;
 
