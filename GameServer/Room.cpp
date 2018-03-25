@@ -792,6 +792,8 @@ void Room::OnGameOver(int64_t player_id)
 		player_brief->set_nickname(player->GetNickName());
 		player_brief->set_headimgurl(player->GetHeadImag());
 		player_brief->set_score(record->score());
+		player_brief->set_hupai_count(record->win_count());
+		player_brief->set_dianpao_count(record->dianpao_count());
 
 		player->AddRoomScore(record->score()); //总积分
 	}
