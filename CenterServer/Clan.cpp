@@ -316,17 +316,31 @@ void Clan::OnDisMiss()
 
 int32_t Clan::RemoveMember(int64_t player_id, Asset::ClanOperation* message)
 {
+	if (!message) return Asset::ERROR_CLAN_NO_MEM;
+
+	std::string player_name;
+
 	int32_t curr_mem_count = _stuff.member_list().size();
 
 	for (int32_t i = 0; i < _stuff.member_list().size(); ++i)
 	{
 		if (player_id != _stuff.member_list(i).player_id()) continue;
 
+		player_name = _stuff.member_list(i).name();
+
 		_stuff.mutable_member_list()->SwapElements(i, _stuff.member_list().size() - 1);
 		_stuff.mutable_member_list()->RemoveLast(); //删除玩家
 	}
 	
 	if (curr_mem_count == _stuff.member_list().size()) return Asset::ERROR_CLAN_NO_MEM;
+	
+	//列表状态更新
+	//
+	auto system_message = _stuff.mutable_message_list()->Add();
+	system_message->set_player_id(player_id);
+	system_message->set_name(player_name);
+	system_message->set_oper_time(TimerInstance.GetTime());
+	system_message->set_oper_type(message->oper_type());
 
 	Asset::Player player;
 	bool loaded = PlayerInstance.GetCache(player_id, player);
@@ -334,6 +348,7 @@ int32_t Clan::RemoveMember(int64_t player_id, Asset::ClanOperation* message)
 
 	if (player.login_time() == 0) //离线:直接从茶馆删除
 	{
+		/*
 		for (int32_t i = 0; i < player.clan_hosters().size(); ++i) //茶馆老板
 		{
 			if (_clan_id != player.clan_hosters(i)) continue;
@@ -341,7 +356,8 @@ int32_t Clan::RemoveMember(int64_t player_id, Asset::ClanOperation* message)
 			player.mutable_clan_hosters()->SwapElements(i, player.clan_hosters().size() - 1);
 			player.mutable_clan_hosters()->RemoveLast();
 		}
-		
+		*/
+
 		for (int32_t i = 0; i < player.clan_joiners().size(); ++i) //茶馆成员
 		{
 			if (_clan_id != player.clan_joiners(i)) continue;
