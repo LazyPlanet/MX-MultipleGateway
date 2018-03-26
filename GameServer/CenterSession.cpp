@@ -34,7 +34,7 @@ void CenterSession::OnConnected()
 
 bool CenterSession::OnMessageProcess(const Asset::Meta& meta)
 {
-	DEBUG("接收来自中心服务器:{} {}的数据:{}", _ip_address, _remote_endpoint.port(), meta.ShortDebugString());
+	DEBUG("接收来自中心服务器，地址:{} 端口:{} 的数据类型:{}", _ip_address, _remote_endpoint.port(), Asset::META_TYPE_Name(meta.type_t()));
 		
 	if (Asset::META_TYPE_C2S_COUNT <= meta.type_t())
 	{
