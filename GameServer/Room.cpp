@@ -1031,7 +1031,7 @@ bool Room::CanStarGame()
 
 		auto consume_count = GetOptions().open_rands() / room_card->rounds(); //待消耗房卡数
 
-		if (IsClan()) //茶馆:开局消耗,到中心服务器消耗
+		if (IsClan() && _games.size() == 0) //茶馆:开局消耗,到中心服务器消耗
 		{
 			Asset::Clan clan;
 			auto has_record = ClanInstance.GetClan(_stuff.clan_id(), clan);
