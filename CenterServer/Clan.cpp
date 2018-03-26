@@ -121,7 +121,7 @@ int32_t Clan::OnAgree(Asset::ClanOperation* message)
 	if (!message) return Asset::ERROR_INNER;
 	
 	auto member_id = message->dest_player_id();
-	auto dest_sys_message_index = message->dest_sys_message_index() - 1;
+	auto dest_sys_message_index = _stuff.message_list().size() - message->dest_sys_message_index();
 
 	if (dest_sys_message_index < 0 || dest_sys_message_index > _stuff.message_list().size()) return Asset::ERROR_CLAN_NO_RECORD; //尚未申请记录
 
@@ -185,7 +185,7 @@ int32_t Clan::OnDisAgree(std::shared_ptr<Player> player, Asset::ClanOperation* m
 	if (!player || !message) return Asset::ERROR_INNER;
 	
 	auto member_id = message->dest_player_id();
-	auto dest_sys_message_index = message->dest_sys_message_index() - 1;
+	auto dest_sys_message_index = _stuff.message_list().size() - message->dest_sys_message_index();
 	
 	if (dest_sys_message_index < 0 || dest_sys_message_index > _stuff.message_list().size()) return Asset::ERROR_CLAN_NO_RECORD; //尚未申请记录
 
@@ -402,11 +402,14 @@ int32_t Clan::RemoveMember(int64_t player_id, Asset::ClanOperation* message)
 	
 	//列表状态更新
 	//
-	auto system_message = _stuff.mutable_message_list()->Add();
-	system_message->set_player_id(player_id);
-	system_message->set_name(player_name);
-	system_message->set_oper_time(TimerInstance.GetTime());
-	system_message->set_oper_type(message->oper_type());
+	if (Asset::CLAN_OPER_TYPE_MEMEBER_QUIT == message->oper_type())
+	{
+		auto system_message = _stuff.mutable_message_list()->Add();
+		system_message->set_player_id(player_id);
+		system_message->set_name(player_name);
+		system_message->set_oper_time(TimerInstance.GetTime());
+		system_message->set_oper_type(message->oper_type());
+	}
 
 	Asset::Player player;
 	bool loaded = PlayerInstance.GetCache(player_id, player);
@@ -1091,6 +1094,8 @@ void ClanManager::OnGameServerBack(const Asset::ClanOperationSync& message)
 
 			auto result = clan_ptr->OnAgree(&operation); //列表更新
 			operation.set_oper_result(result); 
+
+			if (result) return; //不能加入则不通知申请者
 
 			auto des_player = PlayerInstance.Get(operation.dest_player_id()); //不在当前中心服务器
 			if (!des_player) return;
