@@ -4973,6 +4973,10 @@ void Player::OnQuitClan(int64_t clan_id)
 	
 	if (_stuff.selected_clan_id() == clan_id) _stuff.set_selected_clan_id(0);
 
+	Asset::ClanOperation message;
+	message.set_oper_type(Asset::CLAN_OPER_TYPE_CLAN_LIST_QUERY);
+	ClanInstance.OnQueryClanList(shared_from_this(), &message);
+
 	DEBUG("玩家:{} 退出茶馆:{} 成功", _player_id, clan_id);
 
 	_dirty = true;
