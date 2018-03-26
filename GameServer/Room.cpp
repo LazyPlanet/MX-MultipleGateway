@@ -1031,8 +1031,10 @@ bool Room::CanStarGame()
 
 		auto consume_count = GetOptions().open_rands() / room_card->rounds(); //待消耗房卡数
 
-		if (IsClan() && _games.size() == 0) //茶馆:开局消耗,到中心服务器消耗
+		if (IsClan()) //茶馆：开局消耗，到中心服务器消耗
 		{
+			if (_games.size()) return true; //已经开局，不再进行房卡检查
+
 			Asset::Clan clan;
 			auto has_record = ClanInstance.GetClan(_stuff.clan_id(), clan);
 			if (!has_record || clan.room_card_count() < consume_count) return false;
@@ -1041,7 +1043,7 @@ bool Room::CanStarGame()
 			return true;
 		}
 
-		if (!_hoster) return false; //没有房主,正常消耗
+		if (!_hoster) return false; //没有房主，正常消耗
 
 		if (_hoster && _games.size() == 0) //开局消耗
 		{
