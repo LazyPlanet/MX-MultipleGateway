@@ -4977,6 +4977,31 @@ void Player::OnQuitClan(int64_t clan_id)
 
 	_dirty = true;
 }
+	
+void Player::OnClanCreated(int64_t clan_id) 
+{ 
+	auto it = std::find(_stuff.clan_hosters().begin(), _stuff.clan_hosters().end(), clan_id);
+	if (it != _stuff.clan_hosters().end()) return;
+
+	_stuff.mutable_clan_hosters()->Add(clan_id); 
+	_dirty = true; 
+}
+	
+void Player::OnClanJoin(int64_t clan_id) 
+{ 
+	auto it = std::find(_stuff.clan_joiners().begin(), _stuff.clan_joiners().end(), clan_id);
+	if (it != _stuff.clan_joiners().end()) return;
+
+	_stuff.mutable_clan_joiners()->Add(clan_id); 
+	_dirty = true; 
+}
+
+void Player::SetCurrClan(int64_t clan_id) 
+{ 
+	if (clan_id == _stuff.selected_clan_id()) return; 
+	_stuff.set_selected_clan_id(clan_id); 
+	_dirty = true; 
+} 
 
 void Player::OnClanCheck()
 {

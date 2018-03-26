@@ -517,15 +517,12 @@ public:
 	int32_t GetMemberCount() { return _stuff.clan_joiners().size(); } //加入茶馆数量
 	bool IsHoster(int64_t clan_id); //是否是该茶馆的老板
 
-	void OnClanCreated(int64_t clan_id) { _stuff.mutable_clan_hosters()->Add(clan_id); _dirty = true; }
-	void OnClanJoin(int64_t clan_id) { _stuff.mutable_clan_joiners()->Add(clan_id); _dirty = true; }
-	void SetCurrClan(int64_t clan_id) { //当前选择茶馆界面
-		if (clan_id == _stuff.selected_clan_id()) return; 
-		_stuff.set_selected_clan_id(clan_id); _dirty = true; 
-	} 
-	void OnQuitClan(int64_t clan_id);
+	void OnClanCreated(int64_t clan_id); //成功创建茶馆//俱乐部
+	void OnClanJoin(int64_t clan_id); //成功加入茶馆//俱乐部
+	void SetCurrClan(int64_t clan_id); //设置当前所在俱乐部
+	void OnQuitClan(int64_t clan_id); //成功退出茶馆//俱乐部
 	bool IsDaili() { return _stuff.agent_account().size() > 0;} //是否是代理账号
-	void OnClanCheck();
+	void OnClanCheck(); //通用检查
 };
 
 /////////////////////////////////////////////////////

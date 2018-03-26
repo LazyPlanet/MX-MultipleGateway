@@ -229,8 +229,8 @@ public:
 	int32_t GetHosterCount() { return _stuff.clan_hosters().size(); } //拥有茶馆数量
 	int32_t GetMemberCount() { return _stuff.clan_joiners().size(); } //加入茶馆数量
 
-	void OnClanCreated(int64_t clan_id) { _stuff.mutable_clan_hosters()->Add(clan_id); }
-	void OnClanJoin(int64_t clan_id) { _stuff.mutable_clan_joiners()->Add(clan_id); }
+	//void OnClanCreated(int64_t clan_id) { _stuff.mutable_clan_hosters()->Add(clan_id); }
+	//void OnClanJoin(int64_t clan_id) { _stuff.mutable_clan_joiners()->Add(clan_id); }
 };
 
 class PlayerManager : public std::enable_shared_from_this<PlayerManager>

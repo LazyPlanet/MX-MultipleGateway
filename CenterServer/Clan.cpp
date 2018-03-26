@@ -876,7 +876,7 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 
 				message->mutable_clan()->CopyFrom(clan->Get()); //茶馆信息
 
-				des_player->OnClanJoin(message->clan_id());
+				//des_player->OnClanJoin(message->clan_id());
 				des_player->SendProtocol(message); //通知玩家馆长同意加入茶馆
 				des_player->SendProtocol2GameServer(message); //通知逻辑服务器加入茶馆成功
 			}
@@ -893,6 +893,8 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 			
 			auto result = clan->OnDisAgree(player, message);
 			message->set_oper_result(result); 
+
+			if (result) return; //非成功操作不进行转发
 	
 			auto des_player = PlayerInstance.Get(message->dest_player_id());
 			if (!des_player) return;
@@ -1102,7 +1104,7 @@ void ClanManager::OnGameServerBack(const Asset::ClanOperationSync& message)
 
 			operation.mutable_clan()->CopyFrom(clan_ptr->Get()); //茶馆信息
 
-			des_player->OnClanJoin(operation.clan_id());
+			//des_player->OnClanJoin(operation.clan_id());
 			des_player->SendProtocol(operation); //通知玩家馆长同意加入茶馆
 			des_player->SendProtocol2GameServer(operation); //通知逻辑服务器加入茶馆成功
 		}
