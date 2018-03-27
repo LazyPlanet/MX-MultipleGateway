@@ -84,6 +84,8 @@ int32_t Clan::OnApply(int64_t player_id, Asset::ClanOperation* message)
 
 	message->set_oper_result(Asset::ERROR_SUCCESS);
 	*/
+
+	if (HasMember(player_id)) return Asset::ERROR_CLAN_HAS_JOINED; //已经是茶馆成员
 	
 	Asset::Player player;
 	auto loaded = PlayerInstance.GetCache(player_id, player);
