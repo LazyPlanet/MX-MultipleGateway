@@ -22,7 +22,7 @@ bool World::Load()
 	//
 	if (!ProtocolInstance.Load()) 
 	{
-		ERROR("ProtocolInstance load error.");
+		ERROR("协议加载失败");
 		return false;
 	}
 
@@ -31,7 +31,7 @@ bool World::Load()
 	//
 	if (!AssetInstance.Load()) 
 	{
-		ERROR("AssetInstance load error.");
+		ERROR("资源加载失败");
 		return false;
 	}
 	

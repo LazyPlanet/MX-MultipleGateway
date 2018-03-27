@@ -4950,6 +4950,8 @@ void Player::OnBind(std::string account)
 {
 	_stuff.set_agent_account(account);
 
+	SendPlayer(); //同步角色数据
+
 	_dirty = true;
 }
 	

@@ -5,6 +5,7 @@
 #include "Activity.h"
 #include "WhiteBlackManager.h"
 #include "Clan.h"
+#include "NameLimit.h"
 
 namespace Adoter
 {
@@ -26,6 +27,12 @@ bool World::Load()
 	if (!AssetInstance.Load()) 
 	{
 		ERROR("资源加载失败.");
+		return false;
+	}
+
+	if (!NameLimitInstance.Load())
+	{
+		ERROR("屏蔽字库加载失败.");
 		return false;
 	}
 
