@@ -12,11 +12,14 @@ namespace Adoter
 extern int32_t g_server_id;
 extern const Asset::CommonConst* g_const;
 
+//3秒一次
 void Clan::Update()
 {
 	if (_dirty) Save();
 
 	if (!ClanInstance.IsLocal(_clan_id)) Load(); //从茶馆加载数据
+
+	OnQueryMemberStatus(); //定期更新茶馆成员状态
 }
 	
 bool Clan::Load()
@@ -254,23 +257,12 @@ int32_t Clan::OnChangedInformation(std::shared_ptr<Player> player, Asset::ClanOp
 	return 0;
 }
 
-void Clan::OnQueryMemberStatus(std::shared_ptr<Player> player, Asset::ClanOperation* message)
+void Clan::OnQueryMemberStatus(Asset::ClanOperation* message)
 {
-	if (!player || !message) return;
-
-	if (!HasMember(player->GetID())) //加锁
-	{
-		message->set_oper_result(Asset::ERROR_CLAN_QUERY_NO_CLAN);
-		return; //不是成员
-	}
-	
 	std::lock_guard<std::mutex> lock(_member_mutex);
 
 	auto online_mem_count = _stuff.online_mem_count(); //当前在线人数
-
 	_stuff.set_online_mem_count(0); //在线成员数量缓存
-
-	message->mutable_clan()->CopyFrom(_stuff); //茶馆数据
 
 	for (int32_t i = 0; i < _stuff.member_list().size(); ++i)
 	{
@@ -308,7 +300,7 @@ void Clan::OnQueryMemberStatus(std::shared_ptr<Player> player, Asset::ClanOperat
 			_stuff.set_online_mem_count(_stuff.online_mem_count() + 1); //在线成员数量缓存
 	}
 
-	message->mutable_clan()->CopyFrom(_stuff);
+	if (message) message->mutable_clan()->CopyFrom(_stuff);
 
 	if (online_mem_count != _stuff.online_mem_count()) _dirty = true; //状态更新，减少存盘频率
 }
@@ -1014,7 +1006,14 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 
 		case Asset::CLAN_OPER_TYPE_MEMEBER_QUERY: //成员状态查询
 		{
-			clan->OnQueryMemberStatus(player, message);
+			clan->OnQueryMemberStatus(message);
+
+			if (!clan->HasMember(player->GetID())) //不是成员不能查询
+			{
+				message->set_oper_result(Asset::ERROR_CLAN_QUERY_NO_CLAN);
+				return; //不是成员
+			}
+	
 			player->SendProtocol2GameServer(message); //到逻辑服务器进行同步当前茶馆
 		}
 		break;
