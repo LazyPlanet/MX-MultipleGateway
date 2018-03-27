@@ -205,23 +205,30 @@ int32_t Player::OnLogout(Asset::KICK_OUT_REASON reason)
 		if (room) room->Remove(_player_id);
 	}
 	
-	//_stuff.set_login_time(0); //不在逻辑服务器进行在线或离线状态更新
-	//_stuff.set_logout_time(CommonTimerInstance.GetTime());
+	//
+	//避免中心服务器先进行退出，然后逻辑服务器退出，返回给中心服务器退出成功后，中心服务器没有找到玩家的情况
+	//
+	//处理问题：https://www.teambition.com/project/592ad0fd66e46f0dd7503429/tasks/scrum/592ad0fe4e2b442b01e8753d/task/5aba0214bc23685b35b6a896
+	//https://www.teambition.com/project/592ad0fd66e46f0dd7503429/tasks/scrum/592ad0fe4e2b442b01e8753d/task/5ab9e9a11adffc7755dc4df4
+	//
+	//因此，次序必须保证
+	if (reason == Asset::KICK_OUT_REASON_LOGOUT || reason == Asset::KICK_OUT_REASON_CHANGE_SERVER) //切换服务器直接退出
+	{
+		_stuff.set_login_time(0); //不在逻辑服务器进行在线或离线状态更新//真正离线
+		_stuff.set_logout_time(CommonTimerInstance.GetTime());
 
+		PlayerInstance.Remove(_player_id); //删除玩家
+	}
+	
 	Save(true);	//存档数据库
 
 	Asset::KickOutPlayer kickout_player; //通知中心服务器退出
 	kickout_player.set_player_id(_player_id);
 	kickout_player.set_reason(reason);
 	SendProtocol(kickout_player);
-
-	if (reason == Asset::KICK_OUT_REASON_LOGOUT || reason == Asset::KICK_OUT_REASON_CHANGE_SERVER) //切换服务器直接退出
-	{
-		PlayerInstance.Remove(_player_id); //删除玩家
-
-		WARN("玩家:{} 服务器:{} 数据:{} 当前所在服务器:{} 成功退出逻辑服务器:{} 原因:{}", 
-				_player_id, g_server_id, _stuff.ShortDebugString(), _stuff.server_id(), g_server_id, kickout_player.ShortDebugString());
-	}
+		
+	WARN("玩家:{} 服务器:{} 数据:{} 当前所在服务器:{} 成功退出逻辑服务器:{} 原因:{}", 
+			_player_id, g_server_id, _stuff.ShortDebugString(), _stuff.server_id(), g_server_id, kickout_player.ShortDebugString());
 	
 	return 0;
 }

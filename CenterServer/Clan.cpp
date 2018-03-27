@@ -177,7 +177,13 @@ void Clan::AddMember(int64_t player_id)
 	member_ptr->set_headimgurl(user.wechat().headimgurl()); //头像
 	member_ptr->set_status(Asset::CLAN_MEM_STATUS_TYPE_AVAILABLE); //状态
 
-	DEBUG("在茶馆:{} 中增加成员:{} 信息:{} 成功", _clan_id, player_id, member_ptr->ShortDebugString());
+	if (player.login_time() == 0) //离线
+	{
+		player.add_clan_joiners(_clan_id);
+		PlayerInstance.Save(player_id, player); //直接存盘
+	}
+
+	DEBUG("在茶馆:{} 中增加成员:{} 信息:{} 成员数据:{} 成功", _clan_id, player_id, member_ptr->ShortDebugString(), player.ShortDebugString());
 	
 	_dirty = true;
 }
@@ -899,9 +905,18 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 			message->set_oper_result(result); 
 
 			if (result != 0) return; //失败
+				
+			auto des_player = PlayerInstance.Get(message->dest_player_id()); //不在当前中心服务器
+			if (!des_player) return;
+
+			message->mutable_clan()->CopyFrom(clan->Get()); //茶馆信息
+
+			des_player->SendProtocol(message); //通知玩家馆长同意加入茶馆
+			des_player->SendProtocol2GameServer(message); //通知逻辑服务器加入茶馆成功
 			
 			//player->SendProtocol2GameServer(message); //通知逻辑服务器加入成功
 		
+			/*
 			Asset::Player des_player;
 			if (!PlayerInstance.GetCache(message->dest_player_id(), des_player)) return; //没有记录
 
@@ -922,6 +937,7 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 				des_player->SendProtocol(message); //通知玩家馆长同意加入茶馆
 				des_player->SendProtocol2GameServer(message); //通知逻辑服务器加入茶馆成功
 			}
+			*/
 		}
 		break;
 		
