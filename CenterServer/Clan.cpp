@@ -464,11 +464,16 @@ int32_t Clan::RemoveMember(int64_t player_id, Asset::ClanOperation* message)
 
 		for (int32_t i = 0; i < player.clan_joiners().size(); ++i) //茶馆成员
 		{
-			if (_clan_id != player.clan_joiners(i)) continue;
-
-			player.mutable_clan_joiners()->SwapElements(i, player.clan_joiners().size() - 1);
-			player.mutable_clan_joiners()->RemoveLast();
+			if (_clan_id == player.clan_joiners(i)) 
+			{
+				player.mutable_clan_joiners()->SwapElements(i, player.clan_joiners().size() - 1);
+				player.mutable_clan_joiners()->RemoveLast();
+			
+				break;
+			}
 		}
+
+		if (_clan_id == player.selected_clan_id()) player.set_selected_clan_id(0); //清理当前选择的茶馆
 		
 		PlayerInstance.Save(player_id, player); //直接存盘
 	}
