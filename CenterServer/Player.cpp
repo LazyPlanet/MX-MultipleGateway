@@ -661,15 +661,25 @@ int32_t Player::CheckCreateRoom(pb::Message* message)
 
 	auto clan = ClanInstance.Get(clan_id);
 	if (!clan) return Asset::ERROR_CLAN_NOT_FOUND; //尚未存在茶馆 
-
-	auto open_rands = create_room->room().options().open_rands(); //局数
-
+	
 	const Asset::Item_RoomCard* room_card = dynamic_cast<const Asset::Item_RoomCard*>(AssetInstance.Get(g_const->room_card_id()));
-	if (!room_card || room_card->rounds() <= 0) return Asset::ERROR_INNER;
-		
-	int32_t consume_count = open_rands / room_card->rounds(); //待消耗房卡数量
+	if (!room_card || room_card->rounds() <= 0) return Asset::ERROR_INNER; //消耗卡数据
 
-	if (clan->GetRoomCard() < consume_count) return Asset::ERROR_CLAN_ROOM_CARD_NOT_ENOUGH;  //房卡不足
+	auto open_rands = create_room->room().options().open_rands(); //本次局数
+	int32_t total_consume_room_card_count = open_rands / room_card->rounds(); //本次待消耗房卡数量
+	
+	const auto& rooms = clan->GetRooms();
+	for (const auto& room : rooms)
+	{
+		if (room.second.curr_count()) continue; //已经开局
+
+		int32_t open_rands = room.second.options().open_rands(); //局数
+		int32_t consume_count = open_rands / room_card->rounds(); //待消耗房卡数量
+
+		total_consume_room_card_count += consume_count; //待消耗房卡总数
+	}
+
+	if (clan->GetRoomCard() < total_consume_room_card_count) return Asset::ERROR_CLAN_ROOM_CARD_NOT_ENOUGH;  //房卡不足
 
 	return 0;
 }

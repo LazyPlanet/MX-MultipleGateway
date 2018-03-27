@@ -51,6 +51,10 @@ public:
 	void OnRoomOver(const Asset::ClanRoomStatusChanged* message);
 
 	bool HasGaming() { return _gaming_room_list.size() > 0; } //牌局进行中
+	int32_t GetRoomOpenedCount() { return _gaming_room_list.size(); } //总开房房间数量
+	int32_t GetRoomGamingCount(); //开局房间在玩的房间数量
+	int32_t GetRoomNoPlayedCount(); //开房没有玩的房间数量
+	const std::unordered_map<int64_t, Asset::RoomQueryResult>& GetRooms();
 
 	int32_t OnApply(int64_t player_id, Asset::ClanOperation* message);
 	int32_t OnChangedInformation(std::shared_ptr<Player> player, Asset::ClanOperation* message);

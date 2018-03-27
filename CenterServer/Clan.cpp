@@ -304,6 +304,41 @@ void Clan::OnQueryMemberStatus(std::shared_ptr<Player> player, Asset::ClanOperat
 
 	if (online_mem_count != _stuff.online_mem_count()) _dirty = true; //状态更新，减少存盘频率
 }
+	
+const std::unordered_map<int64_t, Asset::RoomQueryResult>& Clan::GetRooms()
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+
+	return _rooms;
+}
+
+int32_t Clan::GetRoomGamingCount()
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+
+	int32_t gaming_count = 0;
+
+	for (const auto& room : _rooms)
+	{
+		if (room.second.curr_count()) ++gaming_count; //进行中房间//已开局房间
+	}
+
+	return gaming_count;
+}
+
+int32_t Clan::GetRoomNoPlayedCount()
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+
+	int32_t room_no_played_count = 0;
+
+	for (const auto& room : _rooms)
+	{
+		if (room.second.curr_count() == 0) ++room_no_played_count; //开房尚未开局的房间
+	}
+
+	return room_no_played_count;
+}
 
 //
 //茶馆当前牌局列表查询
