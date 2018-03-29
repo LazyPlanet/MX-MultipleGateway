@@ -453,16 +453,7 @@ void Player::SendProtocol(const pb::Message& message)
 
 	session->SendProtocol(message);
 
-	//调试
-	//const pb::FieldDescriptor* field = message.GetDescriptor()->FindFieldByName("type_t");
-	//if (!field) return;
-
-	//const pb::EnumValueDescriptor* enum_value = message.GetReflection()->GetEnum(message, field);
-	//if (!enum_value) return;
-
-	//auto debug_string = message.ShortDebugString();
-	//DEBUG("send protocol to player_id:{} protocol_name:{} content:{}", _player_id, enum_value->name().c_str(), debug_string);
-	//DEBUG("玩家:{} 发送协议:{}", _player_id, message.ShortDebugString());
+	DEBUG("玩家:{} 发送协议:{}", _player_id, message.ShortDebugString());
 }
 	
 void Player::SendMeta(const Asset::Meta& meta)

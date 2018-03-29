@@ -64,30 +64,22 @@ int32_t Clan::OnApply(int64_t player_id, Asset::ClanOperation* message)
 {
 	if (!message) return Asset::ERROR_INNER;
 	
-	/*
-	auto oper_type = message->oper_type();
-
-	auto it = std::find_if(_stuff.mutable_message_list()->begin(), _stuff.mutable_message_list()->end(), [player_id](const Asset::SystemMessage& message){
-				return player_id == message.player_id();	
+	const auto& oper_type = message->oper_type();
+	auto it = std::find_if(_stuff.mutable_message_list()->begin(), _stuff.mutable_message_list()->end(), [player_id, oper_type](const Asset::SystemMessage& sys_message){
+				return player_id == sys_message.player_id() && oper_type == sys_message.oper_type();	//相同操作
 			});
 
-	if (it == _stuff.mutable_message_list()->end())
-	{
-		auto system_message = _stuff.mutable_message_list()->Add();
-		system_message->set_player_id(player_id);
-		system_message->set_name(player_name);
-		system_message->set_oper_time(TimerInstance.GetTime());
-		system_message->set_oper_type(oper_type);
-	}
-	else
+	if (it != _stuff.mutable_message_list()->end()) //已经申请过加入茶馆
 	{
 		it->set_oper_time(TimerInstance.GetTime());
 		it->set_oper_type(oper_type);
+
+		return Asset::ERROR_CLAN_HAS_APPLY;
 	}
 
-	message->set_oper_result(Asset::ERROR_SUCCESS);
-	*/
-
+	//
+	//申请加入茶馆
+	
 	if (HasMember(player_id)) return Asset::ERROR_CLAN_HAS_JOINED; //已经是茶馆成员
 	
 	Asset::Player player;
