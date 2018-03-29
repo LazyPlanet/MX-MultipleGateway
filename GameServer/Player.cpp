@@ -1503,6 +1503,8 @@ void Player::AlertMessage(Asset::ERROR_CODE error_code, Asset::ERROR_TYPE error_
 	message.set_error_show_type(error_show_type);
 	message.set_error_code(error_code);
 
+	ERROR("玩家:{} 消息错误:{}", _player_id, message.ShortDebugString());
+
 	SendProtocol(message);
 }
 
@@ -5003,18 +5005,24 @@ void Player::OnClanCreated(int64_t clan_id)
 { 
 	auto it = std::find(_stuff.clan_hosters().begin(), _stuff.clan_hosters().end(), clan_id);
 	if (it != _stuff.clan_hosters().end()) return;
+	
+	DEBUG("玩家:{} 成功创建茶馆:{}", _player_id, clan_id);
 
 	_stuff.mutable_clan_hosters()->Add(clan_id); 
 	_dirty = true; 
 }
 	
-void Player::OnClanJoin(int64_t clan_id) 
+bool Player::OnClanJoin(int64_t clan_id) 
 { 
 	auto it = std::find(_stuff.clan_joiners().begin(), _stuff.clan_joiners().end(), clan_id);
-	if (it != _stuff.clan_joiners().end()) return;
+	if (it != _stuff.clan_joiners().end()) return false;
 
+	DEBUG("玩家:{} 成功加入茶馆:{}", _player_id, clan_id);
+ 
 	_stuff.mutable_clan_joiners()->Add(clan_id); 
 	_dirty = true; 
+
+	return true;
 }
 
 void Player::SetCurrClan(int64_t clan_id) 

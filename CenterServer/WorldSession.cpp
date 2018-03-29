@@ -247,7 +247,7 @@ void WorldSession::OnProcessMessage(const Asset::Meta& meta)
 				_player->SetName(player_name);
 				_player->SetAccount(login->account().username(), _account.account_type());
 
-				_player->Save(true); //存盘，防止数据库无数据
+				//_player->Save(true); //存盘，防止数据库无数据
 				_user.mutable_player_list()->Add(player_id);
 				
 				LOG(INFO, "账号:{} 下尚未创建角色，创建角色:{} 账号数据:{}", login->account().username(), player_id, _user.ShortDebugString());
@@ -410,7 +410,7 @@ void WorldSession::OnProcessMessage(const Asset::Meta& meta)
 			//
 			//账号未能存储成功在角色数据，则重新存储
 			//
-			if (_player->GetAccount().empty()) _player->Save(true); //存盘，防止数据库无数据
+			//if (_player->GetAccount().empty()) _player->Save(true); //存盘，防止数据库无数据
 				
 			_player->SetAccount(_account.username(), _account.account_type());
 
@@ -445,7 +445,9 @@ void WorldSession::OnProcessMessage(const Asset::Meta& meta)
 
 			if (_user.player_list().size()) RedisInstance.SaveUser(_account.username(), _user); //存盘退出
 
-			_player->Save(true);
+			//_player->Save(true);
+	
+			_player->Logout(nullptr);
 			_player.reset();
 			
 			_user.Clear();
@@ -528,8 +530,8 @@ void WorldSession::OnProcessMessage(const Asset::Meta& meta)
 				kickout_player.set_player_id(_player->GetID());
 				kickout_player.set_reason(Asset::KICK_OUT_REASON_CHANGE_SERVER);
 
-				WARN("玩家:{}进入服务器:{}，房间:{}和当前缓存服务器:{}，房间:{}不同，发往原服踢出:{}", 
-						_player->GetID(), _player->GetRoom(), server_id, room_id, _player->GetLocalServer(), kickout_player.ShortDebugString());
+				WARN("玩家:{} 进入服务器:{} 房间:{}和当前缓存服务器:{}，房间:{}不同，发往原服踢出:{}", 
+						_player->GetID(), server_id, _player->GetRoom(), room_id, _player->GetLocalServer(), kickout_player.ShortDebugString());
 
 				_player->SendProtocol2GameServer(kickout_player); 
 			}

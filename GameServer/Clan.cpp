@@ -434,6 +434,8 @@ std::shared_ptr<Clan> ClanManager::Get(int64_t clan_id)
 void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation* message)
 {
 	if (!message || !player) return;
+
+	DEBUG("服务器:{} 接收来自中心服务器的玩家:{} 茶馆操作结果:{}", g_server_id, player->GetID(), message->ShortDebugString());
 		
 	static std::set<int32_t> _valid_operation = { Asset::CLAN_OPER_TYPE_CREATE, Asset::CLAN_OPER_TYPE_MEMEBER_AGEE, Asset::CLAN_OPER_TYPE_CLAN_LIST_QUERY }; //合法
 	
@@ -580,7 +582,8 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 				auto des_player = PlayerInstance.Get(message->dest_player_id());
 				if (!des_player) return;
 
-				des_player->OnClanJoin(message->clan_id());
+				auto result = des_player->OnClanJoin(message->clan_id());
+				if (result) des_player->SendProtocol(message);
 			}
 		}
 		break;

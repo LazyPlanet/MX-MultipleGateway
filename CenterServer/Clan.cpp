@@ -474,6 +474,8 @@ int32_t Clan::RemoveMember(int64_t player_id, Asset::ClanOperation* message)
 		PlayerInstance.SendProtocol2GameServer(player_id, message); //发给另一个中心服处理
 	}
 
+	message->mutable_clan()->CopyFrom(_stuff); //更新列表
+
 	DEBUG("茶馆:{} 删除成员:{} 协议:{} 成功", _clan_id, player_id, message->ShortDebugString());
 		
 	_dirty = true;
@@ -895,7 +897,7 @@ void ClanManager::OnOperate(std::shared_ptr<Player> player, Asset::ClanOperation
 
 			message->mutable_clan()->CopyFrom(clan->Get()); //茶馆信息
 
-			des_player->SendProtocol(message); //通知玩家馆长同意加入茶馆
+			//des_player->SendProtocol(message); //通知玩家馆长同意加入茶馆
 			des_player->SendProtocol2GameServer(message); //通知逻辑服务器加入茶馆成功
 			
 			//player->SendProtocol2GameServer(message); //通知逻辑服务器加入成功

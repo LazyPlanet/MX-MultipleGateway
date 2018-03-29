@@ -518,7 +518,7 @@ public:
 	bool IsHoster(int64_t clan_id); //是否是该茶馆的老板
 
 	void OnClanCreated(int64_t clan_id); //成功创建茶馆//俱乐部
-	void OnClanJoin(int64_t clan_id); //成功加入茶馆//俱乐部
+	bool OnClanJoin(int64_t clan_id); //成功加入茶馆//俱乐部
 	void SetCurrClan(int64_t clan_id); //设置当前所在俱乐部
 	void OnQuitClan(int64_t clan_id); //成功退出茶馆//俱乐部
 	bool IsDaili() { return _stuff.agent_account().size() > 0;} //是否是代理账号

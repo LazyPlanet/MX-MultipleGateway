@@ -88,12 +88,13 @@ public:
 
 	//获取名字
 	virtual std::string GetName() { return _stuff.common_prop().name(); }
-	virtual void SetName(std::string name) { _stuff.mutable_common_prop()->set_name(name); } 
+	virtual void SetName(std::string name) { _stuff.mutable_common_prop()->set_name(name); _dirty = true; } 
 	//账号
 	virtual std::string GetAccount() { return _stuff.account(); }
 	virtual void SetAccount(std::string account, Asset::ACCOUNT_TYPE account_type) { 
 		_stuff.set_account(account); 
 		_account_type = account_type; //账号类型
+		_dirty = true;
 	} 
 	void SetRegisterServer(int32_t server_id) { _stuff.mutable_common_prop()->set_local_server_id(server_id); _dirty = true; }
 	//获取级别

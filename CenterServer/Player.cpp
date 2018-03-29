@@ -98,16 +98,18 @@ int32_t Player::Save(bool force)
 {
 	LOG_BI("player", _stuff);	
 
-	if (!force && !IsDirty()) return 1;
-
-	if (!force && !IsCenterServer()) return 2; 
-
+	//if (!force && !IsDirty()) return 1;
+	//if (!force && !IsCenterServer()) return 2; 
+	
+	if (!IsDirty()) return 1;
+	if (!IsCenterServer()) return 2; 
+	
 	auto success = RedisInstance.SavePlayer(_player_id, _stuff); 
 	if (!success) return 3;
 
 	_dirty = false;
 	
-	DEBUG("玩家:{} 服务器:{} 保存数据成功，内容:{}", _player_id, g_server_id, _stuff.ShortDebugString());
+	DEBUG("玩家:{} 是否强制存盘:{} 服务器:{} 保存数据成功，内容:{}", _player_id, force, g_server_id, _stuff.ShortDebugString());
 		
 	return 0;
 }
@@ -133,7 +135,7 @@ int32_t Player::OnLogout()
 
 	if (IsInRoom()) 
 	{
-		ERROR("玩家:{}游戏进行中，服务器:{}，房间:{} 不能从大厅退出", _player_id, _stuff.server_id(), _stuff.room_id());
+		ERROR("玩家:{} 游戏进行中，服务器:{}，房间:{} 不能从大厅退出", _player_id, _stuff.server_id(), _stuff.room_id());
 
 		WorldSessionInstance.RemovePlayer(_player_id); //网络会话数据
 		PlayerInstance.Remove(_player_id); //玩家管理
@@ -147,6 +149,11 @@ int32_t Player::OnLogout()
 
 	WorldSessionInstance.RemovePlayer(_player_id); //网络会话数据
 	PlayerInstance.Remove(_player_id); //玩家管理
+			
+	Asset::KickOutPlayer kickout_player; //通知游戏逻辑服务器退出
+	kickout_player.set_player_id(_player_id);
+	kickout_player.set_reason(Asset::KICK_OUT_REASON_LOGOUT);
+	SendProtocol2GameServer(kickout_player); 
 
 	DEBUG("玩家:{} 数据:{} 从大厅成功退出", _player_id, _stuff.ShortDebugString());
 
