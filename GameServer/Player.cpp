@@ -3015,11 +3015,30 @@ bool Player::IsSiGuiYi(const Asset::PaiElement& pai)
 const std::vector<Asset::PaiElement>& Player::CalculateJueTouHui(const std::map<int32_t, std::vector<int32_t>>& cards_inhand, const std::map<int32_t, std::vector<int32_t>>& cards_outhand, const Asset::PaiElement& pai)
 {
 	if (_juetouhuis.size()) _juetouhuis.clear();
+	
+	//
+	//检查非自己打牌，然后手牌是否含有3张
+	auto it = cards_inhand.find(pai.card_type());
+	if (it != cards_inhand.end())
+	{
+		int32_t count = std::count(it->second.begin(), it->second.end(), pai.card_value());
+		if (count == 3) _juetouhuis.push_back(pai);
+	}
 
+	//
+	//检查可以杠牌的情况，但是不包括，非自己打出的牌，只检查手牌
 	RepeatedField<Asset::PaiOperationAlert_AlertElement> gang_list;
 	if (CheckAllGangPai(gang_list, cards_inhand, cards_outhand, pai)) 
 	{
-		for (const auto& gang : gang_list) _juetouhuis.push_back(gang.pai());
+		for (const auto& gang : gang_list) 
+		{
+			auto it = std::find_if(_juetouhuis.begin(), _juetouhuis.end(), [pai](const Asset::PaiElement& pai_element){
+						return pai.card_type() == pai_element.card_type() && pai.card_value() == pai_element.card_value();
+					});
+			if (it != _juetouhuis.end()) continue; //防止重复
+
+			_juetouhuis.push_back(gang.pai());
+		}
 	}
 
 	DEBUG("玩家:{} 拥有绝头会儿数量:{}", _player_id, _juetouhuis.size());
