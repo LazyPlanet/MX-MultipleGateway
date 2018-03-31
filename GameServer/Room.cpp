@@ -300,6 +300,13 @@ std::shared_ptr<Player> Room::GetHoster()
 
 bool Room::IsHoster(int64_t player_id)
 {
+	if (_stuff.clan_id()) //茶馆房，老板可以作为房主逻辑
+	{
+		Asset::Clan clan;
+		bool has_clan = ClanInstance.GetCache(_stuff.clan_id(), clan);
+		if (has_clan && clan.hoster_id() == player_id) return true;
+	}
+
 	auto host = GetHoster();
 	if (!host) return false;
 
@@ -352,12 +359,11 @@ void Room::OnPlayerOperate(std::shared_ptr<Player> player, pb::Message* message)
 			
 			if (IsMatch() && IsGaming()) return; //非好友房结束可以直接退出
 
-			//如果房主离开房间，且此时尚未开局，则直接解散
 			if (IsHoster(player->GetID()) && !IsClan()) //非茶馆房间
 			{
 				if (_games.size() == 0) //尚未开局
 				{
-					KickOutPlayer();
+					KickOutPlayer(); //如果房主离开房间，且此时尚未开局，则直接解散
 				}
 				else
 				{
