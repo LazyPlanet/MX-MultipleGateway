@@ -236,8 +236,6 @@ void WorldSession::OnProcessMessage(const Asset::Meta& meta)
 				if (player_id == 0) return;
 				
 				_player = std::make_shared<Player>(player_id);
-				_player->SetLocalServer(g_server_id);
-				_player->SetRegisterServer(g_server_id);
 				
 				WorldSessionInstance.AddPlayer(player_id, shared_from_this()); //在线玩家
 				
@@ -246,8 +244,11 @@ void WorldSession::OnProcessMessage(const Asset::Meta& meta)
 				std::string player_name = NameInstance.Get();
 				_player->SetName(player_name);
 				_player->SetAccount(login->account().username(), _account.account_type());
+				
+				_player->SetRegisterServer(g_server_id);
+				//_player->SetLocalServer(g_server_id); //触发服务器切换，中心服务器->逻辑服务器
 
-				//_player->Save(true); //存盘，防止数据库无数据
+				_player->Save(true); //存盘，防止数据库无数据//此时尚未加载到场景，因此无法通过心跳进行存盘
 				_user.mutable_player_list()->Add(player_id);
 				
 				LOG(INFO, "账号:{} 下尚未创建角色，创建角色:{} 账号数据:{}", login->account().username(), player_id, _user.ShortDebugString());
@@ -698,6 +699,8 @@ void WorldSession::SendProtocol(const pb::Message* message)
 
 void WorldSession::SendProtocol(const pb::Message& message)
 {
+	if (!IsConnect()) return; //网络已经断开
+
 	const pb::FieldDescriptor* field = message.GetDescriptor()->FindFieldByName("type_t");
 	if (!field) return;
 	
@@ -716,6 +719,8 @@ void WorldSession::SendProtocol(const pb::Message& message)
 
 void WorldSession::SendMeta(const Asset::Meta& meta)
 {
+	if (!IsConnect()) return; //网络已经断开
+
 	std::string content = meta.SerializeAsString();
 	if (content.empty()) return;
 

@@ -109,10 +109,11 @@ int32_t Player::Save(bool force)
 	if (!success) return 2;
 	
 	_dirty = false;
-
+	/*
 	Asset::CommonPropSync proto;
 	proto.set_player_id(_player_id);
 	SendProtocol(proto); //数据同步
+	*/
 
 	return 0;
 }

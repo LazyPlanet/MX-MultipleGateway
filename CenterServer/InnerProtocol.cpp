@@ -27,7 +27,7 @@ bool WorldSession::OnInnerProcess(const Asset::Meta& meta)
 		message = nullptr;
 	};
 
-	//if (meta.stuff().size() == 0) return true;
+	//if (meta.stuff().size() == 0) return true; //确实存在只传输类型没内容的情况
 	
 	auto result = message->ParseFromArray(meta.stuff().c_str(), meta.stuff().size());
 	if (!result) return false; 
@@ -136,11 +136,11 @@ bool WorldSession::OnInnerProcess(const Asset::Meta& meta)
 
 		default:
 		{
-			auto player = PlayerInstance.Get(meta.player_id());
+			auto player = WorldSessionInstance.GetPlayerSession(meta.player_id());
 
 			if (!player) 
 			{
-				ERROR("未能找到玩家:{}", meta.player_id());
+				ERROR("未能找到玩家:{}网络连接 不能处理协议:{}", meta.player_id(), Asset::META_TYPE_Name(meta.type_t()));
 				return false;
 			}
 			player->SendMeta(meta);

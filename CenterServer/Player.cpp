@@ -101,8 +101,8 @@ int32_t Player::Save(bool force)
 	//if (!force && !IsDirty()) return 1;
 	//if (!force && !IsCenterServer()) return 2; 
 	
-	if (!IsDirty()) return 1;
-	if (!IsCenterServer()) return 2; 
+	if (!force && !IsDirty()) return 1;
+	if (!IsCenterServer()) return 2; //不能强制存盘，防止数据覆盖
 	
 	auto success = RedisInstance.SavePlayer(_player_id, _stuff); 
 	if (!success) return 3;
@@ -231,12 +231,13 @@ void Player::SetLocalServer(int32_t server_id)
 	if (server_id == _stuff.server_id()) return;
 	
 	_stuff.set_server_id(server_id); 
+	_dirty = true;
+	
+	Save(true); //必须强制存盘，否则会覆盖数据
 	
 	Asset::EnterGame enter_game;
 	enter_game.set_player_id(_player_id);
 	SendProtocol2GameServer(enter_game); //登陆逻辑服务器
-
-	Save(true); //必须强制存盘，否则会覆盖数据
 }
 	
 bool Player::IsCenterServer() 
