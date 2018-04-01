@@ -213,11 +213,15 @@ int32_t Player::OnLogout(Asset::KICK_OUT_REASON reason)
 	//https://www.teambition.com/project/592ad0fd66e46f0dd7503429/tasks/scrum/592ad0fe4e2b442b01e8753d/task/5ab9e9a11adffc7755dc4df4
 	//
 	//因此，次序必须保证
-	if (reason == Asset::KICK_OUT_REASON_LOGOUT || reason == Asset::KICK_OUT_REASON_CHANGE_SERVER) //切换服务器直接退出
+	if (reason == Asset::KICK_OUT_REASON_LOGOUT)
 	{
 		_stuff.set_login_time(0); //不在逻辑服务器进行在线或离线状态更新//真正离线
 		_stuff.set_logout_time(CommonTimerInstance.GetTime());
 
+		PlayerInstance.Remove(_player_id); //删除玩家
+	}
+	else if (reason == Asset::KICK_OUT_REASON_CHANGE_SERVER) //切换服务器直接退出当前服务器，玩家状态还是在线
+	{
 		PlayerInstance.Remove(_player_id); //删除玩家
 	}
 	
@@ -4287,7 +4291,7 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 			{ 5, {2, 2} },
 		};
 	}
-	else if (true && _player_id == 11534364 && _cards_inhand.size() == 0) //13
+	else if (false && _player_id == 11534364 && _cards_inhand.size() == 0) //13
 	{
 		_cards_inhand = {
 			{ 1, {1, 1, 1, 1} },
@@ -4295,7 +4299,7 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 			{ 4, {1, 2, 3, 4, 4, 4} },
 		};
 	}
-	else if (true && _player_id == 11534346 && _cards_inhand.size() == 0) //13
+	else if (false && _player_id == 11534346 && _cards_inhand.size() == 0) //13
 	{
 		_cards_inhand = {
 			{ 1, {1, 1, 1, 1, 2, 2, 2, 2} },
