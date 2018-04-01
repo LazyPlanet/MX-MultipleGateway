@@ -3309,11 +3309,13 @@ bool Player::CheckChiPai(const Asset::PaiElement& pai)
 
 void Player::OnChiPai(const Asset::PaiElement& pai, pb::Message* message)
 {
+	if (!message) return;
+
 	if (!_room || !_game) return;
 
 	PrintPai(); //打印玩家当前手里的牌数据
 
-	if (!CheckChiPai(pai) || !message) 
+	if (!CheckChiPai(pai))
 	{
 		LOG(ERROR, "玩家:{}不能吃牌，原因:没有牌能满足吃牌，类型:{} 牌值:{}", _player_id, pai.card_type(), pai.card_value());
 		return;
@@ -4191,7 +4193,7 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 			{ 5, {1, 2, 3, 3, 3} },
 		};
 	}
-	else if (false && _player_id == 11534338 && _cards_inhand.size() == 0) //14
+	else if (true && _player_id == 11534338 && _cards_inhand.size() == 0) //14
 	{
 		_cards_inhand = {
 			//{ 1, {1, 1, 1, 1, 2, 2, 2, 2} },
