@@ -660,6 +660,12 @@ int32_t Player::CheckCreateRoom(pb::Message* message)
 
 	auto clan = ClanInstance.Get(clan_id);
 	if (!clan) return Asset::ERROR_CLAN_NOT_FOUND; //尚未存在茶馆 
+
+	auto clan_limit = dynamic_cast<Asset::ClanLimit*>(AssetInstance.Get(g_const->clan_id()));
+	if (!clan_limit) return Asset::ERROR_CLAN_NOT_FOUND;
+
+	auto room_gaming_count = clan->GetRoomOpenedCount();
+	if (clan_limit->create_room_limit() < room_gaming_count) return Asset::ERROR_CLAN_ROOM_COUNT_LIMIT; //茶馆房间上限限制
 	
 	const Asset::Item_RoomCard* room_card = dynamic_cast<const Asset::Item_RoomCard*>(AssetInstance.Get(g_const->room_card_id()));
 	if (!room_card || room_card->rounds() <= 0) return Asset::ERROR_INNER; //消耗卡数据

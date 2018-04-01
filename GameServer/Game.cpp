@@ -149,10 +149,10 @@ void Game::OnStarted()
 	auto cards = FaPai(1); 
 	_fanpai = GameInstance.GetCard(cards[0]);
 
-	if (false) //调试
+	if (true) //调试
 	{
 		_fanpai.set_card_type(Asset::CARD_TYPE_JIAN);
-		_fanpai.set_card_value(3);
+		_fanpai.set_card_value(2);
 	}
 	
 	auto huipai = _fanpai;
