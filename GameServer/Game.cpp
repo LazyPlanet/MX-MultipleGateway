@@ -149,7 +149,7 @@ void Game::OnStarted()
 	auto cards = FaPai(1); 
 	_fanpai = GameInstance.GetCard(cards[0]);
 
-	if (true) //调试
+	if (false) //调试
 	{
 		_fanpai.set_card_type(Asset::CARD_TYPE_JIAN);
 		_fanpai.set_card_value(2);
@@ -461,12 +461,6 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				{
 					fan_list.emplace(Asset::FAN_TYPE_JIN_BAO);
 
-					/*
-					_oper_cache.set_player_id(player->GetID()); //当前可操作玩家
-					_oper_cache.set_source_player_id(player->GetID());
-					_oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
-					_oper_cache.mutable_pai()->CopyFrom(pai);
-					*/
 					_room->AddJinBao(player->GetID()); //进宝
 				}
 
@@ -475,8 +469,6 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 			else if (player->ShouldDaPai() && player->CheckZiMo(pai)) //平胡
 			{
 				auto fan_list = player->GetFanList();
-
-				//SetZiMoCache(player, pai); //自摸胡牌缓存
 
 				if (player->IsJinbao()) 
 				{
@@ -488,16 +480,8 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 			else if (player->CheckBaoHu(pai) && player->HasPai(_baopai)) //宝胡
 			{
 				auto fan_list = player->GetFanList();
-
 				fan_list.emplace(Asset::FAN_TYPE_LOU_BAO); 
 					
-				/*
-				_oper_cache.set_player_id(player->GetID()); //当前可操作玩家
-				_oper_cache.set_source_player_id(player->GetID());
-				_oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
-				_oper_cache.mutable_pai()->CopyFrom(_baopai);
-				*/
-
 				_room->AddLouBao(player->GetID()); //搂宝
 
 				Calculate(player->GetID(), _oper_cache.source_player_id(), fan_list); //结算
@@ -505,14 +489,6 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 			else if ((player->ShouldZhuaPai() && player->CheckHuiHu(pai, false, true))/* || (player->ShouldDaPai() && player->CheckHuiHu(pai, true, true))*/)
 			{
 				auto fan_list = player->GetFanList();
-				
-				/*
-				_oper_cache.set_player_id(player->GetID()); //当前可操作玩家
-				_oper_cache.set_source_player_id(player->GetID());
-				_oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
-				_oper_cache.mutable_pai()->CopyFrom(_baopai);
-				*/
-
 				Calculate(player->GetID(), _oper_cache.source_player_id(), fan_list); //结算
 			}
 			else
@@ -1288,24 +1264,7 @@ bool Game::SendCheckRtn()
 	if (operation.alert().pais().size() == 0) return false;
 
 	int64_t player_id = operation.player_id(); 
-
-	//_oper_cache.set_player_id(player_id); //当前可操作玩家
-	//_oper_cache.set_source_player_id(operation.source_player_id()); //当前牌来自玩家
-	//_oper_cache.mutable_pai()->CopyFrom(operation.pai()); //缓存这张牌
-	//_oper_cache.set_time_out(CommonTimerInstance.GetTime() + 30); //8秒后超时
-	
 	Asset::PaiOperationAlert alert = operation.alert();
-
-	//auto pai_perator = alert.mutable_pais()->Add();
-	//pai_perator->mutable_pai()->CopyFrom(operation.pai());
-
-	/*
-	for (auto rtn : operation.oper_list()) 
-	{
-		pai_perator->mutable_oper_list()->Add(rtn); //可操作牌类型
-		_oper_cache.mutable_oper_list()->Add(rtn); //缓存操作
-	}
-	*/
 
 	auto player_to = GetPlayer(player_id); 
 	if (!player_to) return false;
@@ -1391,9 +1350,6 @@ bool Game::IsQiangGang(int64_t player_id)
 	if (_oper_cache.player_id() != player_id) return false;
 	if (_oper_cache.source_player_id() == 0) return false;
 
-	//auto it = std::find(_oper_cache.oper_list().begin(), _oper_cache.oper_list().end(), Asset::PAI_OPER_TYPE_QIANGGANG);
-	//if (it == _oper_cache.oper_list().end()) return false;
-	//return true;
 	for (int32_t i = 0; i < _oper_cache.alert().pais().size(); ++i)
 	{
 		for (int32_t k = 0; k < _oper_cache.alert().pais(i).oper_list().size(); ++k)
@@ -1454,28 +1410,6 @@ void Game::SetPaiOperation(int64_t player_id, int64_t source_player_id, const As
 	DEBUG("房间:{} 局数:{} 玩家:{} 源玩家:{} 设置缓存数据:{}", _room_id, _game_id, player_id, source_player_id, _oper_cache.ShortDebugString());
 }
 	
-/*
-void Game::SetPaiOperation(int64_t player_id, int64_t source_player_id, Asset::PaiElement pai, Asset::PAI_OPER_TYPE oper_type)
-{
-	_oper_cache.set_player_id(player_id); 
-	_oper_cache.set_source_player_id(source_player_id); 
-	_oper_cache.mutable_pai()->CopyFrom(pai);
-	_oper_cache.mutable_oper_list()->Add(oper_type);
-}
-
-void Game::SetZiMoCache(std::shared_ptr<Player> player, Asset::PaiElement pai)
-{
-	if (!player) return;
-
-	_oper_cache.set_player_id(player->GetID()); 
-	_oper_cache.set_source_player_id(player->GetID()); 
-	_oper_cache.mutable_pai()->CopyFrom(pai);
-	_oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
-
-	DEBUG("房间:{} 局数:{} 玩家:{}自摸设置数据:{}", _room_id, _game_id, player->GetID(), _oper_cache.ShortDebugString());
-}
-*/
-
 std::vector<int32_t> Game::TailPai(size_t card_count)
 {
 	std::vector<int32_t> tail_cards;
