@@ -2198,7 +2198,7 @@ bool Player::CheckHuiHu(Asset::PaiElement pai, bool check_zimo, bool calculate)
 
 	if (_room->HasJueTouHui()) 
 	{
-		const auto& juetous = CalculateJueTouHui(cards_inhand, cards_outhand, pai); //支持绝头会儿
+		const auto& juetous = CalculateJueTouHui(pai); //支持绝头会儿
 		if (juetous.size())
 		{
 			for (const auto& juetou : juetous)
@@ -2239,11 +2239,12 @@ bool Player::CheckHuiHu(Asset::PaiElement pai, bool check_zimo, bool calculate)
 		}
 			
 		bool can_hupai = CheckHuPai(cards_inhand_without_huipai, cards_outhand, minggang, angang, jiangang, fenggang, pai, true, calculate);
-		if (can_hupai && calculate) _hui_fan_list.push_back(_fan_list);
-		if (can_hupai && !calculate) 
+
+		if (can_hupai) 
 		{
-			WARN("玩家:{} 结束计算是否可以胡牌:{}", _player_id, pai.ShortDebugString());
-			return true;
+			if (!calculate) return true; //不需要计算番数，直接返回成功
+
+			_hui_fan_list.push_back(_fan_list);
 		}
 	}
 
@@ -2260,13 +2261,9 @@ bool Player::CheckHuiHu(Asset::PaiElement pai, bool check_zimo, bool calculate)
 		bool can_hupai = CheckHuPai(cards_inhand_without_huipai, cards_outhand, minggang, angang, jiangang, fenggang, pai, true, calculate);
 		if (!can_hupai) continue;
 		
-		if (calculate) {
-			_hui_fan_list.push_back(_fan_list);
-		}
-		else {
-			WARN("玩家:{} 结束计算是否可以胡牌:{}", _player_id, pai.ShortDebugString());
-			return true;
-		}
+		if (!calculate) return true; //不需要计算番数，直接返回成功
+
+		_hui_fan_list.push_back(_fan_list);
 
 		++cnt;
 	}
@@ -2640,7 +2637,7 @@ bool Player::CheckHuPai(const std::map<int32_t, std::vector<int32_t>>& cards_inh
 	//
 	if (CheckQiDui(cards_inhand, cards_outhand)) 
 	{
-		if (_room->HasJueTouHui()) CalculateJueTouHui(_cards_inhand, _cards_outhand, pai); //支持绝头会儿//比较特殊必须按照手牌处理
+		if (_room->HasJueTouHui()) CalculateJueTouHui(pai); //支持绝头会儿//比较特殊必须按照手牌处理
 
 		_fan_list.emplace(Asset::FAN_TYPE_QIDUI); //七对儿,不会有其他番数
 	
@@ -3013,30 +3010,26 @@ bool Player::IsSiGuiYi(const Asset::PaiElement& pai)
 //
 //手里四个一饼，其中一个是绝头混
 //
-const std::vector<Asset::PaiElement>& Player::CalculateJueTouHui(const std::map<int32_t, std::vector<int32_t>>& cards_inhand, const std::map<int32_t, std::vector<int32_t>>& cards_outhand, const Asset::PaiElement& pai)
+const std::vector<Asset::PaiElement>& Player::CalculateJueTouHui(const Asset::PaiElement& pai)
 {
 	if (_juetouhuis.size()) _juetouhuis.clear();
-	
-	//
-	//检查非自己打牌，然后手牌是否含有3张
-	auto it = _cards_inhand.find(pai.card_type());
-	if (it != _cards_inhand.end())
-	{
-		int32_t count = std::count(it->second.begin(), it->second.end(), pai.card_value());
-		if (count == 3) _juetouhuis.push_back(pai);
-	}
 
-	//
-	//检查可以杠牌的情况，但是不包括，非自己打出的牌，只检查手牌
+	auto cards_inhand = _cards_inhand;
+	const auto& cards_outhand = _cards_outhand;
+
+	if (ShouldZhuaPai()) cards_inhand[pai.card_type()].push_back(pai.card_value());
+
 	RepeatedField<Asset::PaiOperationAlert_AlertElement> gang_list;
 	if (CheckAllGangPai(gang_list, cards_inhand, cards_outhand, pai)) 
 	{
 		for (const auto& gang : gang_list) 
 		{
+			/*
 			auto it = std::find_if(_juetouhuis.begin(), _juetouhuis.end(), [pai](const Asset::PaiElement& pai_element){
 						return pai.card_type() == pai_element.card_type() && pai.card_value() == pai_element.card_value();
 					});
 			if (it != _juetouhuis.end()) continue; //防止重复
+			*/
 
 			_juetouhuis.push_back(gang.pai());
 		}
@@ -4186,24 +4179,25 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 			{ 4, {1, 2, 3, 4, 4, 4} },
 		};
 	}
-	else if (false && _player_id == 11534346 && _cards_inhand.size() == 0) //13
+	else if (false && _player_id == 11534399 && _cards_inhand.size() == 0) //14
 	{
 		_cards_inhand = {
 			{ 1, {1, 1, 1, 1, 2, 2, 2, 2} },
+			{ 4, {1} },
 			{ 5, {1, 2, 3, 3, 3} },
 		};
 	}
-	else if (true && _player_id == 11534338 && _cards_inhand.size() == 0) //14
+	else if (false && _player_id == 11534338 && _cards_inhand.size() == 0) //13
 	{
 		_cards_inhand = {
 			//{ 1, {1, 1, 1, 1, 2, 2, 2, 2} },
-			{ 4, {2, 2, 3, 3, 4} },
-			{ 5, {3, 3, 3} },
+			{ 2, {1, 2, 5, 5, 6} },
+			{ 5, {3, 3} },
 		};
 		
 		_cards_outhand = {
-			{ 4, {4, 4, 4} },
-			{ 5, {1, 1, 1} },
+			{ 1, {3, 3, 3} },
+			{ 4, {3, 3, 3} },
 		};
 	}
 	else
@@ -4228,7 +4222,6 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 		for (auto pai : _cards_inhand)
 		{
 			auto pais = notify.mutable_pais()->Add();
-
 			pais->set_card_type((Asset::CARD_TYPE)pai.first); //牌类型
 
 			::google::protobuf::RepeatedField<int32_t> cards(pai.second.begin(), pai.second.end());
@@ -4252,7 +4245,7 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 	{
 		auto card = GameInstance.GetCard(cards[0]);
 		if (card.card_type() == 0 || card.card_type() == 0) return 11;
-
+			
 		_zhuapai = card;
 		++_fapai_count; //发牌数量
 		

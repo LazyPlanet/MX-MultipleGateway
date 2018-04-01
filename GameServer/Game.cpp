@@ -152,7 +152,7 @@ void Game::OnStarted()
 	if (false) //调试
 	{
 		_fanpai.set_card_type(Asset::CARD_TYPE_JIAN);
-		_fanpai.set_card_value(2);
+		_fanpai.set_card_value(1);
 	}
 	
 	auto huipai = _fanpai;
@@ -498,6 +498,8 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				LOG(ERROR, "玩家:{}胡牌不满足条件，可能是外挂行为, 胡牌, 牌类型:{} 牌值:{}", player->GetID(), pai.card_type(), pai.card_value());
 				
 				player->AlertMessage(Asset::ERROR_GAME_PAI_UNSATISFIED); //没有牌满足条件
+
+				if (player->ShouldDaPai()) return; //轮到该玩家出牌
 
 				auto player_next = GetNextPlayer(player->GetID());
 				if (!player_next) return; 
