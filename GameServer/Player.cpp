@@ -3309,6 +3309,8 @@ bool Player::CheckChiPai(const Asset::PaiElement& pai)
 
 void Player::OnChiPai(const Asset::PaiElement& pai, pb::Message* message)
 {
+	if (!_room || !_game) return;
+
 	PrintPai(); //打印玩家当前手里的牌数据
 
 	if (!CheckChiPai(pai) || !message) 
@@ -3338,6 +3340,8 @@ void Player::OnChiPai(const Asset::PaiElement& pai, pb::Message* message)
 	{
 		if (pai.card_type() != p.card_type()) return; //牌类型不一致
 
+		if (_game->IsHuiPai(p)) return;
+
 		cards.push_back(p);
 	}
 
@@ -3361,11 +3365,7 @@ void Player::OnChiPai(const Asset::PaiElement& pai, pb::Message* message)
 	it->second.erase(first); //删除
 
 	auto second = std::find(it->second.begin(), it->second.end(), pai_operate->pais(1).card_value());
-	if (second == it->second.end()) 
-	{
-		DEBUG_ASSERT(false);
-		return; //理论上不会出现
-	}
+	if (second == it->second.end()) return; //理论上不会出现
 
 	it->second.erase(second); //删除
 
