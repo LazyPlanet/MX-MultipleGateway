@@ -67,6 +67,12 @@ bool CenterSession::OnMessageProcess(const Asset::Meta& meta)
 		}
 
 		auto message = msg->New();
+
+		defer {
+			delete message; //防止内存泄漏
+			message = nullptr;
+		};
+
 		auto result = message->ParseFromArray(meta.stuff().c_str(), meta.stuff().size());
 		if (!result) return false;		//非法协议
 		
@@ -77,11 +83,8 @@ bool CenterSession::OnMessageProcess(const Asset::Meta& meta)
 			ERROR("玩家:{} 尚未存在逻辑服务器:{} 可能没有登录成功 协议:{}", meta.player_id(), g_server_id, message->ShortDebugString());
 			return false;
 		}
-
+	
 		player->HandleProtocol(meta.type_t(), message);
-
-		delete message; //防止内存泄漏
-		message = nullptr;
 	}
 	return true;
 }

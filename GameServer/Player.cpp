@@ -1181,8 +1181,13 @@ bool Player::HandleMessage(const Asset::MsgItem& item)
 	if (!msg) return false;
 
 	auto message = msg->New();
-	auto result = message->ParseFromString(item.content());
+	
+	defer {
+		delete message;
+		message = nullptr;
+	};
 
+	auto result = message->ParseFromString(item.content());
 	if (!result) return false;      //非法协议
 	
 	DEBUG("玩家:{} 处理消息:{}", _player_id, message->ShortDebugString());
@@ -1194,7 +1199,7 @@ bool Player::HandleMessage(const Asset::MsgItem& item)
 			CmdPaiOperate(message);
 		}
 		break;
-
+		
 		default:
 		{
 			WARN("玩家:{} 尚未消息:{}处理回调", _player_id, item.ShortDebugString());
