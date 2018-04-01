@@ -3019,8 +3019,8 @@ const std::vector<Asset::PaiElement>& Player::CalculateJueTouHui(const std::map<
 	
 	//
 	//检查非自己打牌，然后手牌是否含有3张
-	auto it = cards_inhand.find(pai.card_type());
-	if (it != cards_inhand.end())
+	auto it = _cards_inhand.find(pai.card_type());
+	if (it != _cards_inhand.end())
 	{
 		int32_t count = std::count(it->second.begin(), it->second.end(), pai.card_value());
 		if (count == 3) _juetouhuis.push_back(pai);
@@ -4406,7 +4406,6 @@ bool Player::LookAtBaopai(bool has_saizi)
 		pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
 		SendProtocol(alert); //进宝 
 	
-		//_game->SetZiMoCache(shared_from_this(), baopai); //自摸胡牌缓存
 		_game->SetPaiOperation(_player_id, _player_id, alert);
 
 		return true;
