@@ -2217,9 +2217,7 @@ bool Player::CheckHuiHu(Asset::PaiElement pai, bool check_zimo, bool calculate)
 	
 	if (count == 0) return false; //没有会牌，也没有绝头会儿
 	
-	//DEBUG("玩家:{} 拥有会儿牌数量:{}", _player_id, count);
-	
-	WARN("玩家:{} 开始计算是否可以胡牌:{}", _player_id, pai.ShortDebugString());
+	//WARN("玩家:{} 开始计算是否可以胡牌:{} 是否自摸检查:{} 是否结算:{}", _player_id, pai.ShortDebugString(), check_zimo, calculate);
 
 	auto cards_inhand_without_huipai = cards_inhand;
 
@@ -2238,8 +2236,6 @@ bool Player::CheckHuiHu(Asset::PaiElement pai, bool check_zimo, bool calculate)
 		{
 			const auto& pai_element = cards[vi[j]];
 			cards_inhand_without_huipai[pai_element.card_type()].push_back(pai_element.card_value());
-
-			//DEBUG("玩家:{} 当前替换牌数据:{}", _player_id, pai_element.ShortDebugString());
 		}
 			
 		bool can_hupai = CheckHuPai(cards_inhand_without_huipai, cards_outhand, minggang, angang, jiangang, fenggang, pai, true, calculate);
@@ -2255,29 +2251,12 @@ bool Player::CheckHuiHu(Asset::PaiElement pai, bool check_zimo, bool calculate)
 	{
 		cards_inhand_without_huipai = cards_inhand;
 
-		//Asset::ShunZi shunzi;
-		//std::stringstream card_value_list;
-
 		for (size_t j = 0; j < COMB; ++j)
 		{
 			const auto& pai_element = cards[vi[j]];
 			cards_inhand_without_huipai[pai_element.card_type()].push_back(pai_element.card_value());
-
-			//shunzi.mutable_pai()->Add()->CopyFrom(pai_element);
 		}
 			
-		//DEBUG("玩家:{} 当前替换牌数据:{}", _player_id, shunzi.ShortDebugString());
-
-		/*
-		for (auto cards : cards_inhand_without_huipai)
-		{
-			for (auto card_value : cards.second)
-				card_value_list << cards.first << ":" << card_value;
-		}
-		*/
-				
-		//DEBUG("玩家:{} 当前手牌:{}", _player_id, card_value_list.str());
-		
 		bool can_hupai = CheckHuPai(cards_inhand_without_huipai, cards_outhand, minggang, angang, jiangang, fenggang, pai, true, calculate);
 		if (!can_hupai) continue;
 		
@@ -2292,13 +2271,12 @@ bool Player::CheckHuiHu(Asset::PaiElement pai, bool check_zimo, bool calculate)
 		++cnt;
 	}
 	
-	WARN("玩家:{} 结束计算是否可以胡牌:{}", _player_id, pai.ShortDebugString());
+	//WARN("玩家:{} 开始计算是否可以胡牌:{} 是否自摸检查:{} 是否结算:{}", _player_id, pai.ShortDebugString(), check_zimo, calculate);
 
 	if (_hui_fan_list.size() == 0) return false;
 	
 	//
 	//会牌可能有多种胡法,求最大番数
-	//
 	auto max_fan_score = 1;
 	auto max_fan_list = _fan_list;
 
@@ -2316,7 +2294,7 @@ bool Player::CheckHuiHu(Asset::PaiElement pai, bool check_zimo, bool calculate)
 
 	_fan_list = max_fan_list;
 	
-	WARN("玩家:{} 结束计算是否可以胡牌:{}", _player_id, pai.ShortDebugString());
+	//WARN("玩家:{} 开始计算是否可以胡牌:{} 是否自摸检查:{} 是否结算:{}", _player_id, pai.ShortDebugString(), check_zimo, calculate);
 
 	return _hui_fan_list.size() > 0;
 }
@@ -4435,6 +4413,8 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 bool Player::OnFaPaiCheck(Asset::PaiOperationAlert& alert, Asset::PAI_OPER_TYPE oper_reason)
 {
 	if (!_room || !_game) return false;
+	
+	if (HasTuoGuan()) return false;
 
 	if (Asset::PAI_OPER_TYPE_BEGIN == oper_reason) oper_reason = _oper_type;
 
@@ -4444,7 +4424,7 @@ bool Player::OnFaPaiCheck(Asset::PaiOperationAlert& alert, Asset::PAI_OPER_TYPE 
 	//不能进行如，碰完之后可以胡牌的情况，因为尚未抓牌
 	static std::set<int32_t> _invalid_opers = { Asset::PAI_OPER_TYPE_CHIPAI, Asset::PAI_OPER_TYPE_PENGPAI, Asset::PAI_OPER_TYPE_XUANFENG_JIAN };
 
-	if (_invalid_opers.find(oper_reason) == _invalid_opers.end() && ((ShouldDaPai() && CheckZiMo()) || CheckBaoHu(_zhuapai)))
+	if (_invalid_opers.find(oper_reason) == _invalid_opers.end() && ((ShouldDaPai() && CheckZiMo(false)) || CheckBaoHu(_zhuapai)))
 	{
 		auto pai_perator = alert.mutable_pais()->Add();
 		pai_perator->mutable_pai()->CopyFrom(_zhuapai); //如果天胡则是初始值
