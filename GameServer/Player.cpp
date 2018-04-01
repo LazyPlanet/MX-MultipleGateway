@@ -3823,14 +3823,6 @@ void Player::OnGangZhuiFeng(Asset::PAI_OPER_TYPE oper_type, const Asset::PaiElem
 	_cards_inhand[pai.card_type()].erase(it); //删除牌
 	
 	_fapai_count = 0; //重置检查
-			
-	/*
-	auto cards = _game->FaPai(1); 
-	OnFaPai(cards); 
-	
-	Asset::PaiOperationAlert alert; //提示协议
-	if (OnFaPaiCheck(alert)) SendProtocol(alert);
-	*/
 }
 
 bool Player::CheckZhuiFengGang(std::map<int32_t/*麻将牌类型*/, std::vector<int32_t>/*牌值*/>& cards)
@@ -4054,69 +4046,6 @@ void Player::OnGangFengPai()
 	++_fenggang;
 
 	_fapai_count = 0; //重置检查
-	
-	/*
-	auto cards = _game->TailPai(1); //从后楼给玩家取一张牌
-	OnFaPai(cards);
-
-	Asset::PaiOperationAlert alert;
-	if (OnFaPaiCheck(alert)) SendProtocol(alert);
-	*/
-	//
-	//旋风杠检查
-	//
-	/*
-	auto gang = CheckXuanFeng();
-	if (gang)
-	{
-		auto pai_perator = alert.mutable_pais()->Add();
-		pai_perator->mutable_oper_list()->Add((Asset::PAI_OPER_TYPE)gang);
-	}
-	*/
-
-	//
-	//杠检查(明杠和暗杠)：发牌中检查
-	//
-	/*
-	RepeatedField<Asset::PaiOperationAlert_AlertElement> gang_list;
-	if (CheckAllGangPai(gang_list)) 
-	{
-		for (auto gang : gang_list) 
-		{
-			auto pai_perator = alert.mutable_pais()->Add();
-			pai_perator->CopyFrom(gang);
-		}
-	}
-	*/
-	//
-	//自摸检查
-	//
-	/*
-	auto zhuapai = GameInstance.GetCard(cards[0]);
-	if (CheckZiMo(false) || CheckBaoHu(zhuapai))
-	{
-		auto pai_perator = alert.mutable_pais()->Add();
-		pai_perator->mutable_pai()->CopyFrom(zhuapai);
-		pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
-
-		_game->SetPaiOperation(_player_id, _player_id, zhuapai);
-	}
-	//
-	//听牌检查
-	//
-	std::vector<Asset::PaiElement> pais;
-	if (CheckTingPai(pais))
-	{
-		for (auto pai : pais) 
-		{
-			auto pai_perator = alert.mutable_pais()->Add();
-			pai_perator->mutable_pai()->CopyFrom(pai);
-			pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
-		}
-	}
-	*/
-
-	//if (alert.pais().size()) SendProtocol(alert); //提示Client
 }
 
 bool Player::CheckJianGangPai(std::map<int32_t/*麻将牌类型*/, std::vector<int32_t>/*牌值*/>& cards)
@@ -4159,47 +4088,6 @@ void Player::OnGangJianPai()
 	}
 
 	++_jiangang;
-	
-	//Asset::PaiOperationAlert alert;
-	//if (OnFaPaiCheck(alert)) SendProtocol(alert);
-
-	//
-	//旋风杠检查
-	//
-	/*
-	for (auto gang : CheckXuanFengGang())
-	{
-		auto pai_perator = alert.mutable_pais()->Add();
-		pai_perator->mutable_oper_list()->Add(gang);
-	}
-	//
-	//杠检查(明杠和暗杠)
-	//
-	RepeatedField<Asset::PaiOperationAlert_AlertElement> gang_list;
-	if (CheckAllGangPai(gang_list)) 
-	{
-		for (auto gang : gang_list) 
-		{
-			auto pai_perator = alert.mutable_pais()->Add();
-			pai_perator->CopyFrom(gang);
-		}
-	}
-	//
-	//听牌检查
-	//
-	std::vector<Asset::PaiElement> pais;
-	if (CheckTingPai(pais))
-	{
-		for (auto pai : pais) 
-		{
-			auto pai_perator = alert.mutable_pais()->Add();
-			pai_perator->mutable_pai()->CopyFrom(pai);
-			pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
-		}
-	}
-	
-	if (alert.pais().size()) SendProtocol(alert); //提示Client
-	*/
 }
 
 bool Player::LookAtBaopai()

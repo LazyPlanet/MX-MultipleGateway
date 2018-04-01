@@ -344,87 +344,10 @@ void Game::OnPlayerReEnter(std::shared_ptr<Player> player)
 	DEBUG("玩家:{}由于断线重入房间，进行发牌:{} 缓存操作:{} 当前索引:{} 玩家索引:{}", player->GetID(), card.ShortDebugString(), _oper_cache.ShortDebugString(), _curr_player_index, player_index);
 
 	Asset::PaiOperationAlert alert;
-
-	//
-	//胡牌检查
-	//
-	//注意：自摸和其他玩家点炮之间的检查顺序
-	//
-	/*
-	if (player->CheckZiMo(false)) //自摸检查
-	{
-		auto pai_perator = alert.mutable_pais()->Add();
-		pai_perator->mutable_pai()->CopyFrom(player->GetZhuaPai());
-		pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
-					
-		//SetZiMoCache(player, card); //自摸胡牌缓存
-	}
-	//
-	//玩家摸宝之后进行抓牌正好抓到宝胡
-	//
-	else if (player->HasPai(_baopai) && player->CheckBaoHu(card)) //宝胡
-	{
-		auto pai_perator = alert.mutable_pais()->Add();
-		pai_perator->mutable_pai()->CopyFrom(_baopai);
-		pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
-		
-		//SetZiMoCache(player, card); //自摸胡牌缓存
-	}
-
-	//
-	//听牌检查
-	//
-	std::vector<Asset::PaiElement> ting_list;
-	if (player->CheckTingPai(ting_list))
-	{
-		//_oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
-
-		for (auto pai : ting_list) 
-		{
-			auto pai_perator = alert.mutable_pais()->Add();
-			pai_perator->mutable_pai()->CopyFrom(pai);
-			pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
-
-			//_oper_cache.mutable_ting_pais()->Add()->CopyFrom(pai);
-		}
-	}
-
-	//
-	//明杠和暗杠检查
-	//
-	::google::protobuf::RepeatedField<Asset::PaiOperationAlert_AlertElement> gang_list;
-	if (player->CheckAllGangPai(gang_list)) 
-	{
-		for (auto gang : gang_list) 
-		{
-			auto pai_perator = alert.mutable_pais()->Add();
-			pai_perator->CopyFrom(gang);
-		
-			//_oper_cache.mutable_pai()->CopyFrom(gang.pai());
-			//for (auto oper_type : gang.oper_list()) _oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE(oper_type));
-		}
-	}
-	
-	//
-	//旋风杠检查
-	//
-	for (auto gang : player->CheckXuanFengGang())
-	{
-		auto pai_perator = alert.mutable_pais()->Add();
-		pai_perator->mutable_oper_list()->Add(gang);
-	}
-	*/
-
-	//if (alert.pais().size()) 
 	if (player->OnFaPaiCheck(alert))
 	{
 		player->SendProtocol(alert); //提示Client
 		SetPaiOperation(player->GetID(), player->GetID(), alert);
-
-		//_oper_cache.set_player_id(player->GetID()); //当前可操作玩家
-		//_oper_cache.set_source_player_id(player->GetID()); //当前牌来自玩家，自己抓牌
-		//_oper_cache.set_time_out(CommonTimerInstance.GetTime() + 30); //8秒后超时
-		//_oper_cache.mutable_alert()->CopyFrom(alert);
 	}
 }
 
@@ -645,64 +568,6 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				player->OnFaPai(cards); //发牌
 
 				Asset::PaiOperationAlert alert;
-
-				/*
-				//
-				//旋风杠检查
-				//
-				for (auto gang : player->CheckXuanFengGang())
-				{
-					auto pai_perator = alert.mutable_pais()->Add();
-					pai_perator->mutable_oper_list()->Add(gang);
-				}
-				//
-				//玩家杠牌检查
-				//
-				//杠检查(明杠和暗杠)
-				//
-				RepeatedField<Asset::PaiOperationAlert_AlertElement> gang_list;
-				if (player->CheckAllGangPai(gang_list)) 
-				{
-					for (auto gang : gang_list) 
-					{
-						if (gang.pai().card_type() == pai.card_type() && gang.pai().card_value() == pai.card_value()) continue;
-
-						auto pai_perator = alert.mutable_pais()->Add();
-						pai_perator->CopyFrom(gang);
-					
-						_oper_cache.mutable_pai()->CopyFrom(gang.pai());
-						_oper_cache.set_source_player_id(gang.pai().source_player_id());
-						for (auto oper_type : gang.oper_list()) _oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE(oper_type));
-					}
-				}
-				//
-				//自摸检查
-				//
-				auto zhuapai = GameInstance.GetCard(cards[0]);
-				if (player->CheckZiMo(false) || player->CheckBaoHu(zhuapai))
-				{
-					auto pai_perator = alert.mutable_pais()->Add();
-					pai_perator->mutable_pai()->CopyFrom(zhuapai);
-					pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
-					
-					//SetZiMoCache(player, zhuapai); //自摸胡牌缓存
-				}
-				//
-				//听牌检查
-				//
-				std::vector<Asset::PaiElement> pais;
-				if (player->CheckTingPai(pais))
-				{
-					for (auto pai : pais) 
-					{
-						auto pai_perator = alert.mutable_pais()->Add();
-						pai_perator->mutable_pai()->CopyFrom(pai);
-						pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
-					}
-				}
-				*/
-				
-				//if (alert.pais().size()) 
 				if (player->OnFaPaiCheck(alert, pai_operate->oper_type()))
 				{
 					player->SendProtocol(alert); //提示Client
@@ -737,57 +602,6 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				ClearOperation(); //清理缓存以及等待玩家操作的状态
 
 				Asset::PaiOperationAlert alert;
-				/*
-				//
-				//听牌检查
-				//
-				std::vector<Asset::PaiElement> pais;
-				if (player->CheckTingPai(pais)) 
-				{
-					//_oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
-					//_oper_cache.set_player_id(player->GetID());
-
-					for (auto pai : pais) 
-					{
-						auto pai_perator = alert.mutable_pais()->Add();
-						pai_perator->mutable_pai()->CopyFrom(pai);
-						pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
-
-						//_oper_cache.mutable_ting_pais()->Add()->CopyFrom(pai);
-					}
-				}
-				//
-				//旋风杠检查
-				//
-				for (auto gang : player->CheckXuanFengGang())
-				{
-					auto pai_perator = alert.mutable_pais()->Add();
-					pai_perator->mutable_oper_list()->Add(gang);
-				}
-				//
-				//玩家杠牌检查
-				//
-				//杠检查(明杠和暗杠)
-				//
-				RepeatedField<Asset::PaiOperationAlert_AlertElement> gang_list;
-				if (player->CheckAllGangPai(gang_list)) 
-				{
-					//_oper_cache.set_player_id(player->GetID());
-
-					for (auto gang : gang_list) 
-					{
-						if (gang.pai().card_type() == pai.card_type() && gang.pai().card_value() == pai.card_value()) continue;
-
-						auto pai_perator = alert.mutable_pais()->Add();
-						pai_perator->CopyFrom(gang);
-					
-						//_oper_cache.mutable_pai()->CopyFrom(gang.pai());
-						//for (auto oper_type : gang.oper_list()) _oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE(oper_type));
-					}
-				}
-				*/
-
-				//if (alert.pais().size()) 
 				if (player->OnFaPaiCheck(alert, pai_operate->oper_type()))
 				{
 					player->SendProtocol(alert); //提示Client
@@ -815,58 +629,6 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				ClearOperation(); //清理缓存以及等待玩家操作的状态
 
 				Asset::PaiOperationAlert alert;
-
-				/*
-				//
-				//听牌检查
-				//
-				std::vector<Asset::PaiElement> pais;
-				if (player->CheckTingPai(pais)) 
-				{
-					//_oper_cache.set_player_id(player->GetID());
-					//_oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
-
-					for (auto pai : pais) 
-					{
-						auto pai_perator = alert.mutable_pais()->Add();
-						pai_perator->mutable_pai()->CopyFrom(pai);
-						pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
-
-						//_oper_cache.mutable_ting_pais()->Add()->CopyFrom(pai);
-					}
-				}
-				//
-				//旋风杠检查
-				//
-				for (auto gang : player->CheckXuanFengGang())
-				{
-					auto pai_perator = alert.mutable_pais()->Add();
-					pai_perator->mutable_oper_list()->Add(gang);
-				}
-				//
-				//玩家杠牌检查
-				//
-				//杠检查(明杠和暗杠)
-				//
-				RepeatedField<Asset::PaiOperationAlert_AlertElement> gang_list;
-				if (player->CheckAllGangPai(gang_list)) 
-				{
-					//_oper_cache.set_player_id(player->GetID());
-
-					for (auto gang : gang_list) 
-					{
-						if (gang.pai().card_type() == pai.card_type() && gang.pai().card_value() == pai.card_value()) continue;
-
-						auto pai_perator = alert.mutable_pais()->Add();
-						pai_perator->CopyFrom(gang);
-					
-						//_oper_cache.mutable_pai()->CopyFrom(gang.pai());
-						//for (auto oper_type : gang.oper_list()) _oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE(oper_type));
-					}
-				}
-				*/
-					
-				//if (alert.pais().size()) 
 				if (player->OnFaPaiCheck(alert, pai_operate->oper_type()))
 				{
 					player->SendProtocol(alert); //提示Client
@@ -896,65 +658,6 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				player->OnFaPai(cards); //发牌
 
 				Asset::PaiOperationAlert alert;
-
-				/*
-				//
-				//旋风杠检查
-				//
-				for (auto gang : player->CheckXuanFengGang())
-				{
-					auto pai_perator = alert.mutable_pais()->Add();
-					pai_perator->mutable_oper_list()->Add(gang);
-				}
-				//
-				//玩家杠牌检查
-				//
-				//杠检查(明杠和暗杠)
-				//
-				RepeatedField<Asset::PaiOperationAlert_AlertElement> gang_list;
-				if (player->CheckAllGangPai(gang_list)) 
-				{
-					//_oper_cache.set_player_id(player->GetID());
-
-					for (auto gang : gang_list) 
-					{
-						if (gang.pai().card_type() == pai.card_type() && gang.pai().card_value() == pai.card_value()) continue;
-
-						auto pai_perator = alert.mutable_pais()->Add();
-						pai_perator->CopyFrom(gang);
-					
-						//_oper_cache.mutable_pai()->CopyFrom(gang.pai());
-						//for (auto oper_type : gang.oper_list()) _oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE(oper_type));
-					}
-				}
-				//
-				//自摸检查
-				//
-				auto zhuapai = GameInstance.GetCard(cards[0]);
-				if (player->CheckZiMo(false) || player->CheckBaoHu(zhuapai))
-				{
-					auto pai_perator = alert.mutable_pais()->Add();
-					pai_perator->mutable_pai()->CopyFrom(zhuapai);
-					pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
-					
-					//SetZiMoCache(player, zhuapai); //自摸胡牌缓存
-				}
-				//
-				//听牌检查
-				//
-				std::vector<Asset::PaiElement> pais;
-				if (player->CheckTingPai(pais))
-				{
-					for (auto pai : pais) 
-					{
-						auto pai_perator = alert.mutable_pais()->Add();
-						pai_perator->mutable_pai()->CopyFrom(pai);
-						pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
-					}
-				}
-				*/
-				
-				//if (alert.pais().size()) 
 				if (player->OnFaPaiCheck(alert, pai_operate->oper_type()))
 				{
 					player->SendProtocol(alert); //提示Client
@@ -1003,78 +706,6 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 			player_next->OnFaPai(cards); //放入玩家牌里面
 
 			Asset::PaiOperationAlert alert;
-
-			/*
-			//
-			//胡牌检查
-			//
-			if (player_next->CheckZiMo(false)) //自摸检查
-			{
-				auto pai_perator = alert.mutable_pais()->Add();
-				pai_perator->mutable_pai()->CopyFrom(card);
-				pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
-				
-				//SetZiMoCache(player_next, card); //自摸胡牌缓存
-			}
-
-			//
-			//玩家摸宝之后进行抓牌正好抓到宝胡
-			//
-			else if (player_next->CheckBaoHu(card)) //宝胡
-			{
-				auto pai_perator = alert.mutable_pais()->Add();
-				pai_perator->mutable_pai()->CopyFrom(card);
-				pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_HUPAI);
-				
-				//SetZiMoCache(player_next, card); //自摸胡牌缓存
-			}
-			//	
-			//听牌检查
-			//
-			std::vector<Asset::PaiElement> ting_list;
-			if (player_next->CheckTingPai(ting_list)) 
-			{
-				//_oper_cache.set_player_id(player_next->GetID());
-				//_oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
-
-				for (auto pai : ting_list) 
-				{
-					auto pai_perator = alert.mutable_pais()->Add();
-					pai_perator->mutable_pai()->CopyFrom(pai);
-					pai_perator->mutable_oper_list()->Add(Asset::PAI_OPER_TYPE_TINGPAI);
-
-					//_oper_cache.mutable_ting_pais()->Add()->CopyFrom(pai);
-				}
-			}
-			//	
-			//杠检查(明杠和暗杠)
-			//
-			::google::protobuf::RepeatedField<Asset::PaiOperationAlert_AlertElement> gang_list;
-			if (player_next->CheckAllGangPai(gang_list)) 
-			{
-				//_oper_cache.set_player_id(player_next->GetID());
-
-				for (auto gang : gang_list) 
-				{
-					auto pai_perator = alert.mutable_pais()->Add();
-					pai_perator->CopyFrom(gang);
-						
-					//_oper_cache.mutable_pai()->CopyFrom(gang.pai());
-					//for (auto oper_type : gang.oper_list()) _oper_cache.mutable_oper_list()->Add(Asset::PAI_OPER_TYPE(oper_type));
-				}
-			}
-			//
-			//旋风杠检查
-			//
-			//开局状态，上家打牌，其他玩家可碰，但放弃，此时需要检查当前玩家是否可以旋风杠
-			//
-			for (auto gang : player_next->CheckXuanFengGang())
-			{
-				auto pai_perator = alert.mutable_pais()->Add();
-				pai_perator->mutable_oper_list()->Add(gang);
-			}
-			*/
-				
 			player_next->OnFaPaiCheck(alert, pai_operate->oper_type());
 			//
 			//开局状态，当前玩家拥有中发白白，上家打了白板
@@ -1083,23 +714,10 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 			//
 			if (_oper_cache.player_id() == player_next->GetID() || player->GetID() == player_next->GetID()/*当前操作玩家还是自己*/) //旋风杠检查
 			{
-				/*
-				auto xf_gang = player->CheckXuanFeng();
-				if (xf_gang)
-				{
-					auto pai_perator = alert.mutable_pais()->Add();
-					pai_perator->mutable_oper_list()->Add((Asset::PAI_OPER_TYPE)xf_gang);
-				}
-				*/
-
 				if (alert.pais().size()) 
 				{
 					player_next->SendProtocol(alert); //提示Client
 					SetPaiOperation(player_next->GetID(), player_next->GetID(), alert);
-
-					//_oper_cache.set_player_id(player_next->GetID()); //当前可操作玩家
-					//_oper_cache.set_source_player_id((player_next->GetID())); //当前牌来自玩家，自己抓牌，所以是自己
-					//_oper_cache.set_time_out(CommonTimerInstance.GetTime() + 30); //8秒后超时
 				}
 				else
 				{
@@ -1111,10 +729,6 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 			{
 				player_next->SendProtocol(alert); //提示Client
 				SetPaiOperation(player_next->GetID(), player_next->GetID(), alert);
-
-				//_oper_cache.set_player_id(player_next->GetID()); //当前可操作玩家
-				//_oper_cache.set_source_player_id((player_next->GetID())); //当前牌来自玩家，自己抓牌，所以是自己
-				//_oper_cache.set_time_out(CommonTimerInstance.GetTime() + 30); //8秒后超时
 			}
 			else 
 			{
