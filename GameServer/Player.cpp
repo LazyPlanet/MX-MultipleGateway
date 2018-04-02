@@ -557,6 +557,9 @@ void Player::OnCreateRoom(Asset::CreateRoom* create_room)
 {
 	if (!create_room) return; //理论不会如此
 
+	_stuff.mutable_last_room_options()->CopyFrom(create_room->room().options()); //存储开房玩法
+	_dirty = true;
+
 	Asset::Room asset_room;
 	asset_room.CopyFrom(create_room->room());
 
