@@ -391,12 +391,14 @@ void WorldSession::OnProcessMessage(const Asset::Meta& meta)
 				WorldSessionInstance.AddPlayer(enter_game->player_id(), shared_from_this()); //在线玩家
 			}
 
+			/*
 			if (_player->Load())
 			{
 				LOG(ERROR, "玩家进入游戏，角色ID:{} 加载数据失败", enter_game->player_id());
 				return; //数据加载失败必须终止
 			}
-			
+			*/
+
 			SetRoleType(Asset::ROLE_TYPE_PLAYER, _player->GetID());
 			
 			//

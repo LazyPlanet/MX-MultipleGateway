@@ -173,20 +173,16 @@ int32_t Player::OnEnterGame(bool is_login)
 		}
 	}
 
-	//if (is_login) SendPlayer(); //发送数据给玩家
-
-	Asset::EnterGame enter_game;
-	enter_game.set_player_id(_player_id);
-	SendProtocol2GameServer(enter_game); //通知逻辑服务器
-	
 	_stuff.set_login_time(CommonTimerInstance.GetTime());
 	_stuff.set_logout_time(0);
 
 	Save(true); //存盘
 
-	//LOG_BI("player", _stuff);
-	
 	PlayerInstance.Emplace(_player_id, shared_from_this()); //玩家管理
+	
+	Asset::EnterGame enter_game;
+	enter_game.set_player_id(_player_id);
+	SendProtocol2GameServer(enter_game); //通知逻辑服务器
 
 	OnLogin(is_login);
 
