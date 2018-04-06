@@ -3828,6 +3828,8 @@ bool Player::CheckZhuiFengGang(std::map<int32_t/*麻将牌类型*/, std::vector<
 	if (!_room || !_game) return false;
 
 	if (!_room->HasZhuiFengGang()) return false; //不支持追风杠
+	
+	if (!_room->HasXuanFengGang()) return false; //不支持旋风杠，显然不会有追风杠
 
 	bool has_zhuifeng = false;
 
