@@ -132,6 +132,8 @@ int32_t Clan::OnAgree(Asset::ClanOperation* message)
 	it->set_oper_time(TimerInstance.GetTime());
 	it->set_oper_type(message->oper_type());
 
+	OnSetUpdateTime(); //更新操作时间
+
 	//成员列表更新
 	//
 	AddMember(member_id);
@@ -204,6 +206,8 @@ int32_t Clan::OnDisAgree(std::shared_ptr<Player> player, Asset::ClanOperation* m
 
 	it->set_oper_time(TimerInstance.GetTime());
 	it->set_oper_type(message->oper_type());
+	
+	OnSetUpdateTime(); //更新操作时间
 
 	_dirty = true;
 
@@ -475,6 +479,8 @@ int32_t Clan::RemoveMember(int64_t player_id, Asset::ClanOperation* message)
 	}
 
 	message->mutable_clan()->CopyFrom(_stuff); //更新列表
+	
+	OnSetUpdateTime(); //更新操作时间
 
 	DEBUG("茶馆:{} 删除成员:{} 协议:{} 成功", _clan_id, player_id, message->ShortDebugString());
 		
