@@ -2328,6 +2328,8 @@ bool Player::HasYaoJiu(const std::map<int32_t, std::vector<int32_t>>& cards_inha
 		int32_t jiangang, //旋风杠，本质是明杠
 		int32_t fenggang) //旋风杠，本质是暗杠
 {
+	if (!_room || !_game) return false;
+
 	auto cards = cards_inhand;
 	
 	for (auto crds : cards_outhand) 
@@ -2336,14 +2338,20 @@ bool Player::HasYaoJiu(const std::map<int32_t, std::vector<int32_t>>& cards_inha
 	for (auto crds : cards)
 	{
 		if (crds.second.size() == 0) continue;
-
-		if (crds.first == Asset::CARD_TYPE_WANZI || crds.first == Asset::CARD_TYPE_BINGZI || crds.first == Asset::CARD_TYPE_TIAOZI)
+			
+		for (int card_value : crds.second)
 		{
-			if (std::find(crds.second.begin(), crds.second.end(), 1) != crds.second.end() || 
-					(std::find(crds.second.begin(), crds.second.end(), 9) != crds.second.end())) return true;
+			if (_game->IsHuiPai(crds.first, card_value)) continue; //会牌不顶幺九
+
+			if (crds.first == Asset::CARD_TYPE_WANZI || crds.first == Asset::CARD_TYPE_BINGZI || crds.first == Asset::CARD_TYPE_TIAOZI)
+			{
+				//if (std::find(crds.second.begin(), crds.second.end(), 1) != crds.second.end() || 
+				//		(std::find(crds.second.begin(), crds.second.end(), 9) != crds.second.end())) return true;
+				if (card_value == 1 || card_value == 9) return true;
+			}
+			
+			if (crds.first == Asset::CARD_TYPE_FENG || crds.first == Asset::CARD_TYPE_JIAN) return true;
 		}
-		
-		if (crds.first == Asset::CARD_TYPE_FENG || crds.first == Asset::CARD_TYPE_JIAN) return true;
 	}
 	
 	for (auto gang : minggang)
