@@ -49,7 +49,7 @@ Player::Player()
 	AddHandler(Asset::META_TYPE_SHARE_COMMON_PROPERTY, std::bind(&Player::CmdGetCommonProperty, this, std::placeholders::_1));
 	AddHandler(Asset::META_TYPE_SHARE_SAY_HI, std::bind(&Player::CmdSayHi, this, std::placeholders::_1));
 	//AddHandler(Asset::META_TYPE_SHARE_GAME_SETTING, std::bind(&Player::CmdGameSetting, this, std::placeholders::_1));
-	AddHandler(Asset::META_TYPE_SHARE_ROOM_HISTORY, std::bind(&Player::CmdGetBattleHistory, this, std::placeholders::_1));
+	//AddHandler(Asset::META_TYPE_SHARE_ROOM_HISTORY, std::bind(&Player::CmdGetBattleHistory, this, std::placeholders::_1));
 	//AddHandler(Asset::META_TYPE_SHARE_RECHARGE, std::bind(&Player::CmdRecharge, this, std::placeholders::_1));//逻辑服务器处理
 	AddHandler(Asset::META_TYPE_SHARE_PLAY_BACK, std::bind(&Player::CmdPlayBack, this, std::placeholders::_1));
 	AddHandler(Asset::META_TYPE_SHARE_MATCHING_STATS, std::bind(&Player::CmdGetMatchStatistics, this, std::placeholders::_1));
@@ -216,7 +216,7 @@ int32_t Player::OnLogin(bool is_login)
 {
 	ActivityInstance.OnPlayerLogin(shared_from_this()); //活动数据
 
-	if (is_login) BattleHistory(); //历史对战表
+	//if (is_login) BattleHistory(); //历史对战表
 	//if (is_login) MultiplyRoomCard(); //房卡翻倍//营口不再翻倍
 
 	return 0;

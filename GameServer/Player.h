@@ -194,6 +194,9 @@ public:
 	void OnlineCheck();
 	//游戏设置
 	virtual int32_t CmdGameSetting(pb::Message* message);
+	//历史战绩
+	int32_t CmdBattleHistory(pb::Message* message);
+	void BattleHistory(int32_t start_index, int32_t end_index);
 	//系统聊天
 	virtual int32_t CmdSystemChat(pb::Message* message);
 	//茶馆
