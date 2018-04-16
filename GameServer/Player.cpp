@@ -414,6 +414,8 @@ int32_t Player::OnEnterGame()
 	SetLocalServer(ConfigInstance.GetInt("ServerID", 1));
 
 	SendPlayer(); //发送数据给玩家
+
+	BattleHistory(); //历史战绩
 	
 	_stuff.set_login_time(CommonTimerInstance.GetTime());
 	_stuff.set_logout_time(0);

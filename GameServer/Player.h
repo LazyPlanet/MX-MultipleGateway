@@ -196,7 +196,7 @@ public:
 	virtual int32_t CmdGameSetting(pb::Message* message);
 	//历史战绩
 	int32_t CmdBattleHistory(pb::Message* message);
-	void BattleHistory(int32_t start_index, int32_t end_index);
+	void BattleHistory(int32_t start_index = 0, int32_t end_index = 5);
 	//系统聊天
 	virtual int32_t CmdSystemChat(pb::Message* message);
 	//茶馆
