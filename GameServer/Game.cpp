@@ -151,8 +151,8 @@ void Game::OnStarted()
 
 	if (false) //调试
 	{
-		_fanpai.set_card_type(Asset::CARD_TYPE_JIAN);
-		_fanpai.set_card_value(1);
+		_fanpai.set_card_type(Asset::CARD_TYPE_BINGZI);
+		_fanpai.set_card_value(7);
 	}
 	
 	auto huipai = _fanpai;
@@ -452,44 +452,53 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 				LOG(ERROR, "玩家:{} 在房间:{} 牌局:{} 胡牌:{}，与服务器缓存:{}不一致，怀疑外挂行为，请关注", 
 						player->GetID(), _room_id, _game_id, pai.ShortDebugString(), _oper_cache.ShortDebugString());
 			}
-
-			if (player->CheckCardsInhand() && player->CheckHuPai(pai)) //玩家点炮//平胡
+			//
+			//由于宝胡或者会胡可以有多种胡法，因此先进行计算求最大番数
+			//
+			if (player->ShouldDaPai())
 			{
-				auto fan_list = player->GetFanList();
-
-				if (player->IsJinbao()) 
+				if (player->CheckBaoHu(pai) && player->HasPai(_baopai)) //宝胡
 				{
-					fan_list.emplace(Asset::FAN_TYPE_JIN_BAO);
+					auto fan_list = player->GetFanList();
+					fan_list.emplace(Asset::FAN_TYPE_LOU_BAO); 
+						
+					_room->AddLouBao(player->GetID()); //搂宝
 
-					_room->AddJinBao(player->GetID()); //进宝
+					Calculate(player->GetID(), _oper_cache.source_player_id(), fan_list); //结算
 				}
-
-				Calculate(player->GetID(), _oper_cache.source_player_id(), fan_list); //结算
-			}
-			else if (player->ShouldDaPai() && player->CheckZiMo(pai)) //平胡
-			{
-				auto fan_list = player->GetFanList();
-
-				if (player->IsJinbao()) 
+				else if (player->CheckZiMo(pai)) //平胡//会胡
 				{
-					fan_list.emplace(Asset::FAN_TYPE_JIN_BAO);
+					auto fan_list = player->GetFanList();
+
+					if (player->IsJinbao()) 
+					{
+						fan_list.emplace(Asset::FAN_TYPE_JIN_BAO);
+					}
+
+					Calculate(player->GetID(), _oper_cache.source_player_id(), fan_list); //结算
 				}
-
-				Calculate(player->GetID(), _oper_cache.source_player_id(), fan_list); //结算
 			}
-			else if (player->CheckBaoHu(pai) && player->HasPai(_baopai)) //宝胡
+			else if (player->ShouldZhuaPai())
 			{
-				auto fan_list = player->GetFanList();
-				fan_list.emplace(Asset::FAN_TYPE_LOU_BAO); 
-					
-				_room->AddLouBao(player->GetID()); //搂宝
+				if (player->CheckHuiHu(pai, false, true))
+				{
+					auto fan_list = player->GetFanList();
 
-				Calculate(player->GetID(), _oper_cache.source_player_id(), fan_list); //结算
-			}
-			else if ((player->ShouldZhuaPai() && player->CheckHuiHu(pai, false, true))/* || (player->ShouldDaPai() && player->CheckHuiHu(pai, true, true))*/)
-			{
-				auto fan_list = player->GetFanList();
-				Calculate(player->GetID(), _oper_cache.source_player_id(), fan_list); //结算
+					Calculate(player->GetID(), _oper_cache.source_player_id(), fan_list); //结算
+				}
+				else if (player->CheckHuPai(pai)) //玩家点炮//平胡
+				{
+					auto fan_list = player->GetFanList();
+
+					if (player->IsJinbao()) 
+					{
+						fan_list.emplace(Asset::FAN_TYPE_JIN_BAO);
+
+						_room->AddJinBao(player->GetID()); //进宝
+					}
+
+					Calculate(player->GetID(), _oper_cache.source_player_id(), fan_list); //结算
+				}
 			}
 			else
 			{

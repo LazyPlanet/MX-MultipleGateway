@@ -2975,10 +2975,10 @@ bool Player::CheckZiMo(const Asset::PaiElement& pai, bool calculate)
 
 	if (HasTuoGuan()) return false;
 
-	auto hupai = CheckHuPai(pai, true, calculate);
+	bool hupai = CheckHuiHu(pai, true, calculate); //是否能胡会儿牌
 	if (hupai) return true;
 
-	return CheckHuiHu(pai, true, calculate); //是否能胡会儿牌
+	return CheckHuPai(pai, true, calculate);
 }
 	
 bool Player::CheckHuPai(const Asset::PaiElement& pai, bool check_zimo, bool calculate)
@@ -4290,17 +4290,16 @@ int32_t Player::OnFaPai(std::vector<int32_t>& cards)
 
 	if (LookAtBaopai()) return 0; //生成宝牌，进宝检查
 
-	if (false && _player_id == 722077 && _cards_inhand.size() == 0) //13
+	if (false && _player_id == 11534338 && _cards_inhand.size() == 0) //13
 	{
 		_cards_inhand = {
-			{ 1, {3, 3, 3, 9} },
-			{ 2, {6} },
-			{ 3, {2, 3} },
+			{ 1, {1, 2, 3, 7, 8, 9} },
+			{ 2, {8, 8} },
+			{ 4, {2, 2} },
 		};
 		
 		_cards_outhand = {
-			{ 1, {9, 9, 9} },
-			{ 3, {1, 1, 1} },
+			{ 1, {5, 6, 7} },
 		};
 	}
 	else if (false && _player_id == 11534340 && _cards_inhand.size() == 0) //14
