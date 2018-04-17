@@ -2975,7 +2975,7 @@ bool Player::CheckZiMo(const Asset::PaiElement& pai, bool calculate)
 
 	if (HasTuoGuan()) return false;
 
-	bool hupai = CheckHuiHu(pai, true, calculate); //是否能胡会儿牌
+	bool hupai = CheckHuiHu(pai, true, calculate); //是否能胡会儿牌//多番，因此先进行会儿牌胡牌检查
 	if (hupai) return true;
 
 	return CheckHuPai(pai, true, calculate);
