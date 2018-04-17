@@ -733,6 +733,8 @@ void Room::OnGameOver(int64_t player_id)
 
 	if (player_id != 0 && _banker != player_id) 
 	{
+		++_real_gamed_count; //换庄
+
 		auto city_type = GetCity();
 
 		_banker_index = (_banker_index + 1) % MAX_PLAYER_COUNT; //下庄
@@ -765,7 +767,6 @@ void Room::OnGameOver(int64_t player_id)
 	//
 	//总结算界面弹出
 	//
-
 	Asset::RoomCalculate message;
 	message.set_calculte_type(Asset::CALCULATE_TYPE_FULL);
 	if (HasDisMiss()) message.set_calculte_type(Asset::CALCULATE_TYPE_DISMISS);
@@ -804,7 +805,8 @@ void Room::OnGameOver(int64_t player_id)
 		player->AddRoomScore(record->score()); //总积分
 	}
 
-	LOG(INFO, "房间:{} 整局结算，房间局数:{} 实际局数:{} 结算数据:{}", _stuff.room_id(), _stuff.options().open_rands(), _games.size(), message.ShortDebugString());
+	LOG(INFO, "房间:{} 整局结算，房间局数:{} 实际局数:{} 连庄局数:{} 结算数据:{}", 
+			_stuff.room_id(), _stuff.options().open_rands(), _games.size(), _real_gamed_count, message.ShortDebugString());
 
 	for (auto player : _players)
 	{

@@ -42,6 +42,7 @@ private:
 	int32_t _dismiss_time = 0; //解散时间
 	int32_t _created_time = 0; //创建时间
 	int32_t _dismiss_cooldown = 0; //解散冷却时间
+	int32_t _real_gamed_count = 0; //实际进行的数量//玩家连庄不进行增加
 public:
 	explicit Room(Asset::Room room) {  _stuff = room; }
 	void SetGmtOpened() { _gmt_opened = true; }
