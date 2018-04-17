@@ -887,7 +887,10 @@ void Game::Calculate(int64_t hupai_player_id/*胡牌玩家*/, int64_t dianpao_pl
 		//
 		for (const auto& fan : fan_list)
 		{
-			score *= GetMultiple(fan);
+			int32_t fan_score = GetMultiple(fan);
+			if (fan_score == 1) continue; //没有番数
+
+			score *= fan_score;
 			
 			auto detail = record->mutable_details()->Add();
 			detail->set_fan_type((Asset::FAN_TYPE)fan);
