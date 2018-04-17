@@ -752,7 +752,7 @@ void Room::OnGameOver(int64_t player_id)
 	}
 	else
 	{
-		++_streak_wins[player_id];
+		++_streak_wins[player_id]; //连庄
 	}
 
 	if (!HasBeenOver() && !HasDisMiss()) return; //没有对局结束，且没有解散房间
