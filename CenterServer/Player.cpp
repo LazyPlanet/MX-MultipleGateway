@@ -1197,10 +1197,12 @@ void Player::OnKickOut(Asset::KICK_OUT_REASON reason)
 				break; //中心服没必要发往逻辑服务器//绝对不能
 			}
 
+			/*
 			Asset::KickOutPlayer kickout_player; //通知游戏逻辑服务器退出
 			kickout_player.set_player_id(_player_id);
 			kickout_player.set_reason(reason);
 			SendProtocol2GameServer(kickout_player); 
+			*/
 		}
 		break;
 
