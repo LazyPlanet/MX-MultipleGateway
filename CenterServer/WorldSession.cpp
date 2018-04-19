@@ -533,13 +533,13 @@ void WorldSession::OnProcessMessage(const Asset::Meta& meta)
 				kickout_player.set_player_id(_player->GetID());
 				kickout_player.set_reason(Asset::KICK_OUT_REASON_CHANGE_SERVER);
 
-				WARN("玩家:{} 进入服务器:{} 房间:{}和当前缓存服务器:{}，房间:{}不同，发往原服踢出:{}", 
-						_player->GetID(), server_id, _player->GetRoom(), room_id, _player->GetLocalServer(), kickout_player.ShortDebugString());
+				WARN("玩家:{} 进入服务器:{} 房间:{}和当前缓存服务器:{} 房间:{}不同，发往原服踢出:{}", 
+						_player->GetID(), server_id, _player->GetRoom(), _player->GetLocalServer(), room_id, kickout_player.ShortDebugString());
 
 				_player->SendProtocol2GameServer(kickout_player); 
 			}
 	
-			WARN("玩家:{} 当前所在服务器:{} 即将进入逻辑服务器:{} 进入房间:{}", _player->GetID(), _player->GetLocalServer(), server_id, enter_room->ShortDebugString());
+			//WARN("玩家:{} 当前所在服务器:{} 即将进入逻辑服务器:{} 进入房间:{}", _player->GetID(), _player->GetLocalServer(), server_id, enter_room->ShortDebugString());
 
 			if (room_id) _player->SetRoom(room_id); //设置房间
 			if (server_id) _player->SetLocalServer(server_id); //设置玩家当前所在服务器

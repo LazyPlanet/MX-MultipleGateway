@@ -81,7 +81,7 @@ bool WorldSession::OnInnerProcess(const Asset::Meta& meta)
 			auto player = PlayerInstance.Get(meta.player_id());
 			if (!player) return false;
 
-			if (kick_out->reason() == Asset::KICK_OUT_REASON_LEAVE_ROOM) player->OnEnterCenter(); //进入游戏，初始化数据//正常退出逻辑服务器
+			if (kick_out->reason() == Asset::KICK_OUT_REASON_LEAVE_ROOM) player->OnEnterCenter(); //进入游戏，初始化数据//正常退出逻辑服务器房间
 		}
 		break;
 

@@ -226,14 +226,25 @@ void Player::SetLocalServer(int32_t server_id)
 { 
 	if (server_id == _stuff.server_id()) return;
 	
+	//通知当前游戏逻辑服务器下线
+	//
+	Asset::KickOutPlayer kickout_player; 
+	kickout_player.set_player_id(_player_id);
+	kickout_player.set_reason(Asset::KICK_OUT_REASON_CHANGE_SERVER);
+	SendProtocol2GameServer(kickout_player); 
+	
+	//切换逻辑服务器
+	//
 	_stuff.set_server_id(server_id); 
 	_dirty = true;
 	
 	Save(true); //必须强制存盘，否则会覆盖数据
 	
+	//登陆//进入逻辑服务器
+	//
 	Asset::EnterGame enter_game;
 	enter_game.set_player_id(_player_id);
-	SendProtocol2GameServer(enter_game); //登陆逻辑服务器
+	SendProtocol2GameServer(enter_game); 
 }
 	
 bool Player::IsCenterServer() 
