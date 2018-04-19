@@ -150,6 +150,7 @@ void Room::OnReEnter(std::shared_ptr<Player> op_player)
 	//
 	Asset::RoomAll message;
 	message.set_current_rounds(_games.size());
+	//message.set_current_rounds(_real_gamed_count);
 	message.set_zhuang_position(Asset::POSITION_TYPE(_banker_index + 1));
 	
 	for (const auto& record : _history.list())
@@ -447,7 +448,8 @@ void Room::OnPlayerOperate(std::shared_ptr<Player> player, pb::Message* message)
 	
 int32_t Room::GetRemainCount() 
 { 
-	return _stuff.options().open_rands() - _games.size(); 
+	//return _stuff.options().open_rands() - _games.size(); 
+	return _stuff.options().open_rands() - _real_gamed_count + 1; 
 }
 	
 bool Room::HasBeenOver() 
@@ -677,6 +679,7 @@ void Room::OnGameStart()
 	Asset::GameStart game_start;
 	game_start.set_total_rounds(_stuff.options().open_rands());
 	game_start.set_current_rounds(_games.size());
+	//game_start.set_current_rounds(_real_gamed_count);
 
 	BroadCast(game_start);
 
@@ -735,7 +738,7 @@ void Room::OnGameOver(int64_t player_id)
 	if (player_id != 0 && _banker != player_id) 
 	{
 		++_real_gamed_count; //换庄
-
+	
 		auto city_type = GetCity();
 
 		_banker_index = (_banker_index + 1) % MAX_PLAYER_COUNT; //下庄
@@ -744,7 +747,7 @@ void Room::OnGameOver(int64_t player_id)
 		{
 			_banker_index = GetPlayerOrder(player_id); //谁胡下一局谁坐庄
 		}
-
+		
 		auto player = GetPlayer(player_id);
 		if (player) player->SetStreakWins(_streak_wins[player_id]); //最高连胜
 
@@ -754,6 +757,8 @@ void Room::OnGameOver(int64_t player_id)
 	{
 		++_streak_wins[player_id]; //连庄
 	}
+		
+	DEBUG("当前胡牌玩家:{}, 当前庄家:{} 当前实际局数:{} 即将开始局数:{}", player_id, _banker, _games.size(), _real_gamed_count);
 
 	if (!HasBeenOver() && !HasDisMiss()) return; //没有对局结束，且没有解散房间
 

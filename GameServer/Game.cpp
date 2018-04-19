@@ -366,7 +366,8 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 	auto pai_operate_string = pai_operate->ShortDebugString();
 	auto oper_limit_string = _oper_cache.ShortDebugString();
 
-	DEBUG("房间:{} 当前牌局:{} 当前操作玩家ID:{} 位置索引:{} 进行的操作:{} 服务器记录的当前可操作玩家索引:{} 服务器缓存玩家操作:{}", _room_id, _game_id, curr_player_id, player_index, pai_operate_string, _curr_player_index, oper_limit_string);
+	DEBUG("房间:{} 当前牌局:{} 当前操作玩家ID:{} 位置索引:{} 进行的操作:{} 服务器记录的当前可操作玩家索引:{} 服务器缓存玩家操作:{}", 
+			_room_id, _game_id, curr_player_id, player_index, pai_operate_string, _curr_player_index, oper_limit_string);
 
 	if (!CanPaiOperate(player)) 
 	{
