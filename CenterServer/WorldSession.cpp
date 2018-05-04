@@ -526,6 +526,8 @@ void WorldSession::OnProcessMessage(const Asset::Meta& meta)
 				
 				_player->AddCoolDown(Asset::SYSTEM_COOLDOWN_TYPE_MATCHING);
 			}
+
+			/*
 				
 			if (!_player->IsCenterServer() && server_id > 0 && _player->GetLocalServer() != server_id)
 			{
@@ -538,6 +540,7 @@ void WorldSession::OnProcessMessage(const Asset::Meta& meta)
 
 				_player->SendProtocol2GameServer(kickout_player); 
 			}
+			*/
 	
 			//WARN("玩家:{} 当前所在服务器:{} 即将进入逻辑服务器:{} 进入房间:{}", _player->GetID(), _player->GetLocalServer(), server_id, enter_room->ShortDebugString());
 

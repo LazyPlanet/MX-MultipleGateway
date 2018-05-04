@@ -228,10 +228,32 @@ void Player::SetLocalServer(int32_t server_id)
 	
 	//通知当前游戏逻辑服务器下线
 	//
+	/*
 	Asset::KickOutPlayer kickout_player; 
 	kickout_player.set_player_id(_player_id);
 	kickout_player.set_reason(Asset::KICK_OUT_REASON_CHANGE_SERVER);
 	SendProtocol2GameServer(kickout_player); 
+	*/
+
+	auto gs_session = WorldSessionInstance.GetServerSession(server_id);
+	if (!gs_session) return; //非法的游戏逻辑服务器
+	
+	//通知当前游戏逻辑服务器下线
+	//
+	if (server_id && _stuff.server_id())
+	{
+		Asset::KickOutPlayer kickout_player; 
+		kickout_player.set_player_id(_player_id);
+		kickout_player.set_reason(Asset::KICK_OUT_REASON_CHANGE_SERVER);
+		//SendProtocol2GameServer(kickout_player); 
+	
+		Asset::Meta meta;
+		meta.set_type_t(Asset::META_TYPE_S2S_KICKOUT_PLAYER);
+		meta.set_stuff(kickout_player.SerializeAsString());
+		meta.set_player_id(_player_id); 
+
+		gs_session->SendMeta(meta); 
+	}
 	
 	//切换逻辑服务器
 	//
@@ -626,6 +648,7 @@ int32_t Player::CommonCheck(int32_t type_t, pb::Message* message)
 			int64_t server_id = 0;
 			if (!IsInRoom()) server_id = WorldSessionInstance.RandomServer(); //随机一个逻辑服务器//防止茶馆老板房间内还创建房间
 
+			/*
 			if (server_id != 0 && server_id != GetLocalServer())
 			{
 				Asset::KickOutPlayer kickout_player; //通知当前游戏逻辑服务器下线
@@ -636,6 +659,7 @@ int32_t Player::CommonCheck(int32_t type_t, pb::Message* message)
 				
 				SendProtocol2GameServer(kickout_player); 
 			}
+			*/
 
 			if (server_id > 0) SetLocalServer(server_id); //开房随机
 
