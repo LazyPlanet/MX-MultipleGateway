@@ -358,8 +358,6 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 	Asset::PaiOperation* pai_operate = dynamic_cast<Asset::PaiOperation*>(message);
 	if (!pai_operate) return; 
 
-	AddPlayerOperation(*pai_operate);  //回放记录
-	
 	auto player_index = GetPlayerOrder(player->GetID());
 
 	auto curr_player_id = player->GetID();
@@ -385,6 +383,8 @@ void Game::OnPaiOperate(std::shared_ptr<Player> player, pb::Message* message)
 		_curr_player_index = player_index; //上面检查过，就说明当前该玩家可操作
 		BroadCast(message); //广播玩家操作，玩家放弃操作不能广播
 	}
+	
+	AddPlayerOperation(*pai_operate);  //回放记录
 
 	//const auto& pai = _oper_cache.pai(); //缓存的牌
 	const auto& pai = pai_operate->pai(); //玩家发上来的牌
