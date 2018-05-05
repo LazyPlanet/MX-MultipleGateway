@@ -1389,7 +1389,7 @@ void Player::SendProtocol(const pb::Message& message)
 
 	_session->AsyncSendMessage(content);
 
-	//DEBUG("玩家:{} 发送协议，类型:{} 内容:{}", _player_id, type_t,  message.ShortDebugString());
+	if (Asset::META_TYPE_SHARE_SAY_HI != meta.type_t()) DEBUG("玩家:{} 发送协议，类型:{} 内容:{}", _player_id, type_t,  message.ShortDebugString());
 }
 
 void Player::Send2Roomers(pb::Message& message, int64_t exclude_player_id) 

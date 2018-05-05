@@ -40,7 +40,8 @@ void WorldSession::InitializeHandler(const boost::system::error_code error, cons
 	{
 		if (error)
 		{
-			ERROR("地址:{} 端口:{} 玩家:{}断开连接，错误码:{} 错误描述:{}", _ip_address, _remote_endpoint.port(), _player ? _player->GetID() : 0, error.value(), error.message());
+			ERROR("地址:{} 端口:{} 玩家:{}断开连接，错误码:{} 错误描述:{}", 
+					_ip_address, _remote_endpoint.port(), _player ? _player->GetID() : 0, error.value(), error.message());
 			
 			Close();
 			return;
@@ -53,7 +54,9 @@ void WorldSession::InitializeHandler(const boost::system::error_code error, cons
 					
 				if (body_size > MAX_DATA_SIZE)
 				{
-					LOG(ERROR, "接收来自地址:{} 端口:{} 玩家:{} 太大的包长:{} 丢弃.", _ip_address, _remote_endpoint.port(), _player ? _player->GetID() : 0, body_size)
+					LOG(ERROR, "接收来自地址:{} 端口:{} 玩家:{} 太大的包长:{} 丢弃.", 
+							_ip_address, _remote_endpoint.port(), _player ? _player->GetID() : 0, body_size)
+
 					AsyncReceiveWithCallback(&WorldSession::InitializeHandler); //递归持续接收	
 					return;
 				}
@@ -66,7 +69,9 @@ void WorldSession::InitializeHandler(const boost::system::error_code error, cons
 
 				if (!result) 
 				{
-					LOG(ERROR, "会话类型:{} 会话全局ID:{} 来自地址:{} 端口:{} 玩家:{} 转换Protobuff数据失败.", _role_type, _global_id, _ip_address, _remote_endpoint.port(), _player ? _player->GetID() : 0);
+					LOG(ERROR, "会话类型:{} 会话全局ID:{} 来自地址:{} 端口:{} 玩家:{} 转换Protobuff数据失败.", 
+							_role_type, _global_id, _ip_address, _remote_endpoint.port(), _player ? _player->GetID() : 0);
+
 					AsyncReceiveWithCallback(&WorldSession::InitializeHandler); //递归持续接收	
 					return; //非法协议
 				}
@@ -117,6 +122,7 @@ void WorldSession::OnProcessMessage(const Asset::Meta& meta)
 	}
 
 	//显示协议内容
+	/*
 	const pb::FieldDescriptor* field = message->GetDescriptor()->FindFieldByName("type_t");
 	if (!field) return;
 
@@ -124,7 +130,9 @@ void WorldSession::OnProcessMessage(const Asset::Meta& meta)
 	if (!enum_value) return;
 
 	if (Asset::META_TYPE_SHARE_SAY_HI != meta.type_t())
-		DEBUG("中心服务器接收数据, 玩家:{} 全局角色ID:{} 全局角色类型:{} 协议名称:{} 内容:{}", meta.player_id(), _global_id, _role_type, enum_value->name(), message->ShortDebugString());
+		DEBUG("中心服务器接收数据, 玩家:{} 全局角色ID:{} 全局角色类型:{} 协议名称:{} 内容:{}", 
+				meta.player_id(), _global_id, _role_type, enum_value->name(), message->ShortDebugString());
+	*/
 
 	//
 	// C2S协议可能存在两种情况：
