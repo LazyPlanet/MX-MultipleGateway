@@ -1,8 +1,12 @@
 #!/bin/bash
 
-ln -sf ~/MX-Data/ Asset
+ln -sf ~/MX_DATAYK/ Asset
+
 ln -sf Asset/P_Asset.proto .
 ln -sf Asset/P_Protocol.proto .
+ln -sf Asset/P_Server.proto .
+ln -sf Asset/P_Command.proto .
+
 ln -sf ../ThirdParty/protobuf-2.6.1/src/google .
 
 ln -sf ../ThirdParty/protobuf-2.6.1/output/lib/libprotobuf.so.9 .
