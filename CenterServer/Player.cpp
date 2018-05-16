@@ -235,7 +235,7 @@ void Player::SetLocalServer(int32_t server_id)
 	SendProtocol2GameServer(kickout_player); 
 	*/
 
-	auto gs_session = WorldSessionInstance.GetServerSession(server_id);
+	auto gs_session = WorldSessionInstance.GetServerSession(_stuff.server_id());
 	if (!gs_session) return; //非法的游戏逻辑服务器
 	
 	//通知当前游戏逻辑服务器下线
