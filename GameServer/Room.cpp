@@ -758,7 +758,7 @@ void Room::OnGameOver(int64_t player_id)
 		++_streak_wins[player_id]; //连庄
 	}
 		
-	DEBUG("当前胡牌玩家:{}, 当前庄家:{} 当前实际局数:{} 即将开始局数:{}", player_id, _banker, _games.size(), _real_gamed_count);
+	DEBUG("房间:{} 结束，当前胡牌玩家:{} 当前庄家:{} 当前实际局数:{} 线下局数:{}", _stuff.room_id(), player_id, _banker, _games.size(), _real_gamed_count);
 
 	if (!HasBeenOver() && !HasDisMiss()) return; //没有对局结束，且没有解散房间
 
