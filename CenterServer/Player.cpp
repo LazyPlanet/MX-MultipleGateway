@@ -144,8 +144,9 @@ int32_t Player::OnLogout()
 
 	_stuff.set_login_time(0);
 	_stuff.set_logout_time(CommonTimerInstance.GetTime());
-	
+		
 	Save(true);	//存档数据库
+
 
 	WorldSessionInstance.RemovePlayer(_player_id); //网络会话数据
 	PlayerInstance.Remove(_player_id); //玩家管理
@@ -1215,18 +1216,11 @@ void Player::OnKickOut(Asset::KICK_OUT_REASON reason)
 	{
 		case Asset::KICK_OUT_REASON_DISCONNECT: //玩家杀进程退出
 		{
-			if (IsCenterServer()) 
-			{
-				DEBUG("玩家:{}在中心服务器，尚不能发往游戏逻辑服:{}", _player_id, _stuff.server_id());
-				break; //中心服没必要发往逻辑服务器//绝对不能
-			}
-
-			/*
 			Asset::KickOutPlayer kickout_player; //通知游戏逻辑服务器退出
 			kickout_player.set_player_id(_player_id);
 			kickout_player.set_reason(reason);
+
 			SendProtocol2GameServer(kickout_player); 
-			*/
 		}
 		break;
 
